@@ -6,27 +6,28 @@ Jötnar ist der Client für IoT-Devices (inkl. ESP32/Microcontroller). Er stellt
 
 ## Zielplattformen
 
-- ESP32 (ESP-IDF, Arduino)
-- ESP8266
-- Raspberry Pi Pico
-- Andere Microcontroller mit WiFi/Network
+- ESP32 (esp-rs, Rust)
+- ESP8266 (Rust)
+- Raspberry Pi Pico (Rust)
+- Andere Microcontroller mit WiFi/Network (Rust)
 
 ## Projektstruktur
 
 ```
 jotnar/
 ├── src/
-│   ├── esp32/           # ESP32 Implementation
-│   │   ├── main/
+│   ├── esp32/           # ESP32 Implementation (Rust)
+│   │   ├── main.rs
 │   │   ├── services/
 │   │   └── utils/
-│   ├── generic/         # Generic Implementation
+│   ├── generic/         # Generic Implementation (Rust)
 │   │   ├── protocol/
 │   │   ├── services/
 │   │   └── utils/
-│   └── shared/         # Shared Code
+│   └── shared/         # Shared Code (Rust)
 │       ├── protocol/
 │       └── utils/
+├── Cargo.toml
 ├── config/
 └── examples/
 ```
@@ -188,10 +189,11 @@ interface JotnarCapabilities {
 - Optional: Sensors/Actuators
 
 ### Software Stack
-- ESP-IDF oder Arduino Framework
+- Rust (esp-rs für ESP32)
 - WiFi Stack
 - TCP/IP Stack
 - MessagePack Library
+- Bifrost Client (WebSocket-Support)
 
 ### Features
 - WiFi Connection Management
@@ -201,18 +203,20 @@ interface JotnarCapabilities {
 
 ## Abhängigkeiten
 
-- **Edda Core Library**: Minimal (nur Jötnar Protocol)
+- **Edda Core Library**: Minimal (Jötnar Protocol, Bifrost Client)
 - Network Stack (WiFi, TCP/IP)
 - MessagePack Library
-- Platform SDK (ESP-IDF, Arduino, etc.)
+- Bifrost Client Library (WebSocket-Support)
+- Rust Toolchain (esp-rs für ESP32)
 
 ## Integration
 
 - **Kein Odin**: Jötnar-Devices haben keinen Odin-Prozess
 - **Toolcalling Protocol**: Direkte Kommunikation über spezielles Protocol
+- **Bifrost**: Kann Bifrost-Verbindungen eingehen für erweiterte Kommunikation
 - **Midgard/Asgard**: Werden als Controller verwendet (Odin erkennt Jötnar-Devices und steuert sie)
-- **Bifrost**: Für erweiterte Kommunikation (optional)
 - **Heimdall**: Für Security (optional, wenn Encryption unterstützt)
+- **Programmiersprache**: Rust (esp-rs für ESP32, etc.)
 
 ## Performance
 

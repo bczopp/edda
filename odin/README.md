@@ -2,7 +2,7 @@
 
 ## Übersicht
 
-Odin ist der zentrale Orchestrator auf Midgard (Desktop), Alfheim (Mobile) und Asgard (Homeserver). Er koordiniert alle anderen Services und ist der Hauptprozess des Edda-Systems. Odin läuft NICHT auf Jötnar (IoT-Devices), da diese zu klein sind und ein spezielles Toolcalling-Protokoll verwenden.
+Odin ist der zentrale Orchestrator auf Midgard (Desktop), Alfheim (Mobile), Asgard (Homeserver) und Ragnarok (Terminal). Er koordiniert alle anderen Services und ist der Hauptprozess des Edda-Systems. Odin läuft NICHT auf Jötnar (IoT-Devices), da diese zu klein sind und ein spezielles Toolcalling-Protokoll verwenden.
 
 ## Verantwortlichkeiten
 
@@ -57,19 +57,26 @@ Odin ist der zentrale Orchestrator auf Midgard (Desktop), Alfheim (Mobile) und A
    - Falls nötig: Request an Freki (RAG) für Kontext-Anreicherung
    - Warten auf RAG-Response
 
-3. **LLM Processing**
+3. **LLM-Selection (optional, wenn Provider/Marketplace aktiv)**
+   - Odin erstellt Netzwerkplan (on the fly, mit Cache)
+   - Odin fragt Skuld: "Welches LLM/Device für diesen Request?"
+   - Skuld analysiert Netzwerkplan und empfiehlt optimales LLM/Device
+   - Odin nutzt diese Information für Request-Routing
+
+4. **LLM Processing**
    - Request an Geri (LLM) mit angereichertem Prompt
+   - Geri nutzt gewähltes LLM/Device (basierend auf Skuld-Empfehlung)
    - Warten auf LLM-Response
 
-4. **Action Planning**
+5. **Action Planning**
    - Odin interpretiert LLM-Response
    - Erstellt `ThorAction` für erforderliche Actions
 
-5. **Action Execution**
+6. **Action Execution**
    - Sendet `ThorAction` an Thor
    - Wartet auf `ThorResult`
 
-6. **Response Generation**
+7. **Response Generation**
    - Erstellt Response basierend auf Action-Result
    - Sendet `RavenMessage` an Muninn für TTS
 
@@ -82,6 +89,8 @@ Odin ist der zentrale Orchestrator auf Midgard (Desktop), Alfheim (Mobile) und A
 - **Thor**: Action Executor
 - **Bifrost**: Communication Service
 - **Heimdall**: Security Service
+- **Skuld**: LLM-Selection Service (muss installiert sein)
+- **Vedrfolnir**: Connection Builder Client (für Yggdrasil-Kommunikation)
 - **Edda Core Library**: DTOs, Protocols, Utils
 
 ## Technische Anforderungen
@@ -94,13 +103,15 @@ Odin ist der zentrale Orchestrator auf Midgard (Desktop), Alfheim (Mobile) und A
 
 ## Integration
 
-- **Midgard**: Läuft als Hauptprozess auf Desktop/Laptop
-- **Alfheim**: Läuft als Hauptprozess auf Mobile
-- **Asgard**: Läuft als Hauptprozess auf Homeserver
+- **Midgard**: Läuft als Hauptprozess auf Desktop/Laptop (mit GUI-Frontend)
+- **Alfheim**: Läuft als Hauptprozess auf Mobile (mit GUI-Frontend)
+- **Asgard**: Läuft als Hauptprozess auf Homeserver (mit GUI-Frontend)
+- **Ragnarok**: Läuft als Hauptprozess auf Terminal (mit TUI-Frontend statt GUI)
 - **Jötnar**: Kein Odin (zu klein, nutzt spezielles Toolcalling-Protocol)
-- **Services**: Koordiniert alle Services (Huginn/Muninn, Freki, Geri, Thor, Bifrost, Heimdall)
+- **Services**: Koordiniert alle Services (Huginn/Muninn, Freki, Geri, Thor, Bifrost, Heimdall, Skuld, Vedrfolnir)
 - **Valkyries**: Indirekt über Thor (Thor erkennt Coding-Aufgaben)
 - **Frigg**: Indirekt über Thor (Thor erkennt Healthcare-Aufgaben)
+- **Yggdrasil**: Kommuniziert über Vedrfolnir und Ratatoskr-Protocol
 
 ## Performance
 
@@ -194,27 +205,32 @@ Odin ist der zentrale Orchestrator auf Midgard (Desktop), Alfheim (Mobile) und A
 - **Empfohlene Einstellung**: "Medium" - Balance zwischen Preis und Qualität
 - **Odin wählt optimal**: Basierend auf aktuellen Provider-Angeboten
 
-### Odin's Provider Selection Algorithm
+### Odin's LLM-Selection mit Skuld
 
-**1. Request Analysis**
+**1. Netzwerkplan-Erstellung**
+- Odin erstellt Netzwerkplan (on the fly, mit Cache)
+- Enthält: Verfügbare Devices, Models, Provider (wenn vorhanden), Capabilities, Quality-Metriken, Latency-Info, User-Preferences
+- Cache-Strategie: Netzwerkplan wird gecacht, um wiederholte Erstellung zu vermeiden
+- Cache-Invalidation: Bei Netzwerkplan-Updates, Device-Status-Änderungen, Quality-Metrik-Updates, Timeout
+
+**2. Request-Analyse**
 - Anforderung analysieren: Was wird benötigt?
 - Context verstehen: Komplexität, Token-Schätzung
 - Requirements extrahieren: Aus User-Settings
 
-**2. Provider Matching**
-- Provider filtern: Basierend auf Verfügbarkeit und Capabilities
-- Angebote vergleichen: Preis, Qualität, Latency
-- Fair Distribution: Berücksichtigung von Fairness-Score
-
-**3. Optimal Selection**
-- Score berechnen: Für jeden passenden Provider
-- Besten Provider wählen: Höchster Score
-- Fallback vorbereiten: Alternative Provider falls nötig
+**3. Skuld fragt um Rat**
+- Odin sendet `SelectionRequest` mit Netzwerkplan an Skuld
+- Skuld analysiert Netzwerkplan und entscheidet:
+  - Effektivster Weg (Routing, Latency)
+  - Effektivstes Model (Quality, Performance)
+  - Entspricht User-Vorgaben (Requirements, Preferences)
+- Skuld antwortet mit `SelectionResponse` (Empfehlung für LLM/Device)
 
 **4. Execution**
-- Request an Provider senden: Gewählter Provider
+- Odin nutzt Skuld-Empfehlung für Request-Routing
+- Request wird an gewähltes LLM/Device gesendet
 - Monitoring: Überwachung der Ausführung
-- Fallback: Bei Fehler automatisch zu alternativem Provider
+- Fallback: Bei Fehler automatisch zu alternativem LLM/Device
 
 **5. Error Handling & Fallback**
 
@@ -254,6 +270,14 @@ Odin ist der zentrale Orchestrator auf Midgard (Desktop), Alfheim (Mobile) und A
 - **Fairness** (10% Gewichtung): Fair Distribution Score
 
 **Quality-Metriken**: Quality-Metriken werden nach jedem Request gemessen (automatisch + optionales User-Feedback) und periodisch aggregiert (gewichteter Durchschnitt, neuere Requests haben höheres Gewicht). Quality wird als Faktor im Scoring-Algorithmus verwendet, und optional kann ein Minimum-Quality-Filter angewendet werden.
+
+**Yggdrasil-Kommunikation über Vedrfolnir**
+
+- **Vedrfolnir-Integration**: Odin nutzt Vedrfolnir-Service für Yggdrasil-Kommunikation
+- **Ratatoskr-Protocol**: Kommunikation über Ratatoskr-Protocol (Business-Logik)
+- **Marketplace-Requests**: Provider-Registrierung, Provider-Abfrage, etc.
+- **Payment-Requests**: Payment-Processing, Pre-Authorization, etc.
+- **Business-Requests**: Allgemeine Business-Transaktionen
 
 **User Settings Integration**
 - **Quality Level "Low"**: Preis-Gewichtung erhöht (50%)
@@ -403,17 +427,22 @@ weight_i = e^(-decay_rate * age_i)
 
 ## Implementierungs-Notizen
 
+**Programmiersprache:**
+- **Rust**: Für maximale Performance, Memory-Safety ohne GC, moderne Tooling, Cross-compilation
+- **TypeScript nur im Frontend**: Nur GUI-Frontends (Midgard/Alfheim) nutzen TypeScript
+
+**Technische Anforderungen:**
 - Sollte als zentraler Event-Bus fungieren
 - Muss thread-safe sein für parallele Requests
 - Sollte Retry-Mechanismen für fehlgeschlagene Actions haben
 - Muss Device-State persistent speichern können
 - Muss alle Services koordinieren können
 - Sollte robustes Error-Handling haben
-- **Muss Provider Selection Service haben**: Teil von Odin
+- **Muss Skuld-Integration haben**: Nutzt Skuld für LLM-Auswahl (muss auf allen Devices installiert sein)
+- **Muss Netzwerkplan-Erstellung haben**: Erstellt Netzwerkplan (on the fly, mit Cache)
+- **Muss Vedrfolnir-Integration haben**: Nutzt Vedrfolnir für Yggdrasil-Kommunikation
+- **Muss Ratatoskr-Protocol unterstützen**: Für Business-Logik-Kommunikation mit Yggdrasil
 - **Muss Settings Management haben**: Verwaltung von User-Settings
-- **Muss Scoring Engine haben**: Berechnung von Provider-Scores
-- **Muss Selection Logic haben**: Auswahl-Logik für Provider
-- **Muss Quality-Messung nach jedem Request haben**: Für Provider-Quality-Metriken
 - **Muss periodische Tests haben**: Für Quality-Metriken
 - **Muss gewichteten Durchschnitt haben**: Neuere Requests höheres Gewicht
 - **Muss automatische Bewertung haben**: Für Quality-Metriken

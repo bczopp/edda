@@ -2,7 +2,7 @@
 
 ## Übersicht
 
-Ragnarok ist ein Terminal-basierter Agent für Coding und Device-Steuerung. Er bietet die gleichen Features wie Midgard/Alfheim, jedoch ohne Frontend - alles über die CLI. Ragnarok umgeht Odin und Thor und kommuniziert direkt mit Brünhild (Valkyries).
+Ragnarok ist ein Terminal-basierter Agent für Coding und Device-Steuerung. Er bietet die gleichen Features wie Midgard/Alfheim/Asgard, nutzt aber eine TUI (Terminal User Interface) statt eines GUI-Frontends. Ragnarok nutzt Odin wie die anderen Projekte - der einzige Unterschied ist die TUI statt GUI.
 
 ## Zielplattformen
 
@@ -14,23 +14,35 @@ Ragnarok ist ein Terminal-basierter Agent für Coding und Device-Steuerung. Er b
 
 ```
 ragnarok/
+├── Cargo.toml
 ├── src/
-│   ├── cli/              # CLI Interface
-│   │   ├── main.ts
-│   │   ├── commands/
-│   │   └── prompts/
-│   ├── agents/           # Agent Integration
-│   │   ├── brünhild/     # Direkte Brünhild-Integration
-│   │   └── valkyries/    # Alle Valkyries
-│   ├── services/         # Service Integrations
-│   │   ├── huginn/       # STT Service (optional)
-│   │   ├── muninn/       # TTS Service (optional)
-│   │   ├── freki/        # RAG Service
-│   │   ├── geri/         # LLM Service
-│   │   └── network/      # Optional: Heimnetz-Verbindung
-│   ├── model/            # Model Management
-│   │   ├── llama.cpp/    # llama.cpp Integration
-│   │   └── config/
+│   ├── main.rs          # Main Application
+│   ├── lib.rs
+│   ├── odin/            # Odin Service Integration
+│   ├── tui/             # Terminal User Interface (TUI)
+│   │   ├── components/
+│   │   │   ├── chat.rs  # Chat-Interface
+│   │   │   ├── status.rs # Status-Anzeige
+│   │   │   ├── history.rs # History-View
+│   │   │   └── config.rs # Config-View
+│   │   ├── input.rs     # Input-Handling
+│   │   └── renderer.rs  # TUI Renderer
+│   ├── services/        # Service Integrations
+│   │   ├── huginn.rs    # STT Service (optional)
+│   │   ├── muninn.rs    # TTS Service (optional)
+│   │   ├── freki.rs     # RAG Service
+│   │   ├── geri.rs      # LLM Service
+│   │   ├── thor.rs      # Action Executor
+│   │   └── network.rs   # Optional: Heimnetz-Verbindung
+│   ├── actions/         # Action Handlers
+│   │   ├── device.rs
+│   │   ├── file.rs
+│   │   ├── network.rs
+│   │   ├── application.rs
+│   │   └── system.rs
+│   ├── model/           # Model Management
+│   │   ├── llama_cpp.rs # llama.cpp Integration (FFI)
+│   │   └── config.rs
 │   └── utils/
 ├── config/
 ├── models/              # Mitgeliefertes Model
@@ -41,21 +53,43 @@ ragnarok/
 
 ### Core Features
 
-- **Terminal-basiert**: Vollständige Funktionalität über CLI, kein Frontend
-- **Direkte Brünhild-Kommunikation**: Umgeht Odin und Thor, spricht direkt mit Brünhild
-- **Coding-Agent**: Vollständige Coding-Funktionalität über Valkyries
-- **Device-Steuerung**: Kann das Device steuern, auf dem es installiert ist
+- **Terminal-basiert**: Vollständige Funktionalität über TUI (Terminal User Interface)
+- **Nutzt Odin**: Ragnarok nutzt Odin wie Midgard/Alfheim/Asgard - gleiche Architektur
+- **TUI statt GUI**: Einziger Unterschied zu anderen Projekten: TUI statt GUI-Frontend
+- **Coding-Agent**: Vollständige Coding-Funktionalität über Valkyries (via Odin → Thor → Brünnhilde)
+- **Device-Steuerung**: Kann das Device steuern, auf dem es installiert ist (via Odin → Thor)
 - **Claude Code Features**: Alle aktuellsten Features von Claude Code
 - **Cursor Debug-Mode**: Support für Cursor Debug-Mode Features, möglicherweise verbessert
 
+### TUI (Terminal User Interface)
+
+**TUI als Frontend:**
+- **Chat-Interface**: Interaktives Chat-Interface für Commands und Responses
+- **Status-Anzeige**: Live-Status von laufenden Tasks und Services
+- **History-View**: Anzeige der Command-History
+- **Config-View**: Konfigurations-Interface
+- **Input-Handling**: Text-Input und Keyboard-Navigation
+- **Renderer**: TUI-Rendering-Engine (z.B. mit Ink, Blessed, oder ähnlich)
+
+**TUI-Features:**
+- **Text-Input**: User kann Commands als Text eingeben
+- **Voice-Input**: Optional Voice-Input via Huginn (STT)
+- **Live-Updates**: Live-Updates während Task-Ausführung
+- **Multi-Panel**: Mehrere Panels für Chat, Status, History gleichzeitig
+- **Keyboard-Navigation**: Vollständige Keyboard-Navigation
+- **Responsive**: Passt sich Terminal-Größe an
+
 ### Service Integration
 
-#### Direkte Service-Kommunikation
-- **Brünhild**: Direkte Kommunikation (Odin/Thor umgangen)
+**Gleiche Architektur wie Midgard/Alfheim/Asgard:**
+- **Odin**: Hauptprozess - koordiniert alle Services
+- **Thor**: Action Executor und Tool-Calling-Agent
+- **Brünnhilde (Valkyries)**: Coding-Agent (via Thor)
 - **Huginn & Muninn**: STT/TTS Service (optional, für Voice-Commands)
 - **Freki**: RAG Service für Context-Enrichment
 - **Geri**: LLM Service für Prompt-Processing
-- **Alle Valkyries**: Frontend, Backend, Test, Docs Agents
+- **Bifrost**: Communication Service (optional, für Heimnetz)
+- **Heimdall**: Security Service (optional, für Heimnetz)
 
 #### Optional: Heimnetz-Verbindung
 - **Optional**: User kann optional Verbindung zum Heimnetz aufbauen
@@ -81,7 +115,7 @@ ragnarok/
 #### Model-Anbindung
 - **llama.cpp**: Primäre Anbindung über llama.cpp für minimale Overhead
 - **Direkte Anbindung**: So wenig Overhead wie möglich
-- **Schnelle Sprache**: Implementierung in schneller Sprache (TypeScript/Node.js mit nativen Bindings)
+- **Rust**: Implementierung in Rust (wie alle anderen Services)
 
 ### Claude Code & Cursor Features
 
@@ -97,72 +131,87 @@ ragnarok/
 - **Error-Debugging**: Intelligentes Error-Debugging und -Behebung
 - **Step-by-Step Execution**: Step-by-Step Code-Execution mit Debugging
 
-## CLI Interface
+## TUI Interface
 
-### Commands
+### TUI-Komponenten
 
-- `ragnarok init` - Initialize Ragnarok in project
-- `ragnarok task <description>` - Execute coding task
-- `ragnarok device <command>` - Device control command
-- `ragnarok config` - Configure Ragnarok (Model, Services, etc.)
-- `ragnarok status` - Check current status
-- `ragnarok history` - View task history
-- `/network connect` - Optional: Verbindung zum Heimnetz aufbauen
-- `/network disconnect` - Optional: Heimnetz-Verbindung trennen
-- `/network status` - Optional: Status der Heimnetz-Verbindung
+**Chat-Interface:**
+- **Text-Input**: User kann Commands als Text eingeben
+- **Voice-Input**: Optional Voice-Input via Huginn (STT)
+- **Response-Display**: Anzeige von Responses und Task-Ergebnissen
+- **Live-Updates**: Live-Updates während Task-Ausführung
+
+**Status-Panel:**
+- **Service-Status**: Status aller Services (Odin, Thor, Geri, etc.)
+- **Task-Status**: Status laufender Tasks
+- **Progress-Bars**: Fortschrittsanzeigen für Tasks
+
+**History-Panel:**
+- **Command-History**: Anzeige der Command-History
+- **Task-History**: Anzeige der Task-History
+- **Scrollable**: Scrollbare History-Ansicht
+
+**Config-Panel:**
+- **Model-Konfiguration**: Konfiguration von LLM-Modellen
+- **Service-Konfiguration**: Konfiguration von Services
+- **Network-Konfiguration**: Konfiguration für Heimnetz-Verbindung
+
+### Keyboard-Shortcuts
+
+- `Ctrl+C`: Programm beenden
+- `Tab`: Zwischen Panels wechseln
+- `Enter`: Command senden
+- `Esc`: Panel schließen
+- `Ctrl+L`: Chat leeren
+- `Ctrl+H`: History anzeigen
+- `Ctrl+C`: Config öffnen
 
 ### Example Usage
 
 ```bash
-# Initialize in project
-ragnarok init
+# Start Ragnarok (öffnet TUI)
+ragnarok
 
-# Execute coding task
-ragnarok task "Add user authentication with JWT"
-
-# Device control
-ragnarok device "list running processes"
-
-# Configure model
-ragnarok config --model local:llama-3.1-8b
-ragnarok config --model api:openai --api-key <key> --url <url>
-
-# Optional: Connect to home network
-/network connect
-
-# Check status
-ragnarok status
+# In der TUI:
+# - Text-Input für Commands
+# - Live-Status-Anzeige
+# - History-View
+# - Config-View
 ```
 
 ## Service-Architektur
 
-### Direkte Kommunikation
+### Architektur (gleich wie Midgard/Alfheim/Asgard)
 
 ```
-User (CLI)
+User (TUI)
   ↓
-Brünhild (Valkyries)
+Odin (Main Process)
   ↓
 ├── Geri (LLM) ← Freki (RAG)
 ├── Huginn (STT, optional)
 ├── Muninn (TTS, optional)
-└── Valkyries (Frontend, Backend, Test, Docs)
+├── Thor (Action Executor)
+│   ↓
+│   ├── Brünnhilde (Valkyries)
+│   │   ↓
+│   │   └── Valkyries (Frontend, Backend, Test, Docs)
+│   │       ↓
+│   │   └── Strukturierte Ergebnisse zurück an Thor
+│   ↓
+│   └── Tool-Calling: FILE_OPERATION, SYSTEM_COMMAND, etc.
+├── Bifrost (optional, für Heimnetz)
+└── Heimdall (optional, für Security)
 ```
 
-### Optional: Heimnetz-Integration
+### Unterschied zu Midgard/Alfheim/Asgard
 
-```
-User (CLI)
-  ↓
-Brünhild (Valkyries)
-  ↓
-├── Geri (LLM) ← Freki (RAG)
-├── Huginn (STT, optional)
-├── Muninn (TTS, optional)
-├── Valkyries (Frontend, Backend, Test, Docs)
-└── Bifrost (optional) → Heimnetz
-    └── Heimdall (optional) → Security
-```
+**Einziger Unterschied: TUI statt GUI-Frontend**
+
+- **Midgard/Alfheim/Asgard**: GUI-Frontend (React, Native UI, etc.)
+- **Ragnarok**: TUI-Frontend (Terminal User Interface)
+- **Gleiche Architektur**: Beide nutzen Odin, Thor, Brünnhilde, etc.
+- **Gleiche Features**: Beide haben die gleichen Features, nur unterschiedliche UI
 
 ## LLM-Konfiguration
 
@@ -201,7 +250,7 @@ Brünhild (Valkyries)
 
 ### Performance-Optimierungen
 - **Schlankes Design**: Optimiert, damit es den Computer nicht lahmlegt
-- **Schnelle Sprache**: Implementierung in schneller Sprache (TypeScript/Node.js mit nativen Bindings)
+- **Rust**: Implementierung in Rust (wie alle anderen Services)
 - **Minimaler Overhead**: Direkte Model-Anbindung über llama.cpp
 - **Resource-Management**: Intelligentes Resource-Management für optimale Performance
 - **Lazy Loading**: Model wird nur geladen, wenn benötigt
@@ -244,14 +293,17 @@ Brünhild (Valkyries)
 
 ## Abhängigkeiten
 
-- **Edda Core Library**: DTOs, Protocols, Utils
-- **Brünhild (Valkyries)**: Direkte Integration (Odin/Thor umgangen)
+- **Edda Core Library**: DTOs, Protocols, Utils (Go)
+- **Odin**: Main Process Service (wie Midgard/Alfheim/Asgard)
+- **Thor**: Action Executor und Tool-Calling-Agent
+- **Brünnhilde (Valkyries)**: Coding-Agent (via Thor)
 - **Geri**: LLM Service
 - **Freki**: RAG Service
 - **Huginn & Muninn**: STT/TTS Service (optional)
-- **llama.cpp**: Für Model-Anbindung
-- **Bifrost**: Für optionale Heimnetz-Verbindung
-- **Heimdall**: Für optionale Security (wenn Heimnetz verbunden)
+- **Bifrost**: Communication Service (optional, für Heimnetz)
+- **Heimdall**: Security Service (optional, für Heimnetz)
+- **TUI Library**: ratatui (tui-rs), crossterm oder ähnlich (Rust TUI Libraries)
+- **llama.cpp**: Für Model-Anbindung (FFI-Bindings, optional wenn lokales Model genutzt wird)
 - Git Library
 - File System APIs
 - Execution Environment
@@ -259,13 +311,16 @@ Brünhild (Valkyries)
 
 ## Integration
 
-- **Brünhild**: Direkte Kommunikation (Odin/Thor umgangen)
+- **Odin**: Main Process Service (wie Midgard/Alfheim/Asgard)
+- **Thor**: Action Executor und Tool-Calling-Agent
+- **Brünnhilde (Valkyries)**: Coding-Agent (via Thor)
 - **Valkyries**: Alle Valkyries (Frontend, Backend, Test, Docs)
 - **Geri**: LLM Service für Prompt-Processing
 - **Freki**: RAG Service für Context-Enrichment
 - **Huginn & Muninn**: STT/TTS Service (optional)
 - **Bifrost**: Optional für Heimnetz-Verbindung
 - **Heimdall**: Optional für Security (wenn Heimnetz verbunden)
+- **TUI**: Terminal User Interface (statt GUI-Frontend)
 - **Gemeinsame Pakete**: Nutzt die gleichen Pakete wie andere Projekte
 
 ## Device Interconnection (Phase 2) - Optional
@@ -370,10 +425,12 @@ Brünhild (Valkyries)
 
 ## Implementierungs-Notizen
 
-- **Gemeinsame Programmiersprache**: Sollte in der gleichen Sprache wie andere Projekte geschrieben sein (TypeScript/Node.js)
-- **Gemeinsame Pakete**: Sollte die gleichen Pakete wie andere Projekte nutzen
-- **Terminal-basiert**: Vollständig über CLI, kein Frontend
-- **Direkte Brünhild-Kommunikation**: Umgeht Odin und Thor
+- **Programmiersprache**: Rust (wie alle anderen Services)
+- **TUI Library**: ratatui (tui-rs), crossterm oder ähnlich (Rust TUI Libraries)
+- **Terminal-basiert**: Vollständig über TUI, kein GUI-Frontend
+- **Nutzt Odin**: Gleiche Architektur wie Midgard/Alfheim/Asgard
+- **TUI statt GUI**: Einziger Unterschied: TUI-Frontend statt GUI-Frontend
+- **Performance**: Rust für maximale Performance und Memory-Safety
 - **Mitgeliefertes Model**: Sehr gutes, freies Tool-Calling Model (Llama 3.1 8B oder ähnlich)
 - **llama.cpp Integration**: Direkte Anbindung über llama.cpp für minimale Overhead
 - **Schlank**: Optimiert, damit es den Computer nicht lahmlegt

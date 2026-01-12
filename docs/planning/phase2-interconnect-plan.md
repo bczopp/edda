@@ -55,12 +55,13 @@ Phase 2 implementiert die grundlegende Device-to-Device-Kommunikation. Devices k
 
 ### Device Discovery & Connection
 
+**Lokale Verbindung (ohne Yggdrasil):**
 1. **Device A möchte sich mit Device B verbinden**
-   - Device A sendet Discovery-Request
+   - Device A sendet Discovery-Request (mDNS/Bonjour)
    - Device B antwortet mit Device-Identity
 
 2. **Connection Establishment**
-   - Device A initiiert Bifrost-Connection
+   - Device A initiiert Bifrost-WebSocket-Verbindung
    - Heimdall validiert beide Device-Identities
    - TLS-Handshake wird durchgeführt
    - Connection wird etabliert
@@ -69,6 +70,26 @@ Phase 2 implementiert die grundlegende Device-to-Device-Kommunikation. Devices k
    - Device A kann Messages an Device B senden
    - Device B kann Messages an Device A senden
    - Messages werden über Bifrost geroutet
+
+**Globale Verbindung (über Yggdrasil mit Bifrost):**
+1. **Device A möchte sich mit Device B verbinden**
+   - Device A sendet Bifrost-Message an Yggdrasil: "Möchte mich mit Device B verbinden"
+   - Yggdrasil sendet Bifrost-Message an Device B: "Device A möchte sich verbinden"
+   - Device B antwortet über Bifrost (Allow/Deny)
+   - Bei Allow: Yggdrasil informiert Device A über Bifrost
+
+2. **Connection Establishment**
+   - Device A initiiert Bifrost-WebSocket-Verbindung (direkt oder über Yggdrasil-Relay)
+   - Heimdall validiert beide Device-Identities
+   - TLS-Handshake wird durchgeführt
+   - Connection wird etabliert
+   - Yggdrasil sendet Bifrost-Message: "Connection Established"
+
+3. **Device Communication**
+   - Device A kann Messages an Device B senden
+   - Device B kann Messages an Device A senden
+   - Messages werden über Bifrost geroutet
+   - Persistente WebSocket-Verbindung für Echtzeit-Kommunikation
 
 ### Cross-Device Action Execution
 

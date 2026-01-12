@@ -48,25 +48,39 @@ Bifrost ist der Secure WebSocket Service für Inter-Device Communication. Er erm
 
 ### Connection Establishment
 
+**Connection Establishment über Bifrost**
+
 1. **Device Discovery**
    - Device sucht nach anderen Devices im Netzwerk
    - Lokale Discovery (mDNS/Bonjour)
    - Globale Discovery über Yggdrasil
 
-2. **Connection Request**
-   - Device sendet Connection-Request
+2. **Connection-Initiation über Bifrost (wenn über Yggdrasil)**
+   - Device A möchte sich mit Device B verbinden
+   - Device A sendet Bifrost-Message an Yggdrasil: "Möchte mich mit Device B verbinden"
+   - Yggdrasil sendet Bifrost-Message an Device B: "Device A möchte sich verbinden"
+   - Device B antwortet über Bifrost (Allow/Deny)
+   - Bei Allow: Yggdrasil informiert Device A über Bifrost
+
+3. **Bifrost Connection Request**
+   - Device A initiiert Bifrost-WebSocket-Verbindung (direkt oder über Yggdrasil-Relay)
    - Heimdall validiert Request
    - Bei Allow: Verbindung wird etabliert
 
-3. **TLS Handshake**
+4. **TLS Handshake**
    - TLS-Verschlüsselung wird etabliert
    - Keys werden ausgetauscht
    - Verbindung ist verschlüsselt
 
-4. **Connection Established**
-   - Verbindung ist aktiv
+5. **Connection Established**
+   - WebSocket-Verbindung ist aktiv
    - Messages können gesendet werden
    - Heartbeat wird regelmäßig gesendet
+   - Yggdrasil sendet Bifrost-Message: "Connection Established"
+
+**Alternative: Direkte Verbindung (ohne Yggdrasil)**
+- Devices im lokalen Netzwerk können sich direkt verbinden
+- Direkter Bifrost-WebSocket-Aufbau
 
 ### Message Routing
 
@@ -78,6 +92,8 @@ Bifrost ist der Secure WebSocket Service für Inter-Device Communication. Er erm
 2. **Routing**
    - Direkte Verbindung: Message wird direkt gesendet
    - Relay: Message wird über Asgard/Yggdrasil geroutet
+     - **Yggdrasil als Relay**: Yggdrasil hält Bifrost-Verbindungen zu Devices und routet Messages
+     - **Persistente Verbindungen**: Yggdrasil hat persistente Bifrost-WebSocket-Verbindungen zu allen registrierten Devices
    - Broadcast: Message wird an alle Devices gesendet
 
 3. **Message Delivery**
@@ -97,7 +113,12 @@ Bifrost ist der Secure WebSocket Service für Inter-Device Communication. Er erm
 - **Odin**: Koordiniert Bifrost für Inter-Device Communication
 - **Heimdall**: Validiert alle Connections über Bifrost
 - **Asgard**: Kann als Relay fungieren
-- **Yggdrasil**: Kann als Relay fungieren und für globale Discovery
+- **Yggdrasil**: 
+  - **Bifrost-Relay**: Yggdrasil baut Bifrost-WebSocket-Verbindungen zu Devices auf
+  - **Persistente Verbindungen**: Yggdrasil hält persistente Bifrost-Verbindungen zu allen registrierten Devices
+  - **Message-Routing**: Yggdrasil routet Messages zwischen Devices über Bifrost
+  - **Globale Discovery**: Yggdrasil unterstützt globale Device-Discovery
+  - **Event-Notifications**: Alle Events werden über Bifrost-Messages gesendet
 - **Alle Devices**: Midgard, Alfheim, Asgard verwenden Bifrost für Kommunikation
 
 ## Datenschutz

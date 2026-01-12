@@ -55,13 +55,27 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 - **Deadlock Detection**: Erkennt und löst Deadlocks auf (Timeout + Detection)
 - **System-Priority mit User-Override**: System bestimmt Priorität, User kann überschreiben
 
-### 6. Coding Task Recognition & Delegation
-- **Erkennung**: Thor erkennt automatisch, ob es sich um eine Coding-Aufgabe handelt
-- **User kann explizit angeben**: User kann auch explizit angeben, dass es eine Coding-Aufgabe ist
-- **Weiterleitung**: Thor legt Task in Queue für Brünhild (Valkyries)
-- **Ergebnis**: Thor erhält Ergebnis von Brünhild aus Queue und gibt es an Odin zurück
+### 6. Tool-Calling-Agent (Kernfunktion)
+- **Thor ist der Tool-Calling-Agent**: Thor entscheidet, welche Actions ausgeführt werden müssen
+- **Ergebnis-Analyse**: Thor analysiert strukturierte Ergebnisse von Brünnhilde (Valkyries) oder Frigg
+- **Action-Erkennung**: Thor erkennt automatisch, welche Actions nötig sind:
+  - Datei-Änderungen → `FILE_OPERATION` Actions
+  - System-Commands → `SYSTEM_COMMAND` Actions
+  - Network-Requests → `NETWORK_OPERATION` Actions
+  - Device-Control → `DEVICE_CONTROL` Actions
+- **Action-Ausführung**: Thor führt erkannte Actions aus (via Mjölnir)
+- **Response-Generierung**: Thor erstellt Text-Responses für Odin basierend auf Action-Results
 
-### 7. Healthcare Task Recognition & Delegation
+### 7. Coding Task Recognition & Delegation
+- **Erkennung**: Thor erkennt automatisch, ob es sich um eine Coding-Aufgabe handelt
+- **User kann explizit angeben**: User kann auch explizit angeben, dass es eine Coding-Aufgabe ist (macht Erkennung einfacher)
+- **Weiterleitung**: Thor legt Task in Queue für Brünnhilde (Valkyries)
+- **Strukturierte Ergebnisse**: Thor erhält strukturiertes `ValkyrieResult` von Brünnhilde
+- **Ergebnis-Analyse**: Thor analysiert `ValkyrieResult` und erkennt Actions (Datei-Änderungen, Commands, etc.)
+- **Action-Ausführung**: Thor führt erkannte Actions aus
+- **Ergebnis-Rückgabe**: Thor gibt `ThorResult` an Odin zurück (mit Text-Response und Action-Results)
+
+### 8. Healthcare Task Recognition & Delegation
 - **Erkennung**: Thor erkennt automatisch, ob es sich um eine Healthcare-Aufgabe handelt
 - **User kann explizit anfordern**: User kann auch explizit Frigg anfordern oder eine Behandlung starten wollen
 - **Weiterleitung**: Thor legt Task in Queue für Frigg
@@ -77,8 +91,10 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 
 ### Outputs
 - `ThorResult` mit Status, Result, Error, Execution Time
-- **Coding Results**: Thor erhält Ergebnisse von Brünhild und gibt sie an Odin zurück
-- **Healthcare Results**: Thor erhält Ergebnisse von Frigg und gibt sie an Odin zurück
+- **Text-Response**: Text-Response für Odin (basierend auf Agent-Ergebnissen)
+- **Action-Results**: Ergebnisse der ausgeführten Actions (File-Operations, System-Commands, etc.)
+- **Coding Results**: Thor analysiert `ValkyrieResult` von Brünnhilde, führt Actions aus, gibt `ThorResult` an Odin zurück
+- **Healthcare Results**: Thor analysiert Ergebnisse von Frigg, führt Actions aus, gibt `ThorResult` an Odin zurück
 
 ## Action Types
 
@@ -108,11 +124,14 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 - System Configuration
 
 ### CODING_TASK
-- **Coding-Aufgaben**: Thor erkennt Coding-Aufgaben und leitet sie an Brünhild (Valkyries) weiter
+- **Coding-Aufgaben**: Thor erkennt Coding-Aufgaben und leitet sie an Brünnhilde (Valkyries) weiter
 - **Erkennung**: Thor erkennt automatisch, ob es sich um eine Coding-Aufgabe handelt
 - **User kann explizit angeben**: User kann auch explizit angeben, dass es eine Coding-Aufgabe ist (macht Erkennung einfacher)
-- **Weiterleitung**: Thor legt Task in Queue für Brünhild
-- **Ergebnis**: Thor erhält Ergebnis von Brünhild aus Queue und gibt es an Odin zurück
+- **Weiterleitung**: Thor legt Task in Queue für Brünnhilde
+- **Strukturierte Ergebnisse**: Thor erhält strukturiertes `ValkyrieResult` von Brünnhilde
+- **Tool-Calling**: Thor analysiert `ValkyrieResult` und erkennt Actions (Datei-Änderungen, Commands, etc.)
+- **Action-Ausführung**: Thor führt erkannte Actions aus
+- **Ergebnis**: Thor gibt `ThorResult` an Odin zurück (mit Text-Response und Action-Results)
 
 ### HEALTHCARE_TASK
 - **Healthcare-Aufgaben**: Thor erkennt Healthcare-Aufgaben und leitet sie an Frigg weiter
@@ -385,6 +404,11 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 
 ## Implementierungs-Notizen
 
+**Programmiersprache:**
+- **Rust**: Für maximale Performance, Memory-Safety ohne GC, moderne Tooling, Cross-compilation
+- **TypeScript nur im Frontend**: Nur GUI-Frontends (Midgard/Alfheim) nutzen TypeScript
+
+**Technische Anforderungen:**
 - Sollte Plugin-Architektur für verschiedene Action-Types haben
 - Muss Sandboxing für unsichere Actions unterstützen
 - Sollte parallele Execution mit Resource-Limits haben
@@ -393,7 +417,7 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 - Muss Integration mit System-Security haben
 - Muss Coding-Aufgaben erkennen können (automatisch + explizit)
 - Muss Healthcare-Aufgaben erkennen können (automatisch + explizit)
-- Muss Queue-System für Brünhild und Frigg haben
+- Muss Queue-System für Brünnhilde und Frigg haben
 - Muss prüfen, ob Valkyries/Frigg verfügbar sind
 - Muss Task-Queue-Management haben (Enqueue, Dequeue, Status-Tracking)
 - **Muss Hybrid-Locking unterstützen**: Lokal für lokale Resources, Distributed für geteilte Resources

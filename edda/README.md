@@ -9,36 +9,47 @@ Das Edda-Projekt enthält die Kern-Bibliothek mit allen gemeinsamen DTOs, Protoc
 ```
 edda/
 ├── dtos/              # Data Transfer Objects
-│   ├── device_identity.ts
-│   ├── raven_message.ts
-│   ├── wolf_request.ts
-│   ├── thor_action.ts
-│   ├── heimdall_token.ts
-│   ├── marketplace.ts
-│   ├── valkyrie_task.ts
-│   ├── healthcare.ts
-│   ├── bifrost_connection.ts
-│   └── index.ts
+│   ├── go/            # Go Implementation
+│   │   ├── device_identity.go
+│   │   ├── raven_message.go
+│   │   ├── thor_action.go
+│   │   └── ...
+│   ├── rust/          # Rust Implementation
+│   │   ├── device_identity.rs
+│   │   ├── raven_message.rs
+│   │   ├── thor_action.rs
+│   │   └── ...
+│   ├── elixir/        # Elixir Implementation
+│   │   ├── device_identity.ex
+│   │   ├── raven_message.ex
+│   │   ├── thor_action.ex
+│   │   └── ...
+│   └── typescript/    # TypeScript (nur für Frontends)
+│       ├── device_identity.ts
+│       ├── raven_message.ts
+│       └── ...
 ├── protocols/         # Communication Protocols
 │   ├── bifrost/
-│   │   ├── protocol.ts
-│   │   ├── message.ts
-│   │   └── connection.ts
+│   │   ├── protocol.proto  # Protobuf Definition
+│   │   ├── go/
+│   │   ├── rust/
+│   │   ├── elixir/
+│   │   └── typescript/
 │   ├── jotnar/
-│   │   ├── toolcalling.ts
-│   │   ├── messagepack.ts
-│   │   └── streaming.ts
-│   └── index.ts
+│   │   ├── toolcalling.proto
+│   │   ├── messagepack/
+│   │   └── streaming/
+│   └── ...
 ├── utils/             # Shared Utilities
-│   ├── logger.ts
-│   ├── crypto.ts
-│   ├── validation.ts
-│   ├── serialization.ts
-│   └── index.ts
-└── services/           # Service Interfaces (optional)
-    ├── odin.ts
-    ├── thor.ts
-    └── index.ts
+│   ├── go/
+│   ├── rust/
+│   ├── elixir/
+│   └── typescript/
+└── services/           # Service Interfaces
+    ├── go/
+    ├── rust/
+    ├── elixir/
+    └── typescript/
 ```
 
 ## Komponenten
@@ -64,6 +75,17 @@ Alle DTOs sind bereits im Plan definiert:
 - Message Routing
 - Connection Management
 - Device Discovery
+- Für Device-zu-Device-Kommunikation (lokal und global)
+
+#### Ratatoskr Protocol
+- Secure WebSocket-basiert (zusätzlich zu Bifrost)
+- TLS 1.3 Encryption
+- Message-Signierung
+- Audit-Logging
+- Rate-Limiting
+- Request-Validation
+- Für Yggdrasil Business-Logik (Marketplace, Payments, Provider-Registrierung)
+- Nicht direkt nach außen (sicherer als Bifrost für lokale Nutzung)
 
 #### Jötnar Toolcalling Protocol
 - MessagePack-basiert (Binary)
@@ -100,9 +122,18 @@ Alle DTOs sind bereits im Plan definiert:
 ## Technologie-Stack
 
 ### Programmiersprache
-- **TypeScript/Node.js**: Alle Projekte werden in TypeScript/Node.js geschrieben
-- **Gemeinsame Basis**: Alle Projekte nutzen die gleiche Programmiersprache für Konsistenz und Wiederverwendbarkeit
+
+**Sprachverteilung:**
+- **TypeScript**: Nur in GUI-Frontends (Midgard/Alfheim Frontend-Komponenten)
+- **Rust**: Für alle Services (Odin, Thor, Freki, Geri, Huginn, Muninn, Bifrost, Heimdall, Ragnarok, Jötnar, Skuld, Vedrfolnir)
+  - **Warum Rust**: Maximale Performance, Memory-Safety ohne GC, moderne Tooling, Cross-compilation
+- **Elixir**: Für Yggdrasil (Millionen Verbindungen, Bifrost-Relay, Erlang VM)
 - **Native Bindings**: Für Performance-kritische Teile (z.B. llama.cpp) werden native Bindings verwendet
+
+**Gemeinsame Basis:**
+- **Edda Core Library**: DTOs, Protocols, Utils in mehreren Sprachen (Rust/Elixir/TypeScript-Bindings)
+- **Protobuf/MessagePack**: Für plattformübergreifende Kommunikation
+- **JSON**: Für Konfiguration und einfache Datenstrukturen
 
 ### Gemeinsame Pakete
 - **Edda Core Library**: Alle Projekte nutzen die Edda Core Library (DTOs, Protocols, Utils)

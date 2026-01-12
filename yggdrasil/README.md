@@ -4,7 +4,26 @@
 
 Yggdrasil ist der Main Server, der von der Company kontrolliert wird. Er erweitert Asgard um globale Features und stellt die zentrale Infrastruktur für das globale Edda-Netzwerk bereit. Yggdrasil ist nicht von Usern selbst hostbar.
 
-**Wichtig**: Yggdrasil basiert auf Asgard und erweitert es um:
+**Programmiersprache: Elixir (Erlang VM/BEAM)**
+- **Warum Elixir**: Yggdrasil muss Millionen von gleichzeitigen Bifrost-Verbindungen koordinieren
+- **Erlang VM**: BEAM ist speziell für massive Concurrency und Fault Tolerance designed
+- **Phoenix Channels**: Elixir/Phoenix ist perfekt für WebSocket-Verbindungen (Bifrost)
+- **Skalierbarkeit**: Kann Millionen von Devices gleichzeitig über Bifrost verbinden
+- **Fault Tolerance**: Eingebaute Fault Tolerance durch Erlang VM
+
+**Rust-Microservices für CPU-intensive Tasks:**
+- **Mimir (Mímisbrunnr)**: Privacy Database Service (Rust)
+- **Nornen (Urd, Verdandi)**: Decision Service (Rust)
+- **Nidhöggr**: Connection Endpoint & Message Receiver (Rust)
+- **Heidrun**: Token & Pricing (Rust)
+- **Eikthyrnir**: Quality Assessment (Rust)
+- **Die vier Hirsche**: Data Management (Rust)
+
+**Ratatoskr-Protocol**: Business-Protocol für Yggdrasil-Kommunikation (zusätzlich zu Bifrost)
+
+**Wichtig**: Yggdrasil ist ein eigenständiger Server ohne eigenen Odin. User-Devices (Midgard/Alfheim/Asgard) haben eigene Odin-Instanzen, die direkt mit Yggdrasil kommunizieren.
+
+Yggdrasil erweitert Asgard um:
 - Globale Device-Registry (weltweit)
 - User-Management und Subscriptions
 - Payment-Integration
@@ -17,37 +36,47 @@ Yggdrasil ist der Main Server, der von der Company kontrolliert wird. Er erweite
 
 ```
 yggdrasil/
-├── src/
-│   ├── server/          # Server Core
-│   │   ├── main.ts
-│   │   ├── config/
-│   │   └── platform/
-│   ├── services/        # Server Services
-│   │   ├── device-registry/
-│   │   ├── user-management/
-│   │   ├── subscription/
-│   │   ├── payment/
-│   │   ├── marketplace/
-│   │   └── analytics/
-│   ├── api/            # API Endpoints
-│   │   ├── v1/
-│   │   │   ├── devices/
-│   │   │   ├── users/
-│   │   │   ├── subscriptions/
-│   │   │   ├── payments/
-│   │   │   └── marketplace/
-│   │   └── admin/
-│   ├── database/       # Database Layer
-│   │   ├── models/
-│   │   ├── migrations/
-│   │   └── queries/
-│   └── utils/
 ├── config/
-├── deployments/       # Deployment Configs
-│   ├── kubernetes/
-│   ├── docker/
-│   └── cloud/
-└── tests/
+│   ├── config.exs
+│   ├── dev.exs
+│   ├── prod.exs
+│   └── test.exs
+├── lib/
+│   ├── yggdrasil/
+│   │   ├── application.ex      # Application Entry Point
+│   │   ├── endpoint.ex         # Phoenix Endpoint
+│   │   └── repo.ex             # Ecto Repo
+│   ├── yggdrasil_web/
+│   │   ├── router.ex           # Phoenix Router
+│   │   ├── controllers/        # API Controllers
+│   │   │   ├── device_controller.ex
+│   │   │   ├── user_controller.ex
+│   │   │   ├── subscription_controller.ex
+│   │   │   ├── payment_controller.ex
+│   │   │   └── marketplace_controller.ex
+│   │   └── channels/           # Phoenix Channels (Bifrost & Ratatoskr WebSockets)
+│   │       ├── device_channel.ex    # Bifrost-Verbindungen zu Devices
+│   │       ├── relay_channel.ex    # Relay-Funktionalität
+│   │       └── ratatoskr_channel.ex # Ratatoskr-Protocol Verbindungen
+│   ├── yggdrasil/
+│   │   ├── device_registry/    # Device Registry Service
+│   │   ├── user_management/    # User Management Service
+│   │   ├── subscription/       # Subscription Service
+│   │   ├── payment/            # Payment Service
+│   │   ├── marketplace/        # Marketplace Service
+│   │   ├── bifrost/           # Bifrost-Relay Service
+│   │   │   ├── connection_manager.ex  # Bifrost-Verbindungen verwalten
+│   │   │   ├── message_router.ex     # Message-Routing über Bifrost
+│   │   │   └── relay.ex              # Relay-Funktionalität
+│   │   ├── ratatoskr/         # Ratatoskr-Protocol Service
+│   │   │   └── nidhoggr.ex          # Nidhöggr Connection Endpoint
+│   │   └── connection_manager/ # Connection Management (Millionen Verbindungen)
+│   └── yggdrasil/
+│       ├── schemas/            # Ecto Schemas
+│       └── migrations/         # Database Migrations
+├── test/
+├── mix.exs
+└── mix.lock
 ```
 
 ## Features
@@ -89,7 +118,34 @@ yggdrasil/
 - **Invoice Management**: Rechnungsverwaltung
 - **Refund Handling**: Rückerstattungen
 
-### 5. Marketplace Management (Phase 7)
+### 5. Bifrost-Relay-System
+
+**Bifrost-Funktionalität:**
+- **Yggdrasil baut Bifrost-Verbindungen auf**: Yggdrasil baut Bifrost-WebSocket-Verbindungen zu allen registrierten Devices auf
+- **Persistente Verbindungen**: Yggdrasil hält persistente Bifrost-Verbindungen zu allen registrierten Devices
+- **Connection-Initiation über Bifrost**: Devices verbinden sich über Bifrost, nicht über Webhooks
+- **Message-Routing**: Yggdrasil routet Messages zwischen Devices über Bifrost
+- **Relay-Funktion**: Wenn direkte Device-zu-Device-Verbindung nicht möglich, routet Yggdrasil Messages über Bifrost
+- **Event-Notifications**: Events werden über Bifrost-Messages gesendet (nicht über Webhooks)
+
+**Bifrost für Device-zu-Device-Verbindungen:**
+- **Workflow**: 
+  1. Device A registriert sich bei Yggdrasil (Bifrost-Verbindung wird etabliert)
+  2. Device A möchte sich mit Device B verbinden
+  3. Device A sendet Bifrost-Message an Yggdrasil: "Möchte mich mit Device B verbinden"
+  4. Yggdrasil sendet Bifrost-Message an Device B: "Device A möchte sich verbinden"
+  5. Device B antwortet über Bifrost (Allow/Deny)
+  6. Bei Allow: Bifrost-Verbindung zwischen Device A und Device B wird etabliert (direkt oder über Relay)
+  7. Persistente Kommunikation über Bifrost (WebSocket)
+
+**Yggdrasil als Bifrost-Relay:**
+- **Yggdrasil baut Bifrost-Verbindungen auf**: Yggdrasil kann Bifrost-WebSocket-Verbindungen zu Devices aufbauen
+- **Relay-Funktion**: Wenn direkte Device-zu-Device-Verbindung nicht möglich, routet Yggdrasil Messages über Bifrost
+- **Persistente Verbindungen**: Yggdrasil hält persistente Bifrost-Verbindungen zu allen registrierten Devices
+- **Message-Routing**: Yggdrasil kann Messages zwischen Devices über Bifrost routen
+- **Event-Notifications**: Alle Events werden über Bifrost-Messages gesendet
+
+### 6. Marketplace Management (Phase 7)
 
 Der Marketplace ermöglicht es Usern, ihre Hardware als Compute-Provider anzubieten und andere User können diese für LLM-Requests nutzen.
 
@@ -230,12 +286,179 @@ Der Marketplace ermöglicht es Usern, ihre Hardware als Compute-Provider anzubie
 - **Cost Analysis**: Kosten-Analyse
 - **Quality Metrics**: Quality-Metriken der verwendeten Provider
 
-### 6. Global Lock Management
+### 6. Ratatoskr-Protocol
+
+**Übersicht:**
+- **Neues WebSocket-basiertes Protocol** (zusätzlich zu Bifrost)
+- Speziell für Yggdrasil Business-Logik (Marketplace, Payments, Provider-Registrierung)
+- Extra Absicherung: zusätzliche Verschlüsselung, Audit-Logging, Rate-Limiting
+- Nicht direkt nach außen (sicherer als Bifrost für lokale Nutzung)
+
+**Protocol-Features:**
+- WebSocket-basiert (wie Bifrost)
+- TLS 1.3 Encryption
+- Zusätzliche Security-Layer:
+  - Message-Signierung
+  - Audit-Logging
+  - Rate-Limiting
+  - Request-Validation
+
+**Message-Types:**
+- `BUSINESS_REQUEST`: Business-Transaktionen
+- `MARKETPLACE_REQUEST`: Marketplace-Operationen
+- `PAYMENT_REQUEST`: Payment-Operationen
+- `PROVIDER_REGISTRATION`: Provider-Registrierung
+- `HEARTBEAT`: Keep-Alive
+- `DISCONNECT`: Verbindung beenden
+
+**Unterschied zu Bifrost:**
+- Bifrost: Device-zu-Device-Kommunikation (lokal und global)
+- Ratatoskr: Business-Logik-Kommunikation (nur Yggdrasil, extra abgesichert)
+
+### 7. Rust-Microservices (Wesen am Weltenbaum)
+
+Yggdrasil koordiniert mehrere Rust-Microservices für CPU-intensive Berechnungen. Diese Services kommunizieren über gRPC mit Yggdrasil.
+
+#### Mimir (Mímisbrunnr) - Privacy Database Service
+
+**Mythologische Bedeutung**: Mimir ist der Wächter des Brunnens Mímisbrunnr (Brunnen der Weisheit). Der Brunnen selbst ist die Datenbank.
+
+**Programmiersprache**: Rust
+
+**Aufgaben:**
+- **Privacy Database Service**: Eigene, isolierte Datenbank für personenbezogene Daten
+- **Extra Sicherheitsschicht**: Verschlüsselung, Access Control, Audit-Logging
+- **GDPR-Compliance**: Vollständige Einhaltung der GDPR-Anforderungen
+- **Query-Optimierung**: Optimierte Datenbankabfragen
+- **Connection-Pooling**: Effizientes Connection-Pooling
+- **Transaction-Management**: Verwaltung von Datenbank-Transactions
+- **Database-Sharding**: Unterstützung für Database-Sharding
+- **Caching-Integration**: Integration mit Redis/Memcached
+
+**Kommunikation:**
+- Yggdrasil (Elixir) ↔ Mimir (Rust): gRPC
+- Asynchron: Yggdrasil sendet Query-Requests, Mimir antwortet asynchron
+
+#### Nidhöggr - Connection Endpoint & Message Receiver
+
+**Mythologische Bedeutung**: Nidhöggr ist der Drache, der an den Wurzeln des Weltenbaums nagt. Repräsentiert User Requests (Root/Wurzeln).
+
+**Programmiersprache**: Rust
+
+**Aufgaben:**
+- **Connection Endpoint**: Server-Seite bei Yggdrasil
+- **Empfängt Verbindungen**: Von Vedrfolnir-Clients (User-Devices)
+- **Empfängt Nachrichten**: Über Ratatoskr-Protocol
+- **Message-Routing**: Leitet Nachrichten direkt weiter an Nornen (und andere Services je nach Message-Type)
+- **Connection Management**: Verwaltet Verbindungen zu User-Devices
+- **Connection Termination**: Kann Verbindungen trennen (bei bestimmten Umständen)
+
+**Kommunikation:**
+- User-Devices (Vedrfolnir) ↔ Nidhöggr: Ratatoskr-Protocol (WebSocket)
+- Nidhöggr ↔ Nornen/andere Services: gRPC
+- Asynchron: Nidhöggr leitet Nachrichten weiter an entsprechende Services
+
+#### Heidrun - Token & Pricing Service
+
+**Mythologische Bedeutung**: Heidrun ist die Ziege, die Met produziert (Wert/Flüssigkeit).
+
+**Programmiersprache**: Rust
+
+**Aufgaben:**
+- **Token-Berechnungen**: Token-Counting nach Request-Verarbeitung
+- **Pricing**: Berechnung von Kosten basierend auf Token-Verbrauch
+- **Pricing-Model**: Cent-Berechnung pro 1000 Tokens (ganzzahlig, keine Kommastellen)
+- **Settlement**: Berechnung von Provider-Earnings und Company-Fee
+- **Pre-Authorization**: Pre-Authorization für geschätzte Kosten vor Request
+- **Commission-Berechnung**: Berechnung der Company-Commission (10-15%)
+
+**Berechnungsformel:**
+- `(tokens / 1000) * pricePerToken` (aufgerundet)
+- `providerEarnings = totalCost - companyFee`
+- `companyFee = totalCost * commissionRate`
+
+**Kommunikation:**
+- Yggdrasil (Elixir) ↔ Heidrun (Rust): gRPC
+- Asynchron: Yggdrasil sendet Token-Requests, Heidrun antwortet mit Berechnungen
+
+#### Nornen (Urd, Verdandi) - Decision Service
+
+**Mythologische Bedeutung**: Die Nornen sind die Schicksalsgöttinnen. Urd (Vergangenheit), Verdandi (Gegenwart). **Hinweis**: Skuld ist ein separater Service, der auf allen Devices installiert werden muss.
+
+**Programmiersprache**: Rust
+
+**Aufgaben:**
+- **Urd (Vergangenheit)**: Historie, Request-History, historische Statistiken
+- **Verdandi (Gegenwart)**: Aktuelle Statistiken, Real-time Analytics, Live-Metriken
+- **Entscheidungen über Requests**: Entscheidungen über eingehende/ausgehende Requests
+- **Provider-Registrierung**: Genehmigung und Verwaltung von Provider-Registrierungen
+- **User-Konfiguration**: Speichern der User-Konfiguration für Marketplace
+- **Admin API**: Health Check, Dashboard, Monitoring, Admin-Informationen
+- **Der Brunnen (Mímisbrunnr)**: Datenbank (von Mimir verwaltet)
+
+**Analytics-Features:**
+- **Provider Analytics**: Request Statistics, Earnings, Quality Metrics, Usage Patterns
+- **Requester Analytics**: Request History, Cost Analysis, Quality Metrics der verwendeten Provider
+- **Aggregation**: Aggregation von Daten über Zeiträume
+- **Trend-Analyse**: Erkennung von Trends und Mustern
+
+**Kommunikation:**
+- Yggdrasil (Elixir) ↔ Nornen (Rust): gRPC
+- Nidhöggr → Nornen: gRPC (Nachrichten-Weiterleitung)
+- Asynchron: Yggdrasil/Nidhöggr sendet Requests, Nornen antworten mit Entscheidungen/Statistiken
+
+#### Eikthyrnir - Quality Assessment Service
+
+**Mythologische Bedeutung**: Eikthyrnir ist der Hirsch, der aus dem Brunnen trinkt. Die Tropfen werden zu Flüssen (Qualität fließt weiter).
+
+**Programmiersprache**: Rust
+
+**Aufgaben:**
+- **Quality Assessment**: Bewertung der Provider-Quality nach jedem Request
+- **Quality-Aggregation**: Gewichteter Durchschnitt von Quality-Metriken
+- **Quality-Updates**: Sofortige Updates für wichtige Änderungen, Batch-Aggregation für Effizienz
+- **Quality-Metriken**: Messung von Response-Quality, Latency, Availability
+- **Quality-Weighting**: Neuere Requests haben höheres Gewicht
+
+**Quality-Messung:**
+- Nach jedem Request: Automatische Quality-Messung
+- Periodische Tests: Regelmäßige Tests ergänzen kontinuierliche Bewertung
+- Gewichteter Durchschnitt: Quality-Metriken werden aggregiert
+- Sofort + Batch: Sofortige Updates für wichtige Änderungen, Batch-Aggregation für Effizienz
+
+**Kommunikation:**
+- Yggdrasil (Elixir) ↔ Eikthyrnir (Rust): gRPC
+- Asynchron: Yggdrasil sendet Quality-Assessment-Requests, Eikthyrnir antwortet mit Quality-Metriken
+
+#### Die vier Hirsche (Dáinn, Dvalinn, Duneyrr, Duraþrór) - Data Management Service
+
+**Mythologische Bedeutung**: Die vier Hirsche knabbern an den Ästen des Weltenbaums.
+
+**Programmiersprache**: Rust
+
+**Aufgaben:**
+- **Dáinn**: Data Indexing (Indizierung, Suche)
+- **Dvalinn**: Data Validation (Validierung, Schema-Checks)
+- **Duneyrr**: Data Aggregation (Aggregation, Statistiken)
+- **Duraþrór**: Data Retention (Retention, Archiving, Cleanup)
+
+**Data Management Features:**
+- **Ordnung der Daten**: Verwaltung und Organisation von Daten innerhalb Yggdrasil
+- **Data Integrity**: Sicherstellung der Datenintegrität
+- **Data Lifecycle**: Verwaltung des Datenlebenszyklus
+- **Data Cleanup**: Automatische Bereinigung von alten Daten
+
+**Kommunikation:**
+- Yggdrasil (Elixir) ↔ Die vier Hirsche (Rust): gRPC
+- Asynchron: Yggdrasil sendet Data-Management-Requests, Hirsche antworten mit Ergebnissen
+
+### 8. Global Lock Management
 - **Distributed Locking**: Verwaltet Locks für globale Resources
 - **Lock-Registry**: Zentrale Registry für alle aktiven Locks
 - **Lock-Expiration**: Verwaltet Lock-Expiration (Timeout)
 - **Deadlock-Detection**: Erkennt Deadlocks und löst sie auf
 - **Priority-Management**: Verwaltet Prioritäten für Lock-Requests
+- **Integration**: Global Lock Management wird von Mimir (Database Service) verwaltet
 
 ## Database Schema
 
@@ -383,13 +606,17 @@ Der Marketplace ermöglicht es Usern, ihre Hardware als Compute-Provider anzubie
 Yggdrasil stellt alle Services von Asgard bereit, zusätzlich zu den globalen Features:
 
 ### Verfügbare Services
-- **Odin**: Hauptprozess für Orchestrierung (wie auf Asgard)
-- **Thor**: Action Executor (wie auf Asgard)
-- **Huginn & Muninn**: STT/TTS Service (wie auf Asgard)
-- **Freki**: RAG Service (wie auf Asgard)
-- **Geri**: LLM Service (wie auf Asgard)
-- **Heimdall**: Security Service (wie auf Asgard)
-- **Bifrost**: Communication Service (wie auf Asgard)
+
+**Hinweis**: Yggdrasil hat keinen eigenen Odin. User-Devices (Midgard/Alfheim/Asgard) haben eigene Odin-Instanzen, die direkt mit Yggdrasil kommunizieren.
+
+**Yggdrasil-Services:**
+- **Nidhöggr**: Connection Endpoint für Ratatoskr-Protocol
+- **Nornen (Urd, Verdandi)**: Decision Service
+- **Mimir**: Privacy Database Service
+- **Heidrun**: Token & Pricing Service
+- **Eikthyrnir**: Quality Assessment Service
+- **Die vier Hirsche**: Data Management Service
+- **Bifrost**: Communication Service (für Device-zu-Device-Relay)
 - **Frigg**: Healthcare Plugin (automatisch vorhanden)
 - **Valkyries**: Coding Agent (automatisch vorhanden)
 
@@ -401,13 +628,13 @@ Yggdrasil stellt alle Services von Asgard bereit, zusätzlich zu den globalen Fe
 
 ## Integration
 
-- **Alle Devices**: Midgard, Alfheim, Asgard verbinden sich mit Yggdrasil
+- **Alle Devices**: Midgard, Alfheim, Asgard verbinden sich mit Yggdrasil über Vedrfolnir (Client) und Ratatoskr-Protocol
 - **Device Registry**: Zentrale Registry für alle Devices weltweit
 - **User Management**: Zentrale User-Verwaltung
 - **Marketplace**: Zentrale Marketplace-Infrastruktur
 - **Frigg**: Healthcare Plugin ist automatisch bei Yggdrasil vorhanden
 - **Valkyries**: Coding Agent ist automatisch bei Yggdrasil vorhanden
-- **Alle Services**: Odin, Thor, Huginn-Muninn, Freki, Geri, Heimdall, Bifrost sind verfügbar
+- **Bifrost**: Communication Service für Device-zu-Device-Relay
 
 ## Performance
 
@@ -619,7 +846,7 @@ Yggdrasil stellt alle Services von Asgard bereit, zusätzlich zu den globalen Fe
 
 **Workflow**
 1. **User gibt Command auf Device A**
-   - Odin auf Device A verarbeitet Command
+   - Odin (auf Device A) verarbeitet Command
    - Odin entscheidet, dass Action auf Device B ausgeführt werden soll
 
 2. **Action Routing**
@@ -710,12 +937,34 @@ Yggdrasil stellt alle Services von Asgard bereit, zusätzlich zu den globalen Fe
 
 ## Implementierungs-Notizen
 
-- **Basiert auf Asgard**: Yggdrasil erweitert Asgard um globale Features
-- **Alle Services verfügbar**: Odin, Thor, Huginn-Muninn, Freki, Geri, Heimdall, Bifrost sind verfügbar
+**Programmiersprache:**
+- **Elixir (Erlang VM/BEAM)**: Yggdrasil wird in Elixir implementiert
+- **Warum Elixir**: 
+  - **Millionen Verbindungen**: Erlang VM (BEAM) ist speziell für massive Concurrency designed
+  - **Bifrost-Verbindungen**: Phoenix Channels (WebSockets) für Bifrost-Verbindungen zu Devices
+  - **Fault Tolerance**: Eingebaute Fault Tolerance durch Erlang VM
+  - **Hot Code Reloading**: Live-Updates ohne Downtime möglich
+  - **Skalierbarkeit**: Kann Millionen von Devices gleichzeitig über Bifrost verbinden
+- **Phoenix Framework**: Für Web-API und WebSocket-Verbindungen
+- **Ecto**: Für Database-Access
+- **OTP**: Für verteilte Systeme und Supervision
+
+**Technische Anforderungen:**
+- **Eigenständiger Server**: Yggdrasil ist ein eigenständiger Server ohne eigenen Odin
+- **User-Devices kommunizieren direkt**: User-Devices (Midgard/Alfheim/Asgard) haben eigene Odin-Instanzen, die direkt mit Yggdrasil kommunizieren
+- **Ratatoskr-Protocol**: Business-Protocol für Yggdrasil-Kommunikation (zusätzlich zu Bifrost)
 - **Multi-Tenant-Architektur**: Strikte Isolation zwischen Usern und Netzwerken
 - **Netzwerk-Isolation oberste Priorität**: User dürfen nicht in andere Netze eindringen können
+- **Bifrost-Relay**: Yggdrasil baut Bifrost-WebSocket-Verbindungen zu Devices auf
+- **Ratatoskr-Protocol**: Yggdrasil empfängt Business-Requests über Ratatoskr-Protocol (via Nidhöggr)
+- **Connection Management**: Millionen von gleichzeitigen Bifrost-WebSocket-Verbindungen
+- **Message-Routing**: Yggdrasil routet Messages zwischen Devices über Bifrost
+- **Event-Notifications**: Alle Events werden über Bifrost-Messages gesendet
+- **Connection-Initiation**: Devices verbinden sich über Bifrost, nicht über Webhooks
+- **Rust-Microservices**: Yggdrasil koordiniert Rust-Microservices für CPU-intensive Tasks
+- **gRPC-Kommunikation**: Yggdrasil kommuniziert mit Rust-Microservices über gRPC
 - Muss hochverfügbar sein (99.9%+ Uptime)
-- Sollte skalierbar sein (horizontal scaling)
+- Sollte skalierbar sein (horizontal scaling über mehrere Nodes)
 - Muss robustes Error-Handling haben
 - Sollte Monitoring und Alerting haben
 - Muss Security-Best-Practices folgen

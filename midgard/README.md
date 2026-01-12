@@ -15,23 +15,19 @@ Midgard ist der Client für Desktop/Laptop-Geräte. Er stellt die vollständige 
 ```
 midgard/
 ├── src/
-│   ├── main/              # Main Application
-│   │   ├── odin.ts        # Odin Service Integration
-│   │   ├── ui/            # User Interface
-│   │   ├── config/        # Configuration
-│   │   └── platform/      # Platform-specific Code
-│   ├── services/          # Service Integrations
-│   │   ├── huginn/        # STT Service
-│   │   ├── muninn/        # TTS Service
-│   │   ├── freki/         # RAG Service
-│   │   ├── geri/          # LLM Service
-│   │   └── thor/           # Action Executor
-│   ├── actions/            # Action Handlers
-│   │   ├── device/
-│   │   ├── file/
-│   │   ├── network/
-│   │   ├── application/
-│   │   └── system/
+│   ├── frontend/          # Frontend (TypeScript/React)
+│   │   ├── components/
+│   │   ├── pages/
+│   │   └── ...
+│   ├── backend/           # Backend Services (Go)
+│   │   ├── odin/          # Odin Service
+│   │   ├── services/      # Service Integrations
+│   │   │   ├── huginn/    # STT Service
+│   │   │   ├── muninn/    # TTS Service
+│   │   │   ├── freki/     # RAG Service
+│   │   │   ├── geri/      # LLM Service
+│   │   │   └── thor/      # Action Executor
+│   │   └── actions/       # Action Handlers
 │   └── utils/
 ├── config/
 ├── resources/
