@@ -1,8 +1,19 @@
-# Thor - Action Executor Service
+# Thor - Action Executor Plugin
 
 ## Übersicht
 
-Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden. Er nutzt Mjölnir (Hammer), Tanngrisnir & Tanngnjóstr (Goats) und den Chariot (Streitwagen).
+Thor ist ein Plugin für Action-Execution, das von Odin orchestriert wird. Wenn Funktionen ausgeführt werden müssen, delegiert Odin die Aufgabe an Thor (wenn verfügbar). Thor führt Actions aus, die von Odin geplant wurden. Er nutzt Mjölnir (Hammer), Tanngrisnir & Tanngnjóstr (Goats) und den Chariot (Streitwagen).
+
+**Plugin-Architektur**: Thor ist ein optionales Plugin, das modular zur Odin-Installation hinzugefügt werden kann. Odin entscheidet selbst, ob eine Aufgabe an Thor delegiert werden muss (wenn Funktionen ausgeführt werden müssen) oder ob Odin selbst antworten kann (bei einfachen Fragen).
+
+**Plugin-Interface**: Thor implementiert das `OdinPlugin`-Interface mit:
+- `get_title()`: Gibt "Thor - Action Executor" zurück
+- `get_description()`: Beschreibt die Action-Execution-Funktionalität
+- `get_functions()`: Gibt alle verfügbaren Action-Types zurück (Function Call Protocol)
+
+**Einherjar Protocol**: Thor implementiert das Einherjar Protocol, um seine verfügbaren Funktionen und Zuständigkeits-Domains offenzulegen. Odin nutzt diese Informationen, um automatisch zu erkennen, wann Thor zuständig ist.
+
+**Responsibility Service**: Thor implementiert das Responsibility Service, um Zuständigkeit zu übernehmen, zurückzugeben oder zurückzuweisen. Wenn eine Aufgabe nicht mehr Action-Execution ist, gibt Thor die Zuständigkeit an Odin zurück.
 
 ## Komponenten
 
@@ -24,12 +35,17 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 ## Verantwortlichkeiten
 
 ### 1. Action Execution
-- Führt verschiedene Action-Types aus:
-  - Device Control
-  - File Operations
-  - Network Operations
-  - Application Control
-  - System Commands
+- **Action-Types**: 
+  - **FILE_OPERATION**: Datei-Operationen (Create, Read, Update, Delete, Move, Copy)
+  - **SYSTEM_COMMAND**: System-Commands (Shell-Commands, Script-Execution)
+  - **NETWORK_OPERATION**: Netzwerk-Operationen (HTTP-Requests, API-Calls)
+  - **DEVICE_CONTROL**: Device-Control (Hardware-Steuerung, Sensor-Zugriff)
+  - **APPLICATION_CONTROL**: Application-Control (App-Start, App-Stop, App-Interaktion)
+- **Action-Parsing**: 
+  - **LLM-Response-Parsing**: Actions werden aus LLM-Responses erkannt (strukturierte Outputs)
+  - **Standard-Format**: Standard-Format für Action-Definitionen (JSON-basiert)
+  - **Mehrdeutige Definitionen**: Bei mehrdeutigen Action-Definitionen wird User um Klärung gebeten
+- **Neue Action-Types**: Neue Action-Types können über Plugin-Interface hinzugefügt werden
 
 ### 2. Resource Management
 - Überwacht System-Ressourcen (CPU, RAM, Disk, Network)
@@ -38,9 +54,8 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 
 ### 3. Task Scheduling
 - Verwaltet Action-Queue
-- Plant Actions basierend auf Priorität
 - Handhabt parallele Execution
-- **Conflict Resolution**: Löst Konflikte bei parallelen Actions (Priority + Locking)
+- **Conflict Resolution**: Löst Konflikte bei parallelen Actions (Locking)
 - **Lock Management**: Verwaltet Locks für lokale Resources
 
 ### 4. Error Handling
@@ -49,15 +64,14 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 - Error-Reporting
 
 ### 5. Conflict Resolution
-- **Priority + Locking**: Kombination aus Priorität und Locking für Konfliktlösung
-- **Hybrid Locking**: Lokal für lokale Resources, Distributed für geteilte Resources
+- **Locking**: File Locking für Konfliktlösung bei parallelen Actions
+- **Lokales File Locking**: Für lokale Dateien/Resources auf demselben Device
+- **Distributed File Locking**: File Locking über Asgard/Yggdrasil für geteilte Resources
 - **Pessimistic Locking + Transactions**: Verhindert Race Conditions
-- **Deadlock Detection**: Erkennt und löst Deadlocks auf (Timeout + Detection)
-- **System-Priority mit User-Override**: System bestimmt Priorität, User kann überschreiben
+- **Deadlock Detection**: Erkennt und löst Deadlocks auf (Timeout + Cycle-Detection)
 
 ### 6. Tool-Calling-Agent (Kernfunktion)
-- **Thor ist der Tool-Calling-Agent**: Thor entscheidet, welche Actions ausgeführt werden müssen
-- **Ergebnis-Analyse**: Thor analysiert strukturierte Ergebnisse von Brünnhilde (Valkyries) oder Frigg
+- **Thor ist der Tool-Calling-Agent**: Thor führt Actions aus, die von Odin geplant wurden
 - **Action-Erkennung**: Thor erkennt automatisch, welche Actions nötig sind:
   - Datei-Änderungen → `FILE_OPERATION` Actions
   - System-Commands → `SYSTEM_COMMAND` Actions
@@ -66,35 +80,138 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 - **Action-Ausführung**: Thor führt erkannte Actions aus (via Mjölnir)
 - **Response-Generierung**: Thor erstellt Text-Responses für Odin basierend auf Action-Results
 
-### 7. Coding Task Recognition & Delegation
-- **Erkennung**: Thor erkennt automatisch, ob es sich um eine Coding-Aufgabe handelt
-- **User kann explizit angeben**: User kann auch explizit angeben, dass es eine Coding-Aufgabe ist (macht Erkennung einfacher)
-- **Weiterleitung**: Thor legt Task in Queue für Brünnhilde (Valkyries)
-- **Strukturierte Ergebnisse**: Thor erhält strukturiertes `ValkyrieResult` von Brünnhilde
-- **Ergebnis-Analyse**: Thor analysiert `ValkyrieResult` und erkennt Actions (Datei-Änderungen, Commands, etc.)
+### 7. Action-Execution für Plugin-Ergebnisse
+- **Strukturierte Ergebnisse von Plugins**: Wenn Odin strukturierte Ergebnisse von Valkyries oder Frigg erhält, die Actions benötigen, leitet Odin diese an Thor weiter
+- **Ergebnis-Analyse**: Thor analysiert strukturierte Ergebnisse (z.B. `ValkyrieResult`) und erkennt Actions (Datei-Änderungen, Commands, etc.)
 - **Action-Ausführung**: Thor führt erkannte Actions aus
 - **Ergebnis-Rückgabe**: Thor gibt `ThorResult` an Odin zurück (mit Text-Response und Action-Results)
-
-### 8. Healthcare Task Recognition & Delegation
-- **Erkennung**: Thor erkennt automatisch, ob es sich um eine Healthcare-Aufgabe handelt
-- **User kann explizit anfordern**: User kann auch explizit Frigg anfordern oder eine Behandlung starten wollen
-- **Weiterleitung**: Thor legt Task in Queue für Frigg
-- **Ergebnis**: Thor erhält Ergebnis von Frigg aus Queue und gibt es an Odin zurück
 
 ## Service-Interfaces
 
 ### Inputs
-- `ThorAction` von Odin
+- `ThorAction` von Odin (via gRPC)
 - Resource Requests
-- **Coding Tasks**: Thor erkennt Coding-Aufgaben und leitet sie an Brünhild (Valkyries) weiter
-- **Healthcare Tasks**: Thor erkennt Healthcare-Aufgaben und leitet sie an Frigg weiter
+- **Strukturierte Ergebnisse von Plugins**: Odin leitet strukturierte Ergebnisse von Valkyries oder Frigg an Thor weiter, wenn Actions benötigt werden
+- **Cross-Device Actions**: ThorAction von anderen Devices (via gRPC über Bifrost)
 
 ### Outputs
-- `ThorResult` mit Status, Result, Error, Execution Time
-- **Text-Response**: Text-Response für Odin (basierend auf Agent-Ergebnissen)
+- `ThorResult` mit Status, Result, Error, Execution Time (via gRPC)
+- **Text-Response**: Text-Response für Odin (basierend auf Action-Results)
 - **Action-Results**: Ergebnisse der ausgeführten Actions (File-Operations, System-Commands, etc.)
-- **Coding Results**: Thor analysiert `ValkyrieResult` von Brünnhilde, führt Actions aus, gibt `ThorResult` an Odin zurück
-- **Healthcare Results**: Thor analysiert Ergebnisse von Frigg, führt Actions aus, gibt `ThorResult` an Odin zurück
+- **Cross-Device Results**: `ThorResult` an andere Devices (via gRPC über Bifrost)
+
+### gRPC Service Definition
+
+**Thor Service (gRPC):**
+```protobuf
+service ThorService {
+  rpc ExecuteAction(ThorAction) returns (ThorResult);
+  rpc StreamAction(stream ActionChunk) returns (stream ResultChunk);
+}
+```
+
+## DTO-Definitionen
+
+### ThorAction
+
+`ThorAction` ist das DTO für Actions, die von Odin an Thor gesendet werden.
+
+**Protobuf-Definition:**
+```protobuf
+message ThorAction {
+  string action_id = 1;              // Eindeutige Action-ID
+  ActionType action_type = 2;         // Typ der Action
+  string target_resource = 3;         // Ziel-Ressource (Datei, URL, etc.)
+  map<string, string> parameters = 4; // Action-spezifische Parameter
+  optional ActionPriority priority = 5; // Priorität (optional)
+  optional string session_id = 6;     // Session-ID für Kontext
+  optional ActionMetadata metadata = 7; // Zusätzliche Metadaten
+}
+
+enum ActionType {
+  FILE_OPERATION = 0;      // Datei-Operationen
+  SYSTEM_COMMAND = 1;      // System-Commands
+  NETWORK_OPERATION = 2;   // Netzwerk-Operationen
+  DEVICE_CONTROL = 3;      // Device-Control
+  APPLICATION_CONTROL = 4; // Application-Control
+}
+
+enum ActionPriority {
+  LOW = 0;
+  NORMAL = 1;
+  HIGH = 2;
+  URGENT = 3;
+}
+
+message ActionMetadata {
+  optional string source = 1;         // Quelle (z.B. "odin", "valkyries")
+  optional int64 timeout_ms = 2;     // Timeout in Millisekunden
+  optional bool requires_lock = 3;   // Benötigt File-Lock
+}
+```
+
+**Validierungsregeln:**
+- `action_id`: Muss eindeutig sein, UUID-Format empfohlen
+- `action_type`: Muss gültiger ActionType sein
+- `target_resource`: Muss nicht leer sein
+- `parameters`: Muss für alle erforderlichen Parameter gefüllt sein (abhängig von action_type)
+
+### ThorResult
+
+`ThorResult` ist das DTO für Results, die von Thor an Odin zurückgesendet werden.
+
+**Protobuf-Definition:**
+```protobuf
+message ThorResult {
+  string action_id = 1;              // Action-ID (zur Zuordnung)
+  ActionStatus status = 2;            // Status der Action
+  optional string result = 3;        // Ergebnis (Text-Response)
+  optional bytes result_data = 4;    // Binäre Ergebnis-Daten (optional)
+  optional string error = 5;          // Fehler-Message (falls vorhanden)
+  int64 execution_time_ms = 6;       // Ausführungszeit in Millisekunden
+  optional ResultMetadata metadata = 7; // Zusätzliche Metadaten
+}
+
+enum ActionStatus {
+  SUCCESS = 0;
+  FAILED = 1;
+  TIMEOUT = 2;
+  CANCELLED = 3;
+}
+
+message ResultMetadata {
+  int64 timestamp = 1;                // Timestamp
+  optional map<string, string> action_results = 2; // Action-spezifische Ergebnisse
+  optional string resource_locked = 3; // Gesperrte Ressource (falls vorhanden)
+}
+```
+
+**Validierungsregeln:**
+- `action_id`: Muss mit ursprünglicher Action übereinstimmen
+- `status`: Muss gültiger ActionStatus sein
+- `result` oder `error`: Mindestens eines muss vorhanden sein
+- `execution_time_ms`: Muss >= 0 sein
+
+**Kommunikation:**
+- **Lokal (gleiches Device)**: Odin ↔ Thor via gRPC
+- **Cross-Device**: Device A (Odin) ↔ Device B (Thor) via gRPC über Bifrost
+- **Bifrost**: Für Connection-Establishment, dann gRPC für Action-Execution
+
+**gRPC Connection-Management:**
+- **Connection-Pooling**: Wiederverwendung von Verbindungen für bessere Performance
+- **Connection Reuse**: Connections werden effizient wiederverwendet
+- **Automatische Reconnection**: Kombination aus sofortigem Versuch + Exponential Backoff
+  - Sofortiger Reconnect-Versuch bei Verbindungsabbruch
+  - Nach erstem Fehler beginnt Exponential Backoff
+  - Maximale Wartezeit (z.B. 60 Sekunden)
+  - Kontinuierliche Versuche zur Wiederherstellung
+- **Connection Monitoring**: Verbindungsstatus wird überwacht
+
+**gRPC Error-Handling:**
+- **gRPC Status-Codes**: gRPC-Fehler werden über Status-Codes behandelt
+- **Retry-Mechanismen**: Automatischer Retry mit Exponential Backoff (siehe gemeinsame Klärungspunkte)
+- **Timeout-Konfiguration**: Adaptive Timeouts mit Minimum/Maximum
+- **Fallback**: Bei Fehler Fallback zu alternativen Routen/Providern
 
 ## Action Types
 
@@ -123,22 +240,6 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 - Shell Commands
 - System Configuration
 
-### CODING_TASK
-- **Coding-Aufgaben**: Thor erkennt Coding-Aufgaben und leitet sie an Brünnhilde (Valkyries) weiter
-- **Erkennung**: Thor erkennt automatisch, ob es sich um eine Coding-Aufgabe handelt
-- **User kann explizit angeben**: User kann auch explizit angeben, dass es eine Coding-Aufgabe ist (macht Erkennung einfacher)
-- **Weiterleitung**: Thor legt Task in Queue für Brünnhilde
-- **Strukturierte Ergebnisse**: Thor erhält strukturiertes `ValkyrieResult` von Brünnhilde
-- **Tool-Calling**: Thor analysiert `ValkyrieResult` und erkennt Actions (Datei-Änderungen, Commands, etc.)
-- **Action-Ausführung**: Thor führt erkannte Actions aus
-- **Ergebnis**: Thor gibt `ThorResult` an Odin zurück (mit Text-Response und Action-Results)
-
-### HEALTHCARE_TASK
-- **Healthcare-Aufgaben**: Thor erkennt Healthcare-Aufgaben und leitet sie an Frigg weiter
-- **Erkennung**: Thor erkennt automatisch, ob es sich um eine Healthcare-Aufgabe handelt
-- **User kann explizit anfordern**: User kann auch explizit Frigg anfordern oder eine Behandlung starten wollen
-- **Weiterleitung**: Thor legt Task in Queue für Frigg
-- **Ergebnis**: Thor erhält Ergebnis von Frigg aus Queue und gibt es an Odin zurück
 
 ## Workflow
 
@@ -146,14 +247,9 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
    - Odin sendet `ThorAction`
    - Thor validiert Action
 
-2. **Task-Typ Erkennung**
-   - **Thor erkennt Coding-Aufgaben**: Thor prüft, ob es sich um eine Coding-Aufgabe handelt
-   - **User kann explizit angeben**: User kann explizit angeben, dass es eine Coding-Aufgabe ist
-   - **Weiterleitung an Brünhild**: Falls Coding-Aufgabe, legt Thor Task in Queue für Brünhild (Valkyries)
-   - **Thor erkennt Healthcare-Aufgaben**: Thor prüft, ob es sich um eine Healthcare-Aufgabe handelt
-   - **User kann explizit anfordern**: User kann explizit Frigg anfordern oder eine Behandlung starten wollen
-   - **Weiterleitung an Frigg**: Falls Healthcare-Aufgabe, legt Thor Task in Queue für Frigg
-   - **Normale Actions**: Falls keine spezielle Aufgabe, normaler Workflow
+2. **Action-Analyse**
+   - **Normale Actions**: Thor führt Actions direkt aus (via Mjölnir)
+   - **Strukturierte Ergebnisse von Plugins**: Falls Odin strukturierte Ergebnisse von Plugins (Valkyries, Frigg) weiterleitet, analysiert Thor diese und erkennt benötigte Actions
 
 3. **Resource Check** (für normale Actions)
    - Prüft verfügbare Ressourcen
@@ -166,20 +262,50 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
    - Wartet auf Execution-Slot
 
 5. **Action Execution**
-   - **Normale Actions**: Führt Action aus (via Mjölnir)
-   - **Coding Tasks**: Wartet auf Ergebnis von Brünhild
-   - **Healthcare Tasks**: Wartet auf Ergebnis von Frigg
+   - Führt Action aus (via Mjölnir)
    - Überwacht Execution
    - Trackt Progress
 
 6. **Result Processing**
-   - **Normale Actions**: Sammelt Result, verarbeitet Errors, berechnet Execution Time
-   - **Coding Tasks**: Erhält Ergebnis von Brünhild (nach Prüfung und Bestätigung, dass alle Aufgaben erledigt wurden)
-   - **Healthcare Tasks**: Erhält Ergebnis von Frigg
+   - Sammelt Result, verarbeitet Errors, berechnet Execution Time
 
 7. **Response**
    - Sendet `ThorResult` zurück an Odin
    - Gibt Ressourcen frei
+
+## Settings und Konfiguration
+
+### Allgemeine Settings-Prinzipien
+
+**Wichtig**: Diese Prinzipien gelten für alle Services und Platformen im Edda-System.
+
+#### Settings-Format
+- **Format**: Vermutlich JSON-Format (es sei denn im Rust-Kontext gibt es ein besseres Format, das ebenso einfach für Menschen zu verstehen ist)
+- **Menschlich lesbar**: Settings-Dateien müssen für Menschen einfach zu verstehen und zu bearbeiten sein
+- **Validierung**: Settings werden beim Laden validiert (Schema-Validierung)
+
+#### Platform-Integration
+- **Settings-Sammlung**: Platformen müssen alle Settings/Konfigurationsdateien sammeln, die auf dem Device bzw. auf der Platform aktuell verfügbar und aktiv sind
+- **Frontend-Konfiguration**: Settings müssen über Settings im Frontend konfigurierbar gemacht werden
+- **Zentrale Verwaltung**: Platform stellt zentrale Settings-Verwaltung zur Verfügung
+
+#### Hot-Reload
+- **Keine Neukompilierung**: Änderungen an den Settings sollen nicht dazu führen, dass das Projekt/der Service neu kompiliert werden muss
+- **Runtime-Reload**: Die neuen Werte können einfach zur Laufzeit neu geladen werden
+- **Service-Funktionen**: Services müssen entsprechende Funktionen zur Verfügung stellen (Hot-Reload, Settings-API, etc.)
+
+#### Service-spezifische Settings
+- **Projekt-spezifisch**: Was genau in einer Settings/Konfigurationsdatei steht, hängt sehr stark vom Service oder der Platform ab
+- **Dokumentation**: Service-spezifische Settings müssen in der jeweiligen README dokumentiert werden
+- **Beispiele**: Service-spezifische Settings-Beispiele sollten in der README enthalten sein
+
+### Thor-spezifische Settings
+
+**Settings-Inhalt (wird während Implementierung definiert)**
+- Action-Execution-Einstellungen
+- Resource-Limits
+- Locking-Konfiguration
+- Error-Handling-Einstellungen
 
 ## Technische Anforderungen
 
@@ -190,10 +316,13 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 - Output Sanitization
 
 ### Performance
-- Parallel Execution
-- Async Processing
-- Resource Pooling
-- Caching
+- **Parallel Execution**: 
+  - **Parallele Actions**: Mehrere Actions können parallel ausgeführt werden (abhängig von Resources)
+  - **Concurrency-Limits**: Concurrency-Limits basierend auf verfügbaren Resources
+  - **Resource-Contention**: Intelligentes Handling von Resource-Contention (File Locking, Queuing)
+- **Async Processing**: Asynchrone Verarbeitung für bessere Performance
+- **Resource Pooling**: Effizientes Resource-Pooling
+- **Caching**: Caching für häufig verwendete Actions
 
 ### Reliability
 - **Retry-Mechanismen**: Retry mit Exponential Backoff
@@ -203,13 +332,70 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 - **Replay-Mechanismus**: Actions können erneut ausgeführt werden
 - **State-Synchronisation**: State kann von anderen Devices übernommen werden
 
-### Monitoring
-- Action Tracking
-- Performance Metrics
-- Error Logging
-- Resource Usage Monitoring
+### Monitoring & Logging
+
+**Strukturiertes Logging:**
+- Structured Logging mit strukturierten Daten
+- Log Levels: Verschiedene Log-Level (DEBUG, INFO, WARN, ERROR, etc.)
+- Context Tracking: Context wird mitgeloggt
+- Log Rotation: Automatische Log-Rotation
+- Umfassendes Logging für Debugging und Monitoring
+
+**Performance-Monitoring:**
+- Performance-Metriken: Response-Zeiten, Durchsatz, Resource-Usage (CPU, Memory, Disk, Network)
+- Performance-Tracking für alle Actions
+- Resource-Monitoring: Überwachung von System-Ressourcen
+- Kontinuierliche Überwachung und Performance-Optimierung
+- Alerts bei Performance-Problemen
+
+## Service-Ausfall-Behandlung
+
+**Innerhalb einer Platform:**
+- Fallback ist unnötig - Services müssen existieren, so bauen wir sie ja
+- Services sind Teil der Platform-Installation
+
+**Platformübergreifend:**
+- Netzwerkplan verwenden für Service-Discovery
+- Falls mit Yggdrasil verbunden: Netzwerkplan an Yggdrasil übertragen
+- **WICHTIG**: Netzwerkplan darf unter keinen Umständen anderen Usern zugänglich gemacht werden
+- Asgard fungiert wie eine weitere Platform (Server-optimiert), ähnlich wie Midgard (Desktop-optimiert) und Alfheim (Mobile-optimiert)
+
+**Fallback-Strategien (nur platformübergreifend):**
+- Alternative Route: Falls direkte Verbindung fehlschlägt, Fallback zu Relay (Asgard/Yggdrasil)
+- Alternative Services bei Ausfall
+- Relay-Fallback bei direkter Verbindung fehlschlägt
+
+**Service-Ausfall-Behandlung:**
+- Automatischer Retry mit Exponential Backoff
+- Sofortiger Fallback zu alternativen Services (nur platformübergreifend)
+- User-Benachrichtigung bei komplettem Service-Ausfall
+
+**User-Kommunikation:**
+- Fehlermeldung an User, wenn alle Versuche fehlschlagen
+- Error-Logging für Debugging
+- User kann später erneut versuchen
+- Transparente Fehlerbehandlung
 
 ## Datenschutz
+
+### GDPR-Compliance
+
+**Right to Deletion:**
+- User kann alle Daten löschen ("Right to be forgotten")
+- Sichere Datenlöschung
+- Automatische Löschung nach Retention-Policy
+
+**User-Rechte:**
+- Right to Access: User können ihre Daten abrufen
+- Right to Rectification: User können ihre Daten korrigieren
+- Right to Data Portability: User können ihre Daten exportieren
+- Right to Object: User können der Datenverarbeitung widersprechen
+
+**Data-Minimization:**
+- Nur notwendige Daten werden gespeichert
+- Nur notwendige Daten werden verarbeitet
+- Purpose Limitation: Daten nur für spezifische Zwecke verwendet
+- Storage Limitation: Daten nur so lange gespeichert wie nötig
 
 ### Datenschutz-Features
 - **Lokale Verarbeitung**: Actions werden lokal verarbeitet, wo möglich
@@ -226,21 +412,35 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 
 ## Abhängigkeiten
 
-- **Odin**: Für Actions
-- **Heimdall**: Für Permissions
+### Keine Core Library
+
+- **WICHTIG**: Es gibt keine Edda Core Library
+- **Separate Projekte**: Wenn gemeinsame Komponenten benötigt werden (DTOs, Protocols, Utils), sollte ein separates Projekt erstellt werden
+- **Selektive Nutzung**: Dies hält Apps klein, da genau gewählt werden kann, was benötigt wird
+- **Keine Abhängigkeit**: Thor sollte nicht auf Dateien/Protocols/Utils aus dem `edda` Verzeichnis verweisen (KEIN PROJEKT - nur Metadaten-Sammlung)
+
+### Service-Abhängigkeiten
+
+- **Odin**: Für Actions (Thor ist ein Plugin für Odin)
+- **Heimdall**: Für Permissions (optional)
 - **System APIs**: Für Action Execution
 - **Resource Management**
-- **Brünhild (Valkyries)**: Für Coding-Aufgaben (optional, wenn Valkyries installiert)
-- **Frigg (Healthcare)**: Für Healthcare-Aufgaben (optional, wenn Frigg installiert)
-- **Edda Core Library**: DTOs, Protocols, Utils
+
+### Plugin-Integration (optional, modular)
+
+- **Keine direkte Plugin-Kommunikation**: Thor kommuniziert nicht direkt mit anderen Plugins (Valkyries, Frigg)
+- **Action-Execution für Plugin-Ergebnisse**: Wenn Odin strukturierte Ergebnisse von Plugins erhält, die Actions benötigen, leitet Odin diese an Thor zur Action-Execution weiter
 
 ## Integration
 
-- **Odin**: Empfängt `ThorAction` von Odin, sendet `ThorResult` zurück
+- **Odin**: 
+  - Empfängt `ThorAction` von Odin, sendet `ThorResult` zurück
+  - Empfängt `ResponsibilityRequest` von Odin, sendet `ResponsibilityResponse` zurück
+  - Sendet `ResponsibilityReturn` an Odin, wenn Aufgabe nicht mehr Action-Execution ist
+  - Sendet `ResponsibilityRejection` an Odin, wenn Request nicht in Thors Bereich ist
+  - Implementiert Einherjar Protocol für Funktions-Offenlegung
 - **Heimdall**: Für Permission-Checking
 - **System APIs**: Für Action Execution
-- **Brünhild (Valkyries)**: Queue-basierte Kommunikation für Coding-Aufgaben
-- **Frigg**: Queue-basierte Kommunikation für Healthcare-Aufgaben
 - **Asgard/Yggdrasil**: Für Distributed Locking (bei geteilten Resources)
 
 ## Parallel Action Conflict Resolution
@@ -252,25 +452,27 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 - Actions können sich gegenseitig beeinflussen oder überschreiben
 - Dateninkonsistenz: Ohne Konfliktlösung können Daten inkonsistent werden
 
-### Lösung: Priority + Locking
+### Lösung: File Locking
 
-**Kombination aus Priorität und Locking**
-- **Priority-basiert**: Höhere Priorität gewinnt bei Konflikten
-- **Locking**: Erstes Device bekommt Lock, zweites wartet
-- **Kombination**: Priority bestimmt, wer Lock bekommt, Locking verhindert gleichzeitigen Zugriff
+**File Locking für Konfliktlösung**
+- **First-come-first-served**: Erstes Device/Prozess bekommt Lock, zweites wartet
+- **Locking**: Locking verhindert gleichzeitigen Zugriff auf Resources
+- **Prozessübergreifend**: Da alle Götter in separaten Prozessen laufen, ist File Locking notwendig
 
 ### Locking-Mechanik
 
-**Hybrid-Ansatz: Lokal + Distributed**
+**File Locking als primäre Lösung**
 
-**Lokal für lokale Resources**
-- **Local Locking**: Jedes Device verwaltet eigene Locks für lokale Resources
+Da Odin für Aufgaben, die er anderen Göttern übergibt, neue/parallele Prozesse startet (non-blocking), wird **File Locking** als einheitliche Lösung verwendet (prozessübergreifend). Dies ist notwendig, da alle Götter (Thor, Valkyries, etc.) in separaten Prozessen laufen.
+
+**Lokale Resources (File Locking)**
+- **File Locking für lokale Dateien/Resources**: File Locking für lokale Dateien/Resources auf demselben Device
+- **Prozessübergreifend**: Funktioniert zwischen verschiedenen Prozessen auf demselben Device
 - **Beispiele**: Lokale Dateien, lokale Anwendungen, lokale System-Settings
-- **Schnell**: Keine Netzwerk-Latenz
-- **Einfach**: Keine Koordination nötig
+- **Lock-Types**: Read/Write Locks werden unterstützt (Read-Locks für mehrere gleichzeitige Lese-Operationen, Write-Locks für exklusive Schreib-Operationen)
 
-**Distributed für geteilte Resources**
-- **Distributed Locking**: Locking über Asgard/Yggdrasil für geteilte Resources
+**Geteilte Resources (Distributed File Locking)**
+- **File Locking über Asgard/Yggdrasil**: File Locking über Asgard/Yggdrasil für geteilte Resources (Distributed File Locking)
 - **Beispiele**: Geteilte Dateien, Netzwerk-Devices, Cloud-Ressourcen
 - **Koordination**: Asgard/Yggdrasil koordiniert Locks zwischen Devices
 - **Konsistent**: Garantiert Konsistenz über alle Devices
@@ -290,31 +492,6 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 - **Isolation**: Transactions sind isoliert voneinander
 - **Consistency**: Garantiert Datenkonsistenz
 
-### Priorisierung von Actions
-
-**Kombination: System-Priority mit User-Override**
-
-**System-Priority (Standard)**
-- **System bestimmt**: System bestimmt automatisch Priorität basierend auf:
-  - Action-Typ (kritische Actions haben höhere Priorität)
-  - Resource-Typ (wichtige Resources haben höhere Priorität)
-  - Device-Typ (Server hat höhere Priorität als Mobile)
-  - Zeitpunkt (ältere Requests haben höhere Priorität)
-- **Fairness**: System sorgt für faire Verteilung
-
-**User-Override**
-- **User kann Priorität setzen**: User kann explizit Priorität für Actions setzen
-- **Höhere Priorität**: User kann Actions höhere Priorität geben
-- **Niedrigere Priorität**: User kann Actions niedrigere Priorität geben
-- **Use Cases**: Wichtige Tasks, Eilige Tasks, Hintergrund-Tasks
-
-**Priority-Levels**
-- **CRITICAL**: Kritische Actions (z.B. System-Updates, Sicherheits-Operations)
-- **HIGH**: Wichtige Actions (z.B. User-Commands, wichtige Datei-Operations)
-- **NORMAL**: Normale Actions (Standard-Priorität)
-- **LOW**: Niedrige Priorität (z.B. Hintergrund-Tasks, Wartungs-Operations)
-- **BACKGROUND**: Hintergrund-Priorität (niedrigste Priorität)
-
 ### Deadlock Detection & Resolution
 
 **Kombination: Timeout + Deadlock-Detection**
@@ -329,7 +506,7 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 - **System erkennt Deadlocks**: System erkennt Deadlock-Situationen
 - **Cycle Detection**: System erkennt Zyklen in Lock-Abhängigkeiten
 - **Automatische Auflösung**: System löst Deadlocks automatisch auf
-- **Priorität-basiert**: Device mit niedrigster Priorität gibt Lock frei
+- **Timeout-basiert**: Lock mit längster Wartezeit wird freigegeben (Timeout)
 
 ## Error Recovery und Resilience
 
@@ -338,10 +515,35 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 **Kombination: Retry → Fallback → Fehler**
 
 **1. Automatischer Retry mit Exponential Backoff**
-- **Erster Versuch**: Sofortiger Retry bei Netzwerk-Fehler
-- **Exponential Backoff**: Bei wiederholten Fehlern wird Wartezeit exponentiell erhöht
-- **Maximale Retries**: Maximale Anzahl von Retries (z.B. 3-5 Versuche)
-- **Timeout**: Retry-Versuche haben Timeout
+
+**Exponential Backoff-Formel:**
+```
+wait_time = base_delay * (2 ^ retry_count) + jitter
+```
+
+- **Base-Delay**: 1 Sekunde (konfigurierbar)
+- **Retry-Count**: Anzahl der bisherigen Retry-Versuche
+- **Jitter**: Zufälliger Wert (0-500ms) zur Vermeidung von Thundering-Herd-Problem
+- **Max-Wait-Time**: 60 Sekunden (konfigurierbar)
+
+**Retry-Limits:**
+- **Max-Retries**: 5 Versuche (konfigurierbar)
+- **Timeout pro Retry**: 30 Sekunden (konfigurierbar)
+- **Gesamt-Timeout**: 5 Minuten (konfigurierbar)
+
+**Retry-Strategie:**
+1. **Sofortiger Retry**: Erster Retry-Versuch sofort (0ms Wartezeit)
+2. **Exponential Backoff**: Nach jedem fehlgeschlagenen Versuch wird Wartezeit exponentiell erhöht
+3. **Max-Retries**: Nach max. 5 Versuchen wird Retry abgebrochen
+4. **Timeout**: Jeder Retry-Versuch hat Timeout von 30 Sekunden
+
+**Retry-Beispiel:**
+- Versuch 1: Sofort (0ms)
+- Versuch 2: Nach 1s + jitter
+- Versuch 3: Nach 2s + jitter
+- Versuch 4: Nach 4s + jitter
+- Versuch 5: Nach 8s + jitter
+- Danach: Fallback zu alternativer Route
 
 **2. Sofortiger Fallback**
 - **Alternative Route**: Falls Retry fehlschlägt, sofortiger Fallback zu alternativer Route
@@ -420,10 +622,12 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 - Muss Queue-System für Brünnhilde und Frigg haben
 - Muss prüfen, ob Valkyries/Frigg verfügbar sind
 - Muss Task-Queue-Management haben (Enqueue, Dequeue, Status-Tracking)
-- **Muss Hybrid-Locking unterstützen**: Lokal für lokale Resources, Distributed für geteilte Resources
-- **Muss Priority-basiertes Locking haben**: System-Priority mit User-Override
+- **Muss File Locking unterstützen**: File Locking als primäre Lösung für prozessübergreifendes Locking (da alle Götter in separaten Prozessen laufen)
+- **Muss lokales File Locking haben**: Für lokale Dateien/Resources auf demselben Device
+- **Muss Distributed File Locking haben**: File Locking über Asgard/Yggdrasil für geteilte Resources
+- **Muss Read/Write Locks unterstützen**: Read-Locks für mehrere gleichzeitige Lese-Operationen, Write-Locks für exklusive Schreib-Operationen
 - **Muss Pessimistic Locking + Transactions kombinieren**: Verhindert Race Conditions
-- **Muss Deadlock-Detection haben**: Erkennt und löst Deadlocks auf
+- **Muss Deadlock-Detection haben**: Erkennt und löst Deadlocks auf (Timeout-basiert + Cycle-Detection)
 - **Muss Timeout-basierte Lock-Expiration haben**: Automatische Freigabe nach Timeout
 - **Muss Retry-Mechanismus mit Exponential Backoff haben**: Für Netzwerk-Fehler
 - **Muss Fallback-Mechanismen haben**: Alternative Routen/Provider bei Fehlern
@@ -432,4 +636,8 @@ Thor ist der Action Executor und führt Actions aus, die von Odin geplant wurden
 - **Muss Replay-Mechanismus haben**: Für Daten-Wiederherstellung
 - **Muss State-Synchronisation haben**: Als Fallback für Daten-Wiederherstellung
 - **Muss adaptive Timeouts haben**: Mit Minimum/Maximum für Timeout-Handling
+- **Muss Einherjar Protocol implementieren**: Für Funktions-Offenlegung und Zuständigkeits-Domains
+- **Muss Responsibility Service implementieren**: Für Zuständigkeits-Management (TakeResponsibility, ReturnResponsibility, RejectResponsibility)
+- **Muss Zuständigkeits-Rückgabe haben**: Wenn Aufgabe nicht mehr Action-Execution ist
+- **Muss Rückweisungs-Mechanismus haben**: Kann Requests zurückweisen, wenn nicht in Thors Bereich
 

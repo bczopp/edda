@@ -1,8 +1,10 @@
-# Midgard - Desktop/Laptop Client
+# Midgard - Desktop Platform
 
 ## Übersicht
 
-Midgard ist der Client für Desktop/Laptop-Geräte. Er stellt die vollständige Edda-Funktionalität für Desktop- und Laptop-Computer bereit.
+Midgard ist eine **Platform** für Desktop/Laptop-Geräte, ähnlich wie Alfheim (Mobile), Asgard (Homeserver), Ragnarok (Terminal) und Jotunheim (IoT). Als Platform ist Midgard komplett platformspezifisch optimiert und kümmert sich um Connections (Netzwerk, UI, etc.), konvertiert diese zu Anfragen an Services (Odin) und ruft Services via gRPC auf.
+
+**Services sind unabhängig von Platformen**: Alle Services (Odin, Thor, Freki, Geri, Loki, etc.) sind in Rust implementiert und unabhängig von Platformen. Platformen kommunizieren mit Services via gRPC.
 
 ## Zielplattformen
 
@@ -10,23 +12,33 @@ Midgard ist der Client für Desktop/Laptop-Geräte. Er stellt die vollständige 
 - macOS
 - Linux (Ubuntu, Debian, Fedora, etc.)
 
+### Platform-spezifische Implementierung
+- **Windows**: Native Windows-APIs, Windows-spezifische Features (Tray-Icons, Notifications, System-Integration)
+- **macOS**: Native macOS-APIs, macOS-spezifische Features (Menu Bar, Notifications, System-Integration)
+- **Linux**: Native Linux-APIs, Linux-spezifische Features (System Tray, Notifications, Desktop-Integration)
+- **Platform-Updates**: Automatische Behandlung von Platform-Updates und API-Änderungen
+
 ## Projektstruktur
 
 ```
 midgard/
+├── Cargo.toml
 ├── src/
+│   ├── main.rs
+│   ├── lib.rs
 │   ├── frontend/          # Frontend (TypeScript/React)
 │   │   ├── components/
 │   │   ├── pages/
 │   │   └── ...
-│   ├── backend/           # Backend Services (Go)
-│   │   ├── odin/          # Odin Service
-│   │   ├── services/      # Service Integrations
-│   │   │   ├── huginn/    # STT Service
-│   │   │   ├── muninn/    # TTS Service
-│   │   │   ├── freki/     # RAG Service
-│   │   │   ├── geri/      # LLM Service
-│   │   │   └── thor/      # Action Executor
+│   ├── platform/          # Platform-Logik (Rust)
+│   │   ├── grpc_client/  # gRPC-Clients für Services
+│   │   ├── services/      # Service-Integration
+│   │   │   ├── odin.rs    # Odin Service Client
+│   │   │   ├── huginn.rs  # STT Service Client
+│   │   │   ├── muninn.rs  # TTS Service Client
+│   │   │   ├── freki.rs   # RAG Service Client
+│   │   │   ├── geri.rs    # LLM Service Client
+│   │   │   └── thor.rs    # Action Executor Client
 │   │   └── actions/       # Action Handlers
 │   └── utils/
 ├── config/
@@ -58,32 +70,86 @@ midgard/
 
 #### UI Components (Optional)
 - **Optionales Frontend**: User kann optional ein Frontend nutzen, um nachzuvollziehen, was im System passiert
+- **Desktop-UI-Framework**: Tauri oder Electron für Desktop-UI (TypeScript/React)
+  - **Platform-spezifische UI**: Platform-spezifische UI-Implementierungen für Windows, macOS, Linux
+  - **UI-Performance**: Optimierte UI-Performance mit Lazy-Loading für UI-Komponenten
+  - **Memory-Usage**: Effizientes Memory-Management für UI-Komponenten
 - **Input-Methoden**: Frontend unterstützt sowohl Text- als auch Sprach-Input
   - **Text-Eingabe**: Textfeld für manuelle Command-Eingabe
   - **Voice-Eingabe**: Mikrofon-Button für Sprach-Commands
   - **Wechselbar**: User kann jederzeit zwischen Text und Sprache wechseln
-- System Tray Integration
-- Notification Support
-- Settings UI
-- Status Dashboard
-- Activity Monitoring: Übersicht über laufende Actions und Services
+- **System-Integration**:
+  - **Tray-Icons**: System Tray Integration für alle Platformen
+  - **Notifications**: Platform-spezifische Notification-Support (Windows, macOS, Linux)
+  - **System-Permissions**: Behandlung von System-Permissions (Mikrofon, Dateisystem, etc.)
+  - **Permission-Requests**: UI für Permission-Requests und Permission-Verweigerungen
+- **Settings UI**: Konfigurations-UI für alle Einstellungen
+- **Status Dashboard**: Übersicht über System-Status und Services
+- **Activity Monitoring**: Übersicht über laufende Actions und Services
 
 #### Performance
-- Full Hardware Utilization
-- Multi-threading Support
-- GPU Acceleration Support
+- **Full Hardware Utilization**: Vollständige Nutzung der verfügbaren Hardware-Ressourcen
+- **Multi-threading Support**: Multi-Threading-Unterstützung für parallele Verarbeitung
+- **GPU Acceleration Support**: GPU-Beschleunigung für LLM-Inferenz
+- **UI-Performance**: Optimierte UI-Performance mit Lazy-Loading und effizientem Rendering
+- **Performance-Monitoring**: Monitoring von UI-Performance und -Lag
+- **Memory-Usage**: Effizientes Memory-Management für minimale RAM-Nutzung
+
+## Platform-Architektur
+
+### Platform-Rolle
+
+**Midgard als Platform:**
+- **Connections**: Midgard-Platform kümmert sich um Connections (Netzwerk, UI, etc.)
+- **Konvertierung**: Konvertiert Connections zu Anfragen an Services (Odin)
+- **Platformspezifisch**: Komplett platformspezifische Implementierung (Windows, macOS, Linux)
+- **Service-Aufrufe**: Ruft Services (Odin, Thor, Freki, Geri, etc.) via gRPC auf
+
+**Service-Unabhängigkeit:**
+- **Services in Rust**: Alle Services (Odin, Thor, Freki, Geri, Loki, etc.) sind unabhängig von Platformen
+- **gRPC-Kommunikation**: Midgard-Platform kommuniziert mit Services via gRPC
+- **Wiederverwendbar**: Services können von verschiedenen Platformen genutzt werden
 
 ## Service Integration
 
+### Service-Discovery und Service-Lifecycle
+
+**Service-Unabhängigkeit:**
+- Services sind unabhängig von Platformen implementiert
+- Ermöglicht flexible Entscheidungen, welche Services auf Midgard verfügbar sind
+- Services können je nach Bedarf und Hardware-Kapazität installiert werden
+
+**Service-Discovery (Platform Capability Protocol):**
+- **Einheitliches Protocol**: Alle Platformen (Midgard, Alfheim, Asgard, Ragnarok, Jotunheim) nutzen das gleiche Protocol
+- **Einherjar Protocol**: Platform ruft `EinherjarProtocol.GetCapabilities()` für alle Services auf der Platform auf
+- **Capability-Aggregation**: Platform aggregiert Capabilities von allen Services und propagiert sie an Odin
+- **Service-Discovery**: Platform propagiert alle Methoden, die Odin als public ermittelt von allen Göttern, die auf der Platform vorhanden sind
+- **Odin nutzt Einherjar Protocol**: Odin nutzt Einherjar Protocol zur Funktions-Entdeckung
+- **Von außen wird niemals direkt mit einem Gott geredet**: Alle Kommunikation läuft über die Platform
+
+**Service-Kommunikation:**
+- **Innerhalb der Platform**: Services können via gRPC kommunizieren, wenn nötig. Direkte Aufrufe sind auch möglich, wenn das performanter ist. Platform entscheidet flexibel über Kommunikationsmethode.
+- **Platformübergreifend**: Sowohl Bifrost als auch gRPC müssen unterstützt werden. Bifrost für Connection-Establishment, dann gRPC für Service-Kommunikation.
+
+**Service-Lifecycle-Management:**
+- Services werden als separate Prozesse gestartet (Microservices-Architektur)
+- Platform startet und stoppt Services basierend auf Verfügbarkeit und Bedarf
+- Health Checks werden implementiert für Service-Status-Überwachung
+- Bei Service-Ausfall: Automatische Fallbacks, Restart-Strategie, Service-Fehler werden dem User kommuniziert
+
 ### Odin Integration
-- Main Process Orchestration
-- Event Handling
-- State Management
+- **Main Process Orchestration**: Odin koordiniert alle Services auf Midgard
+- **Event Handling**: Event-basierte Kommunikation zwischen Midgard und Odin
+- **State Management**: Zustandsverwaltung für Odin-Requests und -Responses
+- **Request-Queuing**: Request-Queuing für parallele Requests an Odin
+- **Odin-Ausfälle**: Robustes Error-Handling bei Odin-Ausfällen (Fallback, Retry, User-Benachrichtigung)
 
 ### Huginn/Muninn Integration
-- Microphone Input
-- Speaker Output
-- Audio Device Management
+- **Microphone Input**: Mikrofon-Input für Voice-Commands
+- **Speaker Output**: Speaker-Output für TTS-Responses
+- **Audio Device Management**: Verwaltung von Audio-Devices (Mikrofon, Speaker)
+- **Voice-Input-UI**: UI-Komponenten für Voice-Input (Mikrofon-Button, Voice-Status)
+- **Audio-Device-Änderungen**: Automatische Behandlung von Audio-Device-Änderungen (Plug/Unplug)
 
 ### Freki Integration
 - Local Vector Database
@@ -101,28 +167,91 @@ midgard/
 - Model Management
 
 ### Thor Integration
-- File Operations
-- Application Control
-- System Commands
-- Network Operations
+- **File Operations**: Datei-Operationen über Thor
+- **Application Control**: Anwendungssteuerung über Thor
+- **System Commands**: System-Commands über Thor
+- **Network Operations**: Netzwerk-Operationen über Thor
+- **Action-Tracking**: UI für Action-Tracking und Action-Status-Anzeigen
+- **Action-Ergebnisse**: Anzeige von Action-Ergebnissen in der UI
+
+## Settings und Konfiguration
+
+### Allgemeine Settings-Prinzipien
+
+**Wichtig**: Diese Prinzipien gelten für alle Services und Platformen im Edda-System.
+
+#### Settings-Format
+- **Format**: Vermutlich JSON-Format (es sei denn im Rust-Kontext gibt es ein besseres Format, das ebenso einfach für Menschen zu verstehen ist)
+- **Menschlich lesbar**: Settings-Dateien müssen für Menschen einfach zu verstehen und zu bearbeiten sein
+- **Validierung**: Settings werden beim Laden validiert (Schema-Validierung)
+
+#### Platform-Integration
+- **Settings-Sammlung**: Platformen müssen alle Settings/Konfigurationsdateien sammeln, die auf dem Device bzw. auf der Platform aktuell verfügbar und aktiv sind
+- **Frontend-Konfiguration**: Settings müssen über Settings im Frontend konfigurierbar gemacht werden
+- **Zentrale Verwaltung**: Platform stellt zentrale Settings-Verwaltung zur Verfügung
+
+#### Hot-Reload
+- **Keine Neukompilierung**: Änderungen an den Settings sollen nicht dazu führen, dass das Projekt/der Service neu kompiliert werden muss
+- **Runtime-Reload**: Die neuen Werte können einfach zur Laufzeit neu geladen werden
+- **Service-Funktionen**: Services müssen entsprechende Funktionen zur Verfügung stellen (Hot-Reload, Settings-API, etc.)
+
+#### Service-spezifische Settings
+- **Projekt-spezifisch**: Was genau in einer Settings/Konfigurationsdatei steht, hängt sehr stark vom Service oder der Platform ab
+- **Dokumentation**: Service-spezifische Settings müssen in der jeweiligen README dokumentiert werden
+- **Beispiele**: Service-spezifische Settings-Beispiele sollten in der README enthalten sein
+
+#### Settings-Befüllung bei Installation
+- **Installation-Defaults**: Settings müssen bei der Installation (mindestens mit Default-Werten) befüllt werden
+- **Jeder Gott hat LLM**: Jeder Gott hat ein LLM, um Dinge zu tun, aber auch bestimmten Code, der den Workflow darstellt
+- **Default-Konfiguration**: Jeder Service/Plugin muss mit funktionsfähigen Default-Settings installiert werden können
+
+### Midgard-spezifische Settings
+
+**Chat-Management:**
+- **Beliebig viele Chats**: Platform muss ermöglichen, quasi beliebig viele Chats zu starten
+- **Chat-Leitung**: Chats können direkt an Götter geleitet werden (z.B. Frigg-Chat)
+- **Chat-Flags**: Flags in Settings steuern, ob ein Chat direkt an einen Gott geleitet wird oder über Odin läuft
 
 ## Configuration
 
 ### Installation Configuration
-- Model Selection (basierend auf Hardware)
-- Service Selection (lokal vs. Cloud)
-- Audio Device Configuration
-- Network Configuration
+- **Model Selection**: Model-Auswahl basierend auf Hardware-Kapazität
+- **Service Selection**: Auswahl zwischen lokalen und Cloud-Services
+- **Audio Device Configuration**: Konfiguration von Audio-Devices (Mikrofon, Speaker)
+- **Network Configuration**: Netzwerk-Konfiguration für Device-to-Device Communication
 
 ### Runtime Configuration
-- Model Settings
-- Audio Settings
-- Security Settings
-- Performance Settings
+- **Model Settings**: Konfiguration von LLM-Models (Model-Auswahl, Model-Updates)
+  - **UI für Model-Auswahl**: UI-Komponenten für Model-Auswahl und -Konfiguration
+  - **Model-Updates**: Automatische Behandlung von Model-Updates
+- **Audio Settings**: Konfiguration von Audio-Einstellungen (Qualität, Sprache, Voice)
+- **Security Settings**: Konfiguration von Security-Einstellungen (Permissions, Encryption)
+- **Performance Settings**: Konfiguration von Performance-Einstellungen (Threading, GPU, etc.)
+
+### Konfigurations-Management
+- **Konfigurations-Speicherung**: Lokale Speicherung von Konfigurationen (verschlüsselt)
+- **Konfigurations-Synchronisation**: Synchronisation von Konfigurationen zwischen Devices (optional)
+- **Konfigurations-Konflikte**: Behandlung von Konfigurations-Konflikten bei Synchronisation
 
 ## Abhängigkeiten
 
-- **Edda Core Library**: DTOs, Protocols, Utils
+### TypeScript/Frontend-Tooling
+
+- **WICHTIG**: Für TypeScript/Frontend-Entwicklung muss zwingend `bun` verwendet werden (statt npm oder pnpm)
+- **Integration**: `bun` wird als Package-Manager und Runtime verwendet
+  - Integration erfolgt über `bun install` für Dependencies und `bun run` für Scripts
+  - `bun`-spezifische Konfigurationen können in `package.json` oder `bunfig.toml` definiert werden
+  - Dependencies werden über `bun` verwaltet (schneller als npm/pnpm)
+
+### Keine Core Library
+
+- **WICHTIG**: Es gibt keine Edda Core Library
+- **Separate Projekte**: Wenn gemeinsame Komponenten benötigt werden (DTOs, Protocols, Utils), sollte ein separates Projekt erstellt werden
+- **Selektive Nutzung**: Dies hält Apps klein, da genau gewählt werden kann, was benötigt wird
+- **Keine Abhängigkeit**: Midgard sollte nicht auf Dateien/Protocols/Utils aus dem `edda` Verzeichnis verweisen (KEIN PROJEKT - nur Metadaten-Sammlung)
+
+### Technische Abhängigkeiten
+
 - Platform-specific APIs
 - Audio Libraries
 - UI Framework (Electron, Tauri, etc.)
@@ -132,14 +261,24 @@ midgard/
 - **Odin**: Läuft als Hauptprozess auf Midgard
 - **Services**: Alle Services (Huginn/Muninn, Freki, Geri, Thor) werden von Odin koordiniert
 - **Bifrost**: Für Device-to-Device Communication
+  - **Bifrost-Integration**: Integration von Bifrost für Device-Verbindungen
+  - **UI für Device-Verbindungen**: UI-Komponenten für Device-Verbindungen und -Status
+  - **Verbindungsprobleme**: Robustes Error-Handling bei Verbindungsproblemen (Retry, Fallback)
 - **Heimdall**: Für Security und Authentication
 - **Asgard**: Kann als Server im Netzwerk fungieren
 - **Yggdrasil**: Für globale Device-Registry und User-Management
+
+### Cross-Device Actions
+- **UI-Darstellung**: UI-Komponenten für Cross-Device Actions (Action-Status, Action-Ergebnisse)
+- **Action-Status-Anzeigen**: Echtzeit-Anzeige von Action-Status für Cross-Device Actions
+- **Action-Ergebnisse**: Anzeige von Action-Ergebnissen von anderen Devices in der UI
 
 ## Datenschutz
 
 ### Datenschutz-Features
 - **Lokale Datenverarbeitung**: Daten werden bevorzugt lokal verarbeitet
+  - **UI-Indikatoren**: UI-Indikatoren für lokale vs. Cloud-Verarbeitung (Status-Anzeigen)
+  - **Datenschutz-Präferenzen**: UI für Datenschutz-Präferenzen (lokale vs. Cloud-Verarbeitung)
 - **Minimale Cloud-Nutzung**: Cloud-Services nur bei expliziter User-Erlaubnis
 - **Keine Tracking-Daten**: Keine User-Tracking oder Analytics-Daten ohne Zustimmung
 - **Datenverschlüsselung**: Sensible Daten werden verschlüsselt gespeichert
@@ -184,6 +323,19 @@ midgard/
 - Identity Persistence
 - Identity Verification
 
+**Data Structure**
+- Device ID (user-assigned, unique)
+- Device Name
+- World Type (Midgard, Asgard, Alfheim, Jotunheim)
+- Capabilities
+- Hardware Specs
+- Registration Timestamp
+
+**Storage**
+- Local SQLite Database
+- Encrypted Storage
+- Backup & Restore
+
 ### Device Discovery & Connection
 
 **Workflow**
@@ -209,17 +361,25 @@ midgard/
    - Odin auf Device A verarbeitet Command
    - Odin entscheidet, dass Action auf Device B ausgeführt werden soll
 
-2. **Action Routing**
-   - Device A sendet `ThorAction` über Bifrost an Device B
+2. **Connection Establishment**
+   - Device A verbindet sich mit Device B über Bifrost (WebSocket)
    - Heimdall auf Device B prüft Permissions
+   - gRPC-Verbindung wird über Bifrost etabliert
 
-3. **Action Execution**
+3. **Action Routing**
+   - Device A sendet `ThorAction` via gRPC an Device B
+   - Type-safe Kommunikation mit Protobuf
+   - Bessere Performance als WebSocket für einzelne Requests
+
+4. **Action Execution**
    - Thor auf Device B führt Action aus
-   - `ThorResult` wird zurück an Device A gesendet
+   - `ThorResult` wird zurück an Device A via gRPC gesendet
+   - Streaming möglich für lange Action-Executions
 
-4. **Response**
+5. **Response**
    - Device A empfängt Result
    - User erhält Response
+   - gRPC-Verbindung kann wiederverwendet werden für weitere Actions
 
 ## Network Expansion (Phase 4)
 

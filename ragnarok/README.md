@@ -1,8 +1,12 @@
-# Ragnarok - Terminal Agent
+# Ragnarok - Terminal Platform
 
 ## Übersicht
 
-Ragnarok ist ein Terminal-basierter Agent für Coding und Device-Steuerung. Er bietet die gleichen Features wie Midgard/Alfheim/Asgard, nutzt aber eine TUI (Terminal User Interface) statt eines GUI-Frontends. Ragnarok nutzt Odin wie die anderen Projekte - der einzige Unterschied ist die TUI statt GUI.
+Ragnarok ist eine **Platform** für Terminal-basierte Geräte, ähnlich wie Midgard (Desktop), Alfheim (Mobile), Asgard (Homeserver) und Jotunheim (IoT). Als Platform ist Ragnarok komplett platformspezifisch optimiert und kümmert sich um Connections (Terminal, TUI, etc.), konvertiert diese zu Anfragen an Services (Odin) und ruft Services via gRPC auf.
+
+**Services sind unabhängig von Platformen**: Alle Services (Odin, Thor, Freki, Geri, Loki, etc.) sind in Rust implementiert und unabhängig von Platformen. Platformen kommunizieren mit Services via gRPC.
+
+Ragnarok bietet die gleichen Features wie Midgard/Alfheim/Asgard, nutzt aber eine TUI (Terminal User Interface) statt eines GUI-Frontends. Ragnarok nutzt Odin wie die anderen Projekte - der einzige Unterschied ist die TUI statt GUI.
 
 ## Zielplattformen
 
@@ -76,15 +80,71 @@ ragnarok/
 - **Voice-Input**: Optional Voice-Input via Huginn (STT)
 - **Live-Updates**: Live-Updates während Task-Ausführung
 - **Multi-Panel**: Mehrere Panels für Chat, Status, History gleichzeitig
+  - **Multi-Panel-Layout**: Multi-Panel-Layout-Management
+  - **Layout-Management**: Automatisches Layout-Management für verschiedene Panel-Konfigurationen
+  - **Terminal-Größen-Änderungen**: Automatische Anpassung bei Terminal-Größen-Änderungen
 - **Keyboard-Navigation**: Vollständige Keyboard-Navigation
 - **Responsive**: Passt sich Terminal-Größe an
 
+**TUI-Komponenten-Struktur:**
+- **Component-Libraries**: Wiederverwendbare TUI-Component-Libraries
+- **TUI-Performance**: Optimierte TUI-Performance (Rendering-Optimierungen, Lazy-Loading)
+
+## Platform-Architektur
+
+### Platform-Rolle
+
+**Ragnarok als Platform:**
+- **Connections**: Ragnarok-Platform kümmert sich um Connections (Terminal, TUI, etc.)
+- **Konvertierung**: Konvertiert Connections zu Anfragen an Services (Odin)
+- **Platformspezifisch**: Komplett platformspezifische Implementierung (Terminal-Umgebung)
+- **Service-Aufrufe**: Ruft Services (Odin, Thor, Freki, Geri, etc.) via gRPC auf
+
+**Service-Unabhängigkeit:**
+- **Services in Rust**: Alle Services (Odin, Thor, Freki, Geri, Loki, etc.) sind unabhängig von Platformen
+- **gRPC-Kommunikation**: Ragnarok-Platform kommuniziert mit Services via gRPC
+- **Wiederverwendbar**: Services können von verschiedenen Platformen genutzt werden
+
 ### Service Integration
+
+### Service-Discovery und Service-Lifecycle
+
+**Service-Unabhängigkeit:**
+- Services sind unabhängig von Platformen implementiert
+- Ermöglicht flexible Entscheidungen, welche Services auf Ragnarok verfügbar sind
+- Services können je nach Bedarf und Hardware-Kapazität installiert werden
+
+**Service-Discovery (Platform Capability Protocol):**
+- **Einheitliches Protocol**: Alle Platformen (Midgard, Alfheim, Asgard, Ragnarok, Jotunheim) nutzen das gleiche Protocol
+- **Einherjar Protocol**: Platform ruft `EinherjarProtocol.GetCapabilities()` für alle Services auf der Platform auf
+- **Capability-Aggregation**: Platform aggregiert Capabilities von allen Services und propagiert sie an Odin
+- **Service-Discovery**: Platform propagiert alle Methoden, die Odin als public ermittelt von allen Göttern, die auf der Platform vorhanden sind
+- **Odin nutzt Einherjar Protocol**: Odin nutzt Einherjar Protocol zur Funktions-Entdeckung
+- **Von außen wird niemals direkt mit einem Gott geredet**: Alle Kommunikation läuft über die Platform
+
+**Service-Kommunikation:**
+- **Innerhalb der Platform**: Services können via gRPC kommunizieren, wenn nötig. Direkte Aufrufe sind auch möglich, wenn das performanter ist. Platform entscheidet flexibel über Kommunikationsmethode.
+- **Platformübergreifend**: Sowohl Bifrost als auch gRPC müssen unterstützt werden. Bifrost für Connection-Establishment, dann gRPC für Service-Kommunikation.
+
+**Service-Lifecycle-Management:**
+- Services werden als separate Prozesse gestartet (Microservices-Architektur)
+- Platform startet und stoppt Services basierend auf Verfügbarkeit und Bedarf
+- Health Checks werden implementiert für Service-Status-Überwachung
+- Bei Service-Ausfall: Automatische Fallbacks, Restart-Strategie, Service-Fehler werden dem User kommuniziert
 
 **Gleiche Architektur wie Midgard/Alfheim/Asgard:**
 - **Odin**: Hauptprozess - koordiniert alle Services
+  - **Odin-Integration**: Kommunikation zwischen Ragnarok und Odin
+  - **TUI-spezifische Request-Optimierungen**: Optimierungen für TUI-spezifische Requests
+  - **Odin-Ausfälle**: Robustes Error-Handling bei Odin-Ausfällen
 - **Thor**: Action Executor und Tool-Calling-Agent
+  - **Thor-Integration**: Darstellung von Actions in der TUI
+  - **Action-Status-Anzeigen**: TUI-Anzeigen für Action-Status
+  - **Action-Ergebnisse**: Anzeige von Action-Ergebnissen in der TUI
 - **Brünnhilde (Valkyries)**: Coding-Agent (via Thor)
+  - **Valkyries-Integration**: Darstellung von Coding-Aufgaben in der TUI
+  - **Progress-Anzeigen**: Progress-Anzeigen für Valkyries
+  - **Valkyrie-Ergebnisse**: Anzeige von Valkyrie-Ergebnissen in der TUI
 - **Huginn & Muninn**: STT/TTS Service (optional, für Voice-Commands)
 - **Freki**: RAG Service für Context-Enrichment
 - **Geri**: LLM Service für Prompt-Processing
@@ -94,7 +154,13 @@ ragnarok/
 #### Optional: Heimnetz-Verbindung
 - **Optional**: User kann optional Verbindung zum Heimnetz aufbauen
 - **Expliziter Aufruf**: Muss als `/`-Command explizit aufgerufen werden
+  - **Heimnetz-Aktivierung**: Aktivierung der Heimnetz-Verbindung über `/`-Command
+  - **Connection-Status-Anzeigen**: TUI-Anzeigen für Connection-Status
+  - **Verbindungsprobleme**: Robustes Error-Handling bei Verbindungsproblemen
 - **Bifrost**: Für Device-to-Device Communication (wenn verbunden)
+  - **Bifrost-Integration**: Integration von Bifrost in Ragnarok
+  - **TUI für Device-Verbindungen**: TUI-Komponenten für Device-Verbindungen
+  - **Verbindungsprobleme**: Robustes Error-Handling bei Verbindungsproblemen
 - **Heimdall**: Für Security und Authentication (wenn verbunden)
 
 ### Model Management
@@ -105,6 +171,8 @@ ragnarok/
 - **Schlank**: Optimiert, damit es den Computer nicht lahmlegt
 - **Tool-Calling**: Speziell für Tool-Calling optimiert
 - **Empfohlenes Model**: Llama 3.1 8B oder ähnlich (zuverlässig, wenige Fehler)
+- **Installation**: Automatische Installation beim ersten Start
+- **Model-Updates**: Automatische Updates oder manuelle Update-Funktion
 
 #### Alternative Model-Konfiguration
 - **Lokales Model**: User kann auf anderes lokales Model routen
@@ -116,6 +184,10 @@ ragnarok/
 - **llama.cpp**: Primäre Anbindung über llama.cpp für minimale Overhead
 - **Direkte Anbindung**: So wenig Overhead wie möglich
 - **Rust**: Implementierung in Rust (wie alle anderen Services)
+- **llama.cpp-Integration**: Version-Check und Update-Mechanismus für llama.cpp
+- **Model-Konfiguration**: Verwaltung von Model-Konfigurationen
+- **Model-Switching**: Mechanismen zum Wechseln zwischen verschiedenen Models
+- **Model-Loading-Fehler**: Robustes Error-Handling bei Model-Loading-Fehlern
 
 ### Claude Code & Cursor Features
 
@@ -124,12 +196,15 @@ ragnarok/
 - **Persistent Execution**: Arbeitet nicht aufhören bis Task vollständig erledigt ist
 - **Iterative Improvement**: Verbessert Code iterativ bis zur Vollständigkeit
 - **Context-Aware**: Nutzt Codebase-Kontext intelligent
+- **Feature-Prioritäten**: Priorisierung von Features basierend auf Wichtigkeit
+- **Feature-Implementierung**: Detaillierte Implementierung von Claude Code Features
 
 #### Cursor Debug-Mode Features
 - **Debug-Mode Support**: Unterstützt Cursor Debug-Mode Features
 - **Verbesserungen**: Möglicherweise Verbesserungen gegenüber Cursor Debug-Mode
 - **Error-Debugging**: Intelligentes Error-Debugging und -Behebung
 - **Step-by-Step Execution**: Step-by-Step Code-Execution mit Debugging
+- **Debug-Features in TUI**: Darstellung von Debug-Features in der TUI
 
 ## TUI Interface
 
@@ -165,6 +240,16 @@ ragnarok/
 - `Ctrl+L`: Chat leeren
 - `Ctrl+H`: History anzeigen
 - `Ctrl+C`: Config öffnen
+
+**Keyboard-Shortcuts-Implementierung:**
+- **Keyboard-Shortcuts**: Implementierung von Keyboard-Shortcuts
+- **Konfigurierbare Shortcuts**: Konfigurierbare Keyboard-Shortcuts
+- **Shortcut-Konflikte**: Behandlung von Shortcut-Konflikten
+
+**Input-Handling:**
+- **Text-Input**: Text-Input-Handling in der TUI
+- **Voice-Input-Support**: Optional Voice-Input-Support (via Huginn)
+- **Input-Fehler**: Robustes Error-Handling bei Input-Fehlern
 
 ### Example Usage
 
@@ -221,11 +306,21 @@ Odin (Main Process)
 - **Einheitliche Model-Auswahl**: Brünhild und alle Sub-Valkyries verwenden standardmäßig das gleiche Model
 - **Resource-Optimierung**: Wenn externes Model konfiguriert wird, wird mitgeliefertes Model nicht geladen
 
+### Konfigurations-Management
+- **Konfigurations-Verwaltung**: Verwaltung von Konfigurationen in der TUI
+- **Konfigurations-Dateien**: Speicherung von Konfigurationen in Dateien
+- **Konfigurations-Änderungen**: Behandlung von Konfigurations-Änderungen (Hot-Reload, Restart)
+
+### LLM-Konfiguration
+- **LLM-Konfiguration pro Valkyrie**: Verwaltung von LLM-Konfiguration pro Valkyrie
+- **TUI für Model-Auswahl**: TUI-Komponenten für Model-Auswahl
+- **Konfigurations-Änderungen**: Behandlung von Konfigurations-Änderungen (Hot-Reload, Restart)
+
 ### Individuelle Konfiguration
 - **Konfigurierbar**: Jede Valkyrie kann ein eigenes LLM konfiguriert bekommen
 - **Use-Case-spezifisch**: Verschiedene Valkyries können verschiedene Models nutzen (z.B. spezialisierte Coding-Models)
 - **Konfiguration**: Über `ragnarok config` oder Konfigurationsdatei
-- **Gilt auch außerhalb von Ragnarok**: Diese Konfigurationsmöglichkeit gilt für alle Valkyries-Installationen
+- **Valkyries-Konfiguration**: Die LLM-Konfiguration für Valkyries wird in `valkyries/README.md` dokumentiert (gilt für alle Valkyries-Installationen, nicht nur Ragnarok)
 
 ### Konfigurierbare Modelle
 - **Lokales Model**: Anderes lokales Model über llama.cpp
@@ -246,6 +341,49 @@ Odin (Main Process)
 }
 ```
 
+## Settings und Konfiguration
+
+### Allgemeine Settings-Prinzipien
+
+**Wichtig**: Diese Prinzipien gelten für alle Services und Platformen im Edda-System.
+
+#### Settings-Format
+- **Format**: Vermutlich JSON-Format (es sei denn im Rust-Kontext gibt es ein besseres Format, das ebenso einfach für Menschen zu verstehen ist)
+- **Menschlich lesbar**: Settings-Dateien müssen für Menschen einfach zu verstehen und zu bearbeiten sein
+- **Validierung**: Settings werden beim Laden validiert (Schema-Validierung)
+
+#### Platform-Integration
+- **Settings-Sammlung**: Platformen müssen alle Settings/Konfigurationsdateien sammeln, die auf dem Device bzw. auf der Platform aktuell verfügbar und aktiv sind
+- **Frontend-Konfiguration**: Settings müssen über Settings im Frontend konfigurierbar gemacht werden
+- **Zentrale Verwaltung**: Platform stellt zentrale Settings-Verwaltung zur Verfügung
+
+#### Hot-Reload
+- **Keine Neukompilierung**: Änderungen an den Settings sollen nicht dazu führen, dass das Projekt/der Service neu kompiliert werden muss
+- **Runtime-Reload**: Die neuen Werte können einfach zur Laufzeit neu geladen werden
+- **Service-Funktionen**: Services müssen entsprechende Funktionen zur Verfügung stellen (Hot-Reload, Settings-API, etc.)
+
+#### Service-spezifische Settings
+- **Projekt-spezifisch**: Was genau in einer Settings/Konfigurationsdatei steht, hängt sehr stark vom Service oder der Platform ab
+- **Dokumentation**: Service-spezifische Settings müssen in der jeweiligen README dokumentiert werden
+- **Beispiele**: Service-spezifische Settings-Beispiele sollten in der README enthalten sein
+
+#### Settings-Befüllung bei Installation
+- **Installation-Defaults**: Settings müssen bei der Installation (mindestens mit Default-Werten) befüllt werden
+- **Jeder Gott hat LLM**: Jeder Gott hat ein LLM, um Dinge zu tun, aber auch bestimmten Code, der den Workflow darstellt
+- **Default-Konfiguration**: Jeder Service/Plugin muss mit funktionsfähigen Default-Settings installiert werden können
+
+### Ragnarok-spezifische Settings
+
+**Settings-Inhalt (wird während Implementierung definiert)**
+- Model-Konfiguration (siehe Abschnitt "LLM-Konfiguration")
+- TUI-Einstellungen
+- Keyboard-Navigation-Einstellungen
+
+**Chat-Management:**
+- **Beliebig viele Chats**: Platform muss ermöglichen, quasi beliebig viele Chats zu starten
+- **Chat-Leitung**: Chats können direkt an Götter geleitet werden (z.B. Frigg-Chat)
+- **Chat-Flags**: Flags in Settings steuern, ob ein Chat direkt an einen Gott geleitet wird oder über Odin läuft
+
 ## Performance
 
 ### Performance-Optimierungen
@@ -254,6 +392,16 @@ Odin (Main Process)
 - **Minimaler Overhead**: Direkte Model-Anbindung über llama.cpp
 - **Resource-Management**: Intelligentes Resource-Management für optimale Performance
 - **Lazy Loading**: Model wird nur geladen, wenn benötigt
+
+### TUI-Performance
+- **TUI-Performance-Optimierungen**: Optimierungen für TUI-Performance
+- **Rendering-Optimierungen**: Optimierungen für TUI-Rendering
+- **Terminal-Lag**: Behandlung von Terminal-Lag (Throttling, Debouncing)
+
+### Model-Performance
+- **Model-Inference-Performance**: Optimierungen für Model-Inference-Performance
+- **Model-Caching**: Caching von Model-Responses für bessere Performance
+- **Model-Loading-Zeit**: Behandlung von Model-Loading-Zeit (Progress-Anzeigen, Background-Loading)
 
 ### Performance-Metriken
 - Schnelle Response-Zeiten (< 1s für einfache Commands)
@@ -264,6 +412,9 @@ Odin (Main Process)
 
 ### Datenschutz-Features
 - **Lokale Verarbeitung**: Daten werden lokal verarbeitet, keine unnötige Cloud-Übertragung
+  - **Lokale Datenverarbeitung**: Bevorzugung von lokaler Datenverarbeitung
+  - **TUI-Indikatoren**: TUI-Indikatoren für lokale vs. Cloud-Verarbeitung
+  - **Datenschutz-Präferenzen**: UI für Datenschutz-Präferenzen
 - **Minimale Datensammlung**: Nur notwendige Daten werden gespeichert
 - **Keine Tracking-Daten**: Keine User-Tracking oder Analytics-Daten
 - **User Control**: User hat volle Kontrolle über seine Daten
@@ -279,6 +430,9 @@ Odin (Main Process)
 
 ### Security-Features
 - **Sandboxing**: Sandboxing für Code-Execution zum Schutz vor schädlichem Code
+  - **Sandboxing-Implementierung**: Detaillierte Sandboxing-Implementierung für Code-Execution
+  - **Permission-Systeme**: Granulare Permission-Systeme für Code-Execution
+  - **Sandbox-Escape-Versuche**: Erkennung und Behandlung von Sandbox-Escape-Versuchen
 - **Input Validation**: Umfassende Validierung aller Inputs
 - **Code Review**: Automatische Code-Review für Security-Issues
 - **Secure Key Storage**: Sichere Speicherung von API-Keys
@@ -293,10 +447,18 @@ Odin (Main Process)
 
 ## Abhängigkeiten
 
-- **Edda Core Library**: DTOs, Protocols, Utils (Go)
+### Keine Core Library
+
+- **WICHTIG**: Es gibt keine Edda Core Library
+- **Separate Projekte**: Wenn gemeinsame Komponenten benötigt werden (DTOs, Protocols, Utils), sollte ein separates Projekt erstellt werden
+- **Selektive Nutzung**: Dies hält Apps klein, da genau gewählt werden kann, was benötigt wird
+- **Keine Abhängigkeit**: Ragnarok sollte nicht auf Dateien/Protocols/Utils aus dem `edda` Verzeichnis verweisen (KEIN PROJEKT - nur Metadaten-Sammlung)
+
+### Service-Abhängigkeiten
+
 - **Odin**: Main Process Service (wie Midgard/Alfheim/Asgard)
 - **Thor**: Action Executor und Tool-Calling-Agent
-- **Brünnhilde (Valkyries)**: Coding-Agent (via Thor)
+- **Brünnhilde (Valkyries)**: Coding-Agent (via Thor, optional)
 - **Geri**: LLM Service
 - **Freki**: RAG Service
 - **Huginn & Muninn**: STT/TTS Service (optional)
@@ -340,6 +502,19 @@ Odin (Main Process)
 - Device Metadata (Name, Type, Capabilities)
 - Identity Persistence
 - Identity Verification
+
+**Data Structure**
+- Device ID (user-assigned, unique)
+- Device Name
+- World Type (Midgard, Asgard, Alfheim, Jotunheim)
+- Capabilities
+- Hardware Specs
+- Registration Timestamp
+
+**Storage**
+- Local SQLite Database
+- Encrypted Storage
+- Backup & Restore
 
 ### Device Discovery & Connection
 

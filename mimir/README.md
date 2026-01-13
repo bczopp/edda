@@ -11,9 +11,19 @@ Mimir ist der Privacy Database Service bei Yggdrasil. Er verwaltet eine eigene, 
 ## Verantwortlichkeiten
 
 ### 1. Privacy Database Management
-- **Isolierte Datenbank**: Eigene, isolierte Datenbank für personenbezogene Daten
-- **Extra Sicherheitsschicht**: Verschlüsselung, Access Control, Audit-Logging
-- **GDPR-Compliance**: Vollständige Einhaltung der GDPR-Anforderungen
+- **Isolierte Datenbank**: 
+  - **Technische Implementierung**: Datenbank-Isolation wird technisch implementiert (separate Datenbank-Instanzen, separate Schemas)
+  - **Separate Instanzen**: Separate Datenbank-Instanzen für Privacy-Daten (PostgreSQL, etc.)
+  - **Datenbank-Migrations**: Datenbank-Migrations werden gehandhabt (Schema-Migration, Data-Migration)
+- **Extra Sicherheitsschicht**: 
+  - **Security-Layer-Architektur**: Multi-Layer-Security-Architektur (Verschlüsselung, Access Control, Audit-Logging)
+  - **Security-Layer-Updates**: Bei Security-Layer-Updates wird automatisch Migration durchgeführt
+  - Verschlüsselung, Access Control, Audit-Logging
+- **GDPR-Compliance**: 
+  - **Compliance-Implementierung**: GDPR-Compliance wird implementiert (Data Subject Rights, Data Protection)
+  - **Compliance-Validierung**: Automatische Compliance-Validierung (Policy-Checks, Audit-Checks)
+  - **Compliance-Fehler**: Bei Compliance-Fehlern wird Fehler geloggt, Security-Alert wird ausgelöst
+  - Vollständige Einhaltung der GDPR-Anforderungen
 - **Data Isolation**: Strikte Isolation von anderen Datenbanken
 
 ### 2. Database Operations
@@ -119,8 +129,12 @@ Mimir ist der Privacy Database Service bei Yggdrasil. Er verwaltet eine eigene, 
 ### Audit-Logging
 - **Vollständiges Logging**: Alle Datenzugriffe werden geloggt
 - **Immutable Logs**: Logs können nicht verändert werden
-- **Compliance-Logging**: Logging erfüllt Compliance-Anforderungen
+- **Compliance-Logging**: Logging erfüllt Compliance-Anforderungen (GDPR)
 - **Log-Retention**: Langfristige Aufbewahrung von Logs
+- **Strukturiertes Logging**: Structured Logging mit Log Levels (DEBUG, INFO, WARN, ERROR)
+- **Context Tracking**: Context wird mitgeloggt für besseres Tracking
+- **Log Rotation**: Automatische Log-Rotation
+- **Audit-Logs für Security-Audits**: Logs werden für Security-Audits aufbewahrt
 
 ## GDPR-Compliance
 
@@ -139,10 +153,51 @@ Mimir ist der Privacy Database Service bei Yggdrasil. Er verwaltet eine eigene, 
 
 ## Abhängigkeiten
 
-- **Edda Core Library**: DTOs, Protocols, Utils
+### Keine Core Library
+
+- **WICHTIG**: Es gibt keine Edda Core Library
+- **Separate Projekte**: Wenn gemeinsame Komponenten benötigt werden (DTOs, Protocols, Utils), sollte ein separates Projekt erstellt werden
+- **Selektive Nutzung**: Dies hält Apps klein, da genau gewählt werden kann, was benötigt wird
+- **Keine Abhängigkeit**: Mimir sollte nicht auf Dateien/Protocols/Utils aus dem `edda` Verzeichnis verweisen (KEIN PROJEKT - nur Metadaten-Sammlung)
+
+### Technische Abhängigkeiten
+
 - **Database**: PostgreSQL oder spezialisierte Privacy-Datenbank
 - **Encryption Libraries**: Für Verschlüsselung
 - **Security Libraries**: Für Access Control und Audit-Logging
+
+## Settings und Konfiguration
+
+### Allgemeine Settings-Prinzipien
+
+**Wichtig**: Diese Prinzipien gelten für alle Services und Platformen im Edda-System.
+
+#### Settings-Format
+- **Format**: Vermutlich JSON-Format (es sei denn im Rust-Kontext gibt es ein besseres Format, das ebenso einfach für Menschen zu verstehen ist)
+- **Menschlich lesbar**: Settings-Dateien müssen für Menschen einfach zu verstehen und zu bearbeiten sein
+- **Validierung**: Settings werden beim Laden validiert (Schema-Validierung)
+
+#### Platform-Integration
+- **Settings-Sammlung**: Platformen müssen alle Settings/Konfigurationsdateien sammeln, die auf dem Device bzw. auf der Platform aktuell verfügbar und aktiv sind
+- **Frontend-Konfiguration**: Settings müssen über Settings im Frontend konfigurierbar gemacht werden
+- **Zentrale Verwaltung**: Platform stellt zentrale Settings-Verwaltung zur Verfügung
+
+#### Hot-Reload
+- **Keine Neukompilierung**: Änderungen an den Settings sollen nicht dazu führen, dass das Projekt/der Service neu kompiliert werden muss
+- **Runtime-Reload**: Die neuen Werte können einfach zur Laufzeit neu geladen werden
+- **Service-Funktionen**: Services müssen entsprechende Funktionen zur Verfügung stellen (Hot-Reload, Settings-API, etc.)
+
+#### Service-spezifische Settings
+- **Projekt-spezifisch**: Was genau in einer Settings/Konfigurationsdatei steht, hängt sehr stark vom Service oder der Platform ab
+- **Dokumentation**: Service-spezifische Settings müssen in der jeweiligen README dokumentiert werden
+- **Beispiele**: Service-spezifische Settings-Beispiele sollten in der README enthalten sein
+
+### Mimir-spezifische Settings
+
+**Settings-Inhalt (wird während Implementierung definiert)**
+- Database-Konfiguration
+- Security-Einstellungen
+- Data-Retention-Einstellungen
 
 ## Integration
 
@@ -162,6 +217,14 @@ Mimir ist der Privacy Database Service bei Yggdrasil. Er verwaltet eine eigene, 
 - Schnelle Queries (< 50ms für Standard-Queries)
 - Effiziente Writes (< 100ms für Standard-Writes)
 - Hoher Durchsatz (1000+ Queries/Sekunde pro Instanz)
+
+### Performance-Monitoring
+
+**Performance-Monitoring:**
+- Performance-Metriken: Response-Zeiten, Durchsatz, Resource-Usage
+- Performance-Tracking für alle Database-Operations
+- Kontinuierliche Überwachung und Performance-Optimierung
+- Alerts bei Performance-Problemen
 
 ## Implementierungs-Notizen
 

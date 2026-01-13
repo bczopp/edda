@@ -8,9 +8,9 @@
 - **Midgard** (Desktop/Laptop): Odin läuft als Hauptprozess
 - **Alfheim** (Mobile/Smartphone): Odin läuft als Hauptprozess
 - **Asgard** (Homeserver): Odin läuft als Hauptprozess (zusätzlich Server-Funktionalität)
-- **Jötnar** (IoT/ESP32): Kein Odin (Devices zu klein, nutzen spezielles Toolcalling-Protocol)
+- **Jotunheim** (IoT/ESP32): Kein Odin (Devices zu klein, nutzen Loki für Toolcalling-Funktionalität)
 
-Odin koordiniert alle Services (Huginn/Muninn für STT/TTS, Freki für RAG, Geri für LLM, Thor für Actions) auf jedem Device (Midgard, Alfheim, Asgard) und ermöglicht die dezentrale, device-übergreifende Kommunikation über Bifrost. Jötnar-Devices kommunizieren über ein spezielles, token-effizientes Toolcalling-Protocol.
+Odin koordiniert alle Services (Huginn/Muninn für STT/TTS, Freki für RAG, Geri für LLM, Thor für Actions) auf jedem Device (Midgard, Alfheim, Asgard) und ermöglicht die dezentrale, device-übergreifende Kommunikation über Bifrost. Jotunheim-Devices nutzen Loki für token-effizientes Toolcalling.
 
 ### Kernwerte
 - **Dezentralität**: Keine Vendor Lock-in, User behalten Kontrolle
@@ -91,7 +91,7 @@ Odin koordiniert alle Services (Huginn/Muninn für STT/TTS, Freki für RAG, Geri
   - Desktop/Laptop (Midgard) - Vollständig kostenfrei
   - Mobile (Alfheim) - Vollständig kostenfrei
   - Homeserver (Asgard) - Vollständig kostenfrei
-  - IoT-Devices (Jötnar) - Vollständig kostenfrei
+  - IoT-Devices (Jotunheim) - Vollständig kostenfrei
   - **Hinweis**: Software ist kostenlos, aber proprietär (kein Open Source, keine Code-Anpassungen möglich)
 - Lokale Gerätesteuerung
 - Heimnetzwerk-Integration (Nine Realms)
@@ -255,7 +255,7 @@ Odin koordiniert alle Services (Huginn/Muninn für STT/TTS, Freki für RAG, Geri
 - **User-Wert**: User erhalten deutlich mehr Wert (68-72% der Subscription als Cloud-LLM-Kosten) - Premium: 68%, Pro: 72.25%, Enterprise: 71.4%
 
 **Hinweis**: 
-- Marketplace und Analytics sind für alle kostenlos. **Odin** (der Hauptprozess auf Midgard/Desktop, Alfheim/Mobile, Asgard/Homeserver - nicht auf Jötnar/IoT, da diese zu klein sind) wählt automatisch den passenden Provider basierend auf User-Settings (Anspruch/Requirements). Direkte Provider-Auswahl ist möglich, aber nicht empfohlen, da Odin optimiert auswählt.
+- Marketplace und Analytics sind für alle kostenlos. **Odin** (der Hauptprozess auf Midgard/Desktop, Alfheim/Mobile, Asgard/Homeserver - nicht auf Jotunheim/IoT, da diese zu klein sind) wählt automatisch den passenden Provider basierend auf User-Settings (Anspruch/Requirements). Direkte Provider-Auswahl ist möglich, aber nicht empfohlen, da Odin optimiert auswählt.
 - **Zahlungsmethode erforderlich**: Sowohl Provider als auch Consumer müssen eine gültige Zahlungsmethode hinterlegen (Provider für Auszahlungen, Consumer für Requests).
 - **Bezahlte Tiers**: Dienen hauptsächlich dem Zugang zu Premium Cloud-LLMs (OpenAI, Anthropic, Google). Revenue kommt primär aus Marketplace-Commissions.
 
@@ -594,7 +594,7 @@ Odin koordiniert alle Services (Huginn/Muninn für STT/TTS, Freki für RAG, Geri
 - **Desktop/Laptop (Midgard)**: Download für Windows, macOS, Linux
 - **Mobile (Alfheim)**: Download für iOS, Android
 - **Homeserver (Asgard)**: Download für verschiedene Server-OS
-- **IoT-Devices (Jötnar)**: Download für ESP32 und andere IoT-Plattformen
+- **IoT-Devices (Jotunheim)**: Download für ESP32 und andere IoT-Plattformen
 - **Installations-Anleitungen**: Schritt-für-Schritt Guides
 - **System-Anforderungen**: Hardware/Software-Voraussetzungen
 - **Release Notes**: Versions-Historie und Changelogs
@@ -612,8 +612,8 @@ Odin koordiniert alle Services (Huginn/Muninn für STT/TTS, Freki für RAG, Geri
 **4. User-Account & Dashboard**:
 - **Registrierung/Anmeldung**: User können sich anmelden
 - **Asgard Dashboard**: 
-  - Zugriff auf Asgard-Dashboard direkt von der Website (Asgard ist der Homeserver, Odin läuft als Hauptprozess auf Midgard, Alfheim und Asgard - nicht auf Jötnar/IoT)
-  - Device-Management (alle Devices: Midgard/Desktop, Alfheim/Mobile, Asgard/Homeserver, Jötnar/IoT - wobei Jötnar über spezielles Protocol kommuniziert)
+  - Zugriff auf Asgard-Dashboard direkt von der Website (Asgard ist der Homeserver, Odin läuft als Hauptprozess auf Midgard, Alfheim und Asgard - nicht auf Jotunheim/IoT)
+  - Device-Management (alle Devices: Midgard/Desktop, Alfheim/Mobile, Asgard/Homeserver, Jotunheim/IoT - wobei Jotunheim über spezielles Protocol kommuniziert)
   - Network-Status (Nine Realms)
   - Usage-Statistiken
   - Marketplace-Übersicht (als Consumer/Provider)

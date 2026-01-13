@@ -2,7 +2,18 @@
 
 ## Übersicht
 
-Valkyries ist das Coding-Agent-Plugin, das als separates Projekt implementiert wird. Brünhild führt die Valkyries an und koordiniert Sub-Agents für verschiedene Aufgaben. Valkyries kann als Extension zu Asgard hinzugefügt werden oder ist automatisch bei Yggdrasil vorhanden.
+Valkyries ist ein Plugin für Coding-Aufgaben, das von Odin orchestriert wird. Wenn Coding-Aufgaben erkannt werden, delegiert Odin die Aufgabe an Valkyries (wenn verfügbar). Brünhild führt die Valkyries an und koordiniert Sub-Agents für verschiedene Aufgaben.
+
+**Plugin-Architektur**: Valkyries ist ein optionales Plugin, das modular zur Odin-Installation hinzugefügt werden kann. Odin entscheidet selbst, ob eine Aufgabe an Valkyries delegiert werden muss (bei Coding-Aufgaben) oder ob Odin selbst antworten kann (bei einfachen Fragen).
+
+**Plugin-Interface**: Valkyries implementiert das `OdinPlugin`-Interface mit:
+- `get_title()`: Gibt "Valkyries - Coding Agent" zurück
+- `get_description()`: Beschreibt die Coding-Agent-Funktionalität
+- `get_functions()`: Gibt alle verfügbaren Coding-Funktionen zurück (Function Call Protocol)
+
+**Einherjar Protocol**: Valkyries implementiert das Einherjar Protocol, um ihre verfügbaren Funktionen und Zuständigkeits-Domains offenzulegen. Odin nutzt diese Informationen, um automatisch zu erkennen, wann Valkyries zuständig ist.
+
+**Responsibility Service**: Valkyries implementiert das Responsibility Service, um Zuständigkeit zu übernehmen, zurückzugeben oder zurückzuweisen. Wenn eine Aufgabe nicht mehr Coding-Aufgaben sind, gibt Valkyries die Zuständigkeit an Odin zurück.
 
 ### Valkyries-Struktur
 
@@ -86,8 +97,11 @@ valkyries/
 #### Spezialisierte Verantwortlichkeiten
 
 **1. Task Analysis & Decomposition**
-- **Task-Analyse**: Analysiert eingehende Tasks auf Komplexität, Abhängigkeiten und Anforderungen
-- **Dependency-Mapping**: Identifiziert Abhängigkeiten zwischen Sub-Tasks
+- **Task-Analyse**: 
+  - **Komplexitäts-Analyse**: Analysiert eingehende Tasks auf Komplexität, Abhängigkeiten und Anforderungen
+  - **Decomposition-Algorithmen**: Graph-basierte Decomposition-Algorithmen für Task-Zerlegung
+  - **Abhängigkeits-Erkennung**: Automatische Erkennung von Abhängigkeiten zwischen Sub-Tasks (Dependency-Graph)
+- **Dependency-Mapping**: Identifiziert Abhängigkeiten zwischen Sub-Tasks (DAG - Directed Acyclic Graph)
 - **Task-Zerlegung**: Zerlegt komplexe Tasks in atomare, ausführbare Sub-Tasks
 - **Prioritätsbestimmung**: Bestimmt Prioritäten für Sub-Tasks basierend auf Abhängigkeiten
 - **Resource-Schätzung**: Schätzt benötigte Ressourcen für jeden Sub-Task
@@ -120,10 +134,13 @@ valkyries/
 - **Iterations-Planung**: Plant zusätzliche Iterationen für fehlende Teile
 
 **6. Communication & Coordination**
-- **Thor-Kommunikation**: Empfängt Tasks aus Queue von Thor, sendet Ergebnisse zurück
-- **Valkyrie-Kommunikation**: Delegiert Tasks an Sub-Valkyries über interne Queue
-- **Status-Updates**: Sendet regelmäßige Status-Updates an Thor
-- **Error-Reporting**: Meldet Fehler und Probleme an Thor
+- **Event-basierte Kommunikation**: Kommuniziert mit Odin und anderen Services über Event-Dispatcher
+- **Event-Registrierung**: Registriert sich für relevante Events (z.B. `CodingTaskRequest`, `FileChanged`, etc.)
+- **Interne FIFO-Queue**: Events werden plugin-intern auf FIFO-Queue gestellt und abgearbeitet
+- **Event-Publishing**: Publiziert Events für Folge-Events oder Return-Events
+- **Platform-Capabilities**: Nutzt Platform-Capabilities für Service-Discovery (z.B. Thor für Actions)
+- **Status-Updates**: Sendet regelmäßige Status-Updates via Events
+- **Error-Reporting**: Meldet Fehler und Probleme via Events
 
 **7. Resource Management**
 - **Resource-Allokation**: Allokiert Ressourcen für Sub-Agents
@@ -131,18 +148,41 @@ valkyries/
 - **Resource-Optimierung**: Optimiert Resource-Allokation für beste Performance
 - **Cleanup-Koordination**: Koordiniert Cleanup von Ressourcen nach Task-Abschluss
 
-#### Workflow (Detailliert)
-1. **Task empfangen**: Task wird aus Queue von Thor abgeholt
+#### Kanban-Workflow
+
+**Kanban-Board-Erstellung:**
+- **Brünnhilde erstellt Kanban-Board**: Nach Task-Analyse erstellt Brünnhilde ein Kanban-Board mit allen Tasks und Iterationen
+- **Board-Struktur**: 
+  - **Backlog**: Alle Tasks, die noch nicht begonnen wurden
+  - **In Progress**: Tasks, die aktuell bearbeitet werden
+  - **Review**: Tasks, die auf Review warten
+  - **Done**: Abgeschlossene Tasks
+- **Task-Priorisierung**: Tasks werden nach Dependencies und Priorität sortiert
+- **Iteration-Tracking**: Iterationen werden als separate Spalten oder Tags verwaltet
+
+**Task-Abarbeitung:**
+- **Valkyries wählen Tasks**: Valkyries wählen Tasks aus Board basierend auf:
+  - **Eignung**: Wie gut ist die Valkyrie für den Task geeignet?
+  - **Verfügbarkeit**: Ist die Valkyrie verfügbar?
+  - **User-Konfiguration**: Wie viele parallele Agents hat User konfiguriert?
+- **Parallele Bearbeitung**: Mehrere Valkyries können parallel arbeiten (basierend auf User-Konfiguration)
+- **Task-Status-Updates**: Valkyries aktualisieren Task-Status im Kanban-Board
+- **Dependency-Management**: Tasks mit Dependencies werden erst gestartet, wenn Dependencies erfüllt sind
+
+**Workflow (Detailliert)**
+1. **Task empfangen**: Task wird via Event-Dispatcher empfangen (Event wird auf interne FIFO-Queue gestellt)
 2. **Task-Analyse**: Task wird analysiert (Komplexität, Abhängigkeiten, Anforderungen)
-3. **Task-Decomposition**: Task wird in Sub-Tasks zerlegt mit Dependency-Mapping
-4. **Workflow-Erstellung**: Detaillierter Workflow wird erstellt
-5. **Agent-Auswahl & Instanzierung**: Entscheidet, welche Valkyries benötigt werden, startet Instanzen
-6. **Task-Delegation**: Delegiert Sub-Tasks an entsprechende Valkyries
-7. **Progress-Monitoring**: Überwacht Fortschritt aller laufenden Tasks
-8. **Statement-Collection**: Sammelt Statements von allen Valkyries nach Abschluss
-9. **Quality-Verification**: Prüft Qualität und Vollständigkeit aller Ergebnisse
-10. **Iteration (falls nötig)**: Plant und delegiert zusätzliche Tasks für fehlende Teile
-11. **Task-Completion**: Task wird abgeschlossen, Results werden zurückgegeben
+3. **RAG-Indexierung**: Projekt wird indexiert (falls noch nicht geschehen) für besseren Überblick
+4. **Task-Decomposition**: Task wird in Sub-Tasks zerlegt mit Dependency-Mapping
+5. **Kanban-Board-Erstellung**: Brünnhilde erstellt Kanban-Board mit allen Tasks und Iterationen
+6. **Agent-Auswahl & Instanzierung**: Entscheidet, welche Valkyries benötigt werden, startet Instanzen (basierend auf User-Konfiguration)
+7. **Task-Auswahl durch Valkyries**: Valkyries wählen Tasks aus Board basierend auf Eignung und Verfügbarkeit
+8. **Parallele Task-Abarbeitung**: Mehrere Valkyries arbeiten parallel an verschiedenen Tasks
+9. **Progress-Monitoring**: Brünnhilde überwacht Fortschritt aller laufenden Tasks im Kanban-Board
+10. **Statement-Collection**: Sammelt Statements von allen Valkyries nach Abschluss
+11. **Quality-Verification**: Prüft Qualität und Vollständigkeit aller Ergebnisse
+12. **Iteration (falls nötig)**: Plant und delegiert zusätzliche Tasks für fehlende Teile (neue Tasks im Kanban-Board)
+13. **Task-Completion**: Task wird abgeschlossen, Results werden via Event zurückgegeben
 
 ### Sub-Valkyries
 
@@ -591,6 +631,34 @@ valkyries/
 
 **Jede Valkyrie hat einen engen, spezialisierten Fokus, um das Context-Fenster klein zu halten. Die mythologischen Namen und Bedeutungen spiegeln ihre Software-Entwicklungsaufgaben wider.**
 
+## RAG-System für Valkyries
+
+**Projekt-Indexierung:**
+- **RAG-Integration**: Jede Valkyrie hat Zugriff auf RAG-System für Projekt-Indexierung
+- **Projekt-Indexierung**: Projekt wird indexiert, damit immer ein guter Überblick besteht
+- **Stichwort-basierte Speicherung**: Informationen werden in Stichworten festgehalten, ohne Sinn zu verlieren
+- **Kategorisierung und Gruppierung**: Informationen werden kategorisiert und gruppiert
+- **Effiziente Suche**: Mit Stichworten gute Treffer erzielen, aber nicht alle Daten aus Datenbank laden müssen
+- **Optimierte Datenbanken**: Verwendung von für RAG optimierten Datenbanken (z.B. Vector-Databases)
+
+**RAG-Strategie:**
+- **Stichwort-Extraktion**: Wichtige Code-Informationen werden als Stichworte extrahiert
+- **Kategorisierung**: Stichworte werden kategorisiert (z.B. "Frontend", "Backend", "Database", "API", "Component", "Function")
+- **Gruppierung**: Ähnliche Stichworte werden gruppiert (z.B. alle React-Komponenten, alle API-Endpoints)
+- **Vector-Embeddings**: Stichworte werden als Embeddings gespeichert für semantische Suche
+- **Hierarchische Struktur**: Informationen werden hierarchisch strukturiert (Kategorie → Gruppe → Stichwort → Code-Location)
+
+**Context-Window-Optimierung:**
+- **Selektive Datenladung**: Nur relevante Code-Teile werden geladen (basierend auf Stichwort-Suche)
+- **Minimaler Memory-Footprint**: Kleine Context-Fenster durch effiziente Datenstrukturen
+- **Schnelle Suche**: Stichwort-basierte Suche ist schnell und effizient
+- **Projekt-Überblick**: Jede Valkyrie hat immer einen guten Überblick über das Projekt, ohne alle Daten zu laden
+
+**RAG-Index-Updates:**
+- **Incremental Updates**: Bei Code-Änderungen wird Index inkrementell aktualisiert
+- **Real-time Indexing**: Code-Änderungen werden sofort indexiert
+- **Stichwort-Refresh**: Stichworte werden bei Code-Änderungen aktualisiert
+
 ## Features
 
 ### 1. Claude Code Features (Übernommen)
@@ -600,19 +668,41 @@ valkyries/
 - **Iterative Improvement**: Verbessert Code iterativ bis zur Vollständigkeit
 - **Context-Aware**: Nutzt Codebase-Kontext intelligent
 
-### 2. Multi-Instance Orchestration
+### 2. Multi-Instance Orchestration (via Kanban-Board)
 - **Mehrere Instanzen einer Valkyrie**: Brünhild kann mehrere Instanzen einer Valkyrie starten
 - **Beispiel**: Mehrere Frontend-Agents für verschiedene Komponenten parallel
 - **Resource Management**: Verwaltung von Ressourcen für mehrere Instanzen
 - **Coordination**: Koordination zwischen Instanzen derselben Valkyrie
 
-### 3. Statement System
+### 3. Kanban-Workflow
+
+**Kanban-Board-System:**
+- **Board-Erstellung**: Brünnhilde erstellt Kanban-Board mit allen Tasks und Iterationen
+- **Task-Management**: Tasks werden in Backlog, In Progress, Review, Done verwaltet
+- **Task-Auswahl**: Valkyries wählen Tasks aus Board basierend auf Eignung und Verfügbarkeit
+- **Parallele Bearbeitung**: Mehrere Valkyries können parallel arbeiten (basierend auf User-Konfiguration)
+- **Dependency-Management**: Tasks mit Dependencies werden erst gestartet, wenn Dependencies erfüllt sind
+- **Iteration-Tracking**: Iterationen werden als separate Spalten oder Tags verwaltet
+
+### 4. Statement System
 - **Task Completion Statements**: Jede Valkyrie gibt Statement ab nach Abschluss
 - **Statement Format**: Kurz, prägnant (z.B. "Frontend-Komponenten X, Y, Z erstellt")
 - **Statement Collection**: Brünhild sammelt alle Statements
 - **Vollständigkeitsprüfung**: Brünhild prüft basierend auf Statements, ob Task vollständig ist
 
 ### 4. Git Integration
+- **Repository-Detection**: 
+  - **Automatische Erkennung**: Automatische Erkennung von Git-Repositories (`.git`-Ordner)
+  - **Multi-Repository-Support**: Unterstützung für mehrere Repositories (Monorepo, Multi-Repo)
+  - **Repository-Fehler**: Bei Repository-Fehlern wird Fehler geloggt, Task wird ohne Git-Integration fortgesetzt
+- **Branch-Management**: 
+  - **Branch-Strategien**: Branch-Strategien (Feature-Branches, Main-Branch, etc.)
+  - **Branch-Konflikte**: Bei Branch-Konflikten wird Merge durchgeführt oder User wird benachrichtigt
+  - **Branch-Verwaltung**: Automatische Branch-Verwaltung für Feature-Entwicklung
+- **Change-Tracking**: 
+  - **Change-Tracking**: Automatisches Tracking von Änderungen (Git-Diff)
+  - **Change-Validation**: Change-Validation (Syntax-Check, Linter, etc.)
+  - **Change-Konflikte**: Bei Change-Konflikten wird User benachrichtigt oder automatischer Merge
 - **Repository Detection**: Automatische Erkennung von Git-Repositories
 - **Branch Management**: Branch-Verwaltung
 - **Change Tracking**: Tracking von Änderungen
@@ -715,7 +805,7 @@ valkyries/
 1. Róta (API Design Agent) erstellt API-Contract zuerst
 2. Þrúðr (Backend Agent) implementiert basierend auf Contract
 3. Göll (Frontend Agent) integriert basierend auf Contract
-4. Brünnhilde koordiniert diese Abstimmung über interne Queue
+4. Brünnhilde koordiniert diese Abstimmung über Kanban-Board
 
 **Database-Integration:**
 - Geirskögul (Database Agent) erstellt Schema und Migrations
@@ -757,26 +847,107 @@ valkyries/
 **Statement-Struktur:**
 ```typescript
 interface ValkyrieStatement {
-  valkyrie: 'frontend' | 'backend' | 'test' | 'docs';
-  instanceId: string;
-  taskId: string;
-  completed: boolean;
-  summary: string;  // Kurze Zusammenfassung
+  valkyrie: 'brünnhilde' | 'gunnr' | 'hildr' | 'skögul' | 'hrist' | 'mist' | 
+            'skeggjöld' | 'göll' | 'geirskögul' | 'thrúd' | 'hlökk' | 'róta' | 'sigrún';
+  instanceId: string;  // Eindeutige Instanz-ID (für Multi-Instance-Szenarien)
+  taskId: string;      // Task-ID zur Zuordnung
+  completed: boolean;  // Ob Task erfolgreich abgeschlossen wurde
+  summary: string;      // Kurze Zusammenfassung (für User)
   details: {
-    filesCreated: string[];
-    filesModified: string[];
-    metrics?: Record<string, number>;  // z.B. { components: 3, tests: 10 }
+    filesCreated: string[];      // Liste der erstellten Dateien
+    filesModified: string[];     // Liste der geänderten Dateien
+    filesDeleted?: string[];     // Liste der gelöschten Dateien (optional)
+    metrics?: Record<string, number>;  // Metriken (z.B. { components: 3, tests: 10, coverage: 85 })
   };
-  errors?: string[];
-  warnings?: string[];
+  errors?: string[];    // Fehler (falls vorhanden)
+  warnings?: string[];  // Warnungen (falls vorhanden)
+  timestamp: number;    // Timestamp der Statement-Erstellung
+  executionTimeMs?: number;  // Ausführungszeit in Millisekunden (optional)
+}
+```
+
+**Statement-Format-Beispiele:**
+
+**Gunnr (Test Agent):**
+```typescript
+{
+  valkyrie: 'gunnr',
+  instanceId: 'gunnr-1',
+  taskId: 'task-123',
+  completed: true,
+  summary: 'Tests: 15 Unit-Tests, 5 Integration-Tests, 2 E2E-Tests erstellt, Coverage: 85%',
+  details: {
+    filesCreated: ['tests/unit/user.test.ts', 'tests/integration/api.test.ts'],
+    filesModified: [],
+    metrics: { unitTests: 15, integrationTests: 5, e2eTests: 2, coverage: 85 }
+  },
+  timestamp: 1234567890
+}
+```
+
+**Göll (Frontend Agent):**
+```typescript
+{
+  valkyrie: 'göll',
+  instanceId: 'göll-1',
+  taskId: 'task-123',
+  completed: true,
+  summary: 'Frontend: 3 Komponenten erstellt, 2 Stylesheets generiert, Routing implementiert',
+  details: {
+    filesCreated: ['src/components/UserProfile.tsx', 'src/components/UserList.tsx'],
+    filesModified: ['src/App.tsx'],
+    metrics: { components: 3, stylesheets: 2 }
+  },
+  timestamp: 1234567890
+}
+```
+
+**Hlökk (Documentation Agent):**
+```typescript
+{
+  valkyrie: 'hlökk',
+  instanceId: 'hlökk-1',
+  taskId: 'task-123',
+  completed: true,
+  summary: 'Dokumentation: 2 README-Dateien aktualisiert, API-Dokumentation generiert, 15 Code-Kommentare hinzugefügt',
+  details: {
+    filesCreated: ['docs/API.md'],
+    filesModified: ['README.md', 'docs/ARCHITECTURE.md'],
+    metrics: { readmeFiles: 2, apiDocs: 1, codeComments: 15 }
+  },
+  timestamp: 1234567890
 }
 ```
 
 **Brünnhilde's Statement-Analyse:**
-- Prüft Vollständigkeit: Alle erwarteten Statements vorhanden?
-- Prüft Konsistenz: Stimmen Statements mit erwarteten Ergebnissen überein?
-- Identifiziert Lücken: Fehlen erwartete Dateien oder Features?
-- Plant Iterationen: Falls Lücken gefunden, plant zusätzliche Tasks
+
+**Vollständigkeitsprüfung:**
+- **Erwartete Statements**: Prüft, ob alle erwarteten Valkyries Statements abgegeben haben
+- **Fehlende Statements**: Identifiziert fehlende Statements (z.B. wenn eine Valkyrie fehlgeschlagen ist)
+- **Statement-Validierung**: Validiert, ob Statements vollständig und korrekt sind
+
+**Konsistenzprüfung:**
+- **Erwartete vs. Tatsächliche Ergebnisse**: Vergleicht erwartete Ergebnisse mit tatsächlichen Statements
+- **Datei-Konsistenz**: Prüft, ob alle erwarteten Dateien erstellt wurden
+- **Metriken-Konsistenz**: Prüft, ob Metriken den Erwartungen entsprechen (z.B. Test-Coverage)
+
+**Lücken-Identifikation:**
+- **Fehlende Dateien**: Identifiziert fehlende Dateien basierend auf Task-Anforderungen
+- **Fehlende Features**: Erkennt fehlende Features oder Funktionalitäten
+- **Unvollständige Implementierungen**: Erkennt unvollständige Implementierungen
+
+**Iterations-Planung:**
+- **Zusätzliche Tasks**: Plant zusätzliche Tasks für identifizierte Lücken
+- **Priorisierung**: Priorisiert zusätzliche Tasks basierend auf Wichtigkeit
+- **Dependency-Management**: Berücksichtigt Dependencies bei Iterations-Planung
+
+**Statement-Sammlung-Workflow:**
+1. **Valkyrie sendet Statement**: Jede Valkyrie sendet Statement nach Abschluss an Brünnhilde
+2. **Brünnhilde sammelt Statements**: Brünnhilde sammelt alle Statements in einer Liste
+3. **Statement-Analyse**: Brünnhilde analysiert alle Statements auf Vollständigkeit und Konsistenz
+4. **Lücken-Erkennung**: Falls Lücken erkannt werden, plant Brünnhilde zusätzliche Tasks
+5. **ValkyrieResult-Erstellung**: Brünnhilde erstellt `ValkyrieResult` mit allen Statements und Metadaten
+6. **Weiterleitung an Odin**: `ValkyrieResult` wird an Odin weitergeleitet (via Event-Dispatcher)
 
 **ValkyrieResult-Struktur (an Thor):**
 ```typescript
@@ -805,58 +976,75 @@ interface FileChange {
 }
 ```
 
-**Thor's Analyse von ValkyrieResult:**
-- **Datei-Änderungen erkennen**: Thor erkennt alle `filesCreated`, `filesModified`, `filesDeleted`
-- **FILE_OPERATION Actions erstellen**: Thor erstellt `FILE_OPERATION` Actions für jede Datei-Änderung
-- **System-Commands erkennen**: Thor erkennt, ob System-Commands nötig sind (z.B. npm install, git commit)
-- **Text-Response erstellen**: Thor erstellt Text-Response für Odin basierend auf `summary` und `metadata`
-- **Actions ausführen**: Thor führt alle Actions aus (via Mjölnir)
-- **ThorResult erstellen**: Thor erstellt `ThorResult` mit Text-Response und Action-Results
+**Odin's Analyse von ValkyrieResult:**
+- **Odin analysiert Ergebnis**: Odin analysiert `ValkyrieResult` und erkennt, ob Actions benötigt werden
+- **Weiterleitung an Thor (falls nötig)**: Falls Actions benötigt werden, leitet Odin die strukturierten Ergebnisse an Thor zur Action-Execution weiter
+- **Thor's Analyse**: Thor erkennt alle `filesCreated`, `filesModified`, `filesDeleted` und erstellt entsprechende Actions
+- **Action-Ausführung**: Thor führt alle Actions aus (via Mjölnir)
+- **Ergebnis-Rückgabe**: Thor gibt `ThorResult` an Odin zurück
 
-## Integration mit Thor
+## Integration mit Odin und Thor
 
-### Thor als Tool-Calling-Agent
+### Event-basierte Kommunikation
 
-**Wichtig**: Thor ist der Tool-Calling-Agent des Systems. Er entscheidet, welche Actions ausgeführt werden müssen.
+**Wichtig**: Odin und Plugins kommunizieren über Event-Dispatcher. Plugins kommunizieren nicht direkt miteinander, sondern über Events.
 
-**Brünnhilde → Thor Kommunikation:**
-- **Strukturierte Ergebnisse**: Brünnhilde gibt strukturierte Ergebnisse an Thor weiter
-- **Ergebnis-Format**: Brünnhilde sendet strukturierte `ValkyrieResult` mit:
+**Event-Dispatcher-System:**
+- **Pro Platform ein Event-Dispatcher**: Jede Platform hat einen zentralen Event-Dispatcher
+- **Event-Registrierung**: Odin und alle Plugins registrieren sich für Events, die für sie relevant sind
+- **Event-Publishing**: Services und Plugins können Events publizieren
+- **Event-Subscription**: Odin und Plugins abonnieren Events basierend auf ihren Interessen
+
+**Plugin-interne Event-Verarbeitung:**
+- **FIFO-Queue**: Events werden plugin-intern auf eine FIFO-Queue gestellt
+- **Sequenzielle Abarbeitung**: Events werden sequenziell abgearbeitet (FIFO)
+- **Folge-Events**: Plugin kann Folge-Events erstellen und publizieren
+- **Return-Events**: Plugin kann Return-Events erstellen, die zurück an Odin/andere Services geroutet werden
+
+**Odin → Valkyries Kommunikation:**
+- **Event-basiert**: Odin publiziert `CodingTaskRequest`-Event
+- **Valkyries empfängt Event**: Brünnhilde empfängt Event und stellt es auf interne FIFO-Queue
+- **Task-Verarbeitung**: Brünnhilde verarbeitet Task aus Queue
+- **Zuständigkeits-Management**: Valkyries übernimmt Zuständigkeit via Responsibility Service (gRPC)
+
+**Valkyries → Odin Kommunikation:**
+- **Return-Event**: Brünnhilde publiziert `ValkyrieResult`-Event
+- **Ergebnis-Format**: Event enthält strukturiertes `ValkyrieResult` mit:
   - Code-Änderungen (Dateien, die geändert/erstellt/gelöscht wurden)
   - Dokumentation
   - Tests
   - Metadaten (Statements, Quality-Metriken)
-- **Keine direkten Actions**: Brünnhilde führt KEINE direkten File-Operations oder System-Commands aus
-- **Thor entscheidet**: Thor analysiert die Ergebnisse und entscheidet, welche Actions nötig sind
+- **Odin empfängt Event**: Odin empfängt Event und verarbeitet es
 
-**Thor's Entscheidungslogik:**
-- **Datei-Änderungen**: Thor erkennt, welche Dateien geändert/erstellt werden müssen → `FILE_OPERATION` Actions
-- **System-Commands**: Thor erkennt, ob System-Commands nötig sind → `SYSTEM_COMMAND` Actions
-- **Antwort für Odin**: Thor erkennt, ob es nur eine Antwort für Odin ist → `ThorResult` mit Text-Response
-- **Kombination**: Oft Kombination aus File-Operations und Antwort
+### Action-Execution über Thor (via Events)
 
-### Thor als Vermittler zwischen Odin und Brünnhilde
-- **Odin ruft Valkyries NICHT direkt auf**: Odin arbeitet mit Thor und übergibt ihm Aufgaben
-- **Thor erkennt Coding-Aufgaben**: Thor erkennt automatisch, ob es sich um eine Coding-Aufgabe handelt
-- **User kann explizit angeben**: User kann auch explizit angeben, dass es eine Coding-Aufgabe ist (macht Erkennung einfacher)
-- **Queue-basierte Kommunikation**: Thor legt Task in Queue, Brünnhilde holt Task ab und verarbeitet ihn
-- **Strukturierte Ergebnis-Rückgabe**: Brünnhilde gibt strukturierte Ergebnisse an Thor, Thor entscheidet über Actions
+**Valkyries → Thor Kommunikation (via Events):**
+- **Platform-Capabilities-Abfrage**: Brünnhilde fragt Platform-Capabilities: "Welche Services sind verfügbar?"
+- **Service-Discovery**: Platform antwortet: "Thor verfügbar, kann `FILE_OPERATION` Actions ausführen"
+- **Event-Erstellung**: Brünnhilde erstellt `ThorActionRequest`-Event (direkt zu Thor)
+- **Event-Publishing**: Event wird via Event-Dispatcher an Thor geroutet
+- **Thor verarbeitet Event**: Thor empfängt Event, stellt es auf interne FIFO-Queue, verarbeitet es
+- **Action-Ausführung**: Thor führt Actions aus (via Mjölnir)
+- **Return-Event**: Thor publiziert `ThorActionResult`-Event
+- **Valkyries empfängt Ergebnis**: Brünnhilde empfängt Event und verarbeitet es
 
-### Workflow: Odin → Thor → Brünnhilde → Valkyries → Thor → Odin
+**Workflow: Odin → Valkyries → Thor (via Events) → Valkyries → Odin**
 
-1. **Odin erkennt Anforderung**: Odin erkennt, dass etwas verlangt wird, erstellt `ThorAction` und sendet es an Thor
-2. **Thor erkennt Coding-Aufgabe**: Thor prüft, ob es sich um eine Coding-Aufgabe handelt, legt Task in Queue für Brünnhilde
-3. **Brünnhilde verarbeitet Task**: Brünnhilde holt Task aus Queue, analysiert Task und delegiert an Sub-Valkyries
-4. **Valkyries arbeiten**: Sub-Valkyries arbeiten an ihren Aufgaben (über interne Queue), Brünnhilde koordiniert und überwacht
-5. **Brünnhilde sammelt Ergebnisse**: Brünnhilde sammelt alle Statements und Ergebnisse von Valkyries
-6. **Brünnhilde prüft und strukturiert**: Brünnhilde prüft Vollständigkeit und erstellt strukturiertes `ValkyrieResult`
-7. **Brünnhilde → Thor**: Brünnhilde sendet strukturiertes Ergebnis an Thor (über Queue)
-8. **Thor analysiert Ergebnisse**: Thor analysiert `ValkyrieResult` und entscheidet:
-   - Welche Dateien müssen geändert/erstellt werden? → `FILE_OPERATION` Actions
-   - Welche System-Commands sind nötig? → `SYSTEM_COMMAND` Actions
-   - Was ist die Antwort für Odin? → Text-Response
-9. **Thor führt Actions aus**: Thor führt die erkannten Actions aus (via Mjölnir)
-10. **Thor → Odin**: Thor sendet `ThorResult` an Odin zurück (mit Text-Response und Action-Results)
+1. **Odin erkennt Coding-Aufgabe**: Odin erkennt via Einherjar Protocol, dass es sich um eine Coding-Aufgabe handelt
+2. **Event-Publishing**: Odin publiziert `CodingTaskRequest`-Event
+3. **Valkyries empfängt Event**: Brünnhilde empfängt Event, stellt es auf interne FIFO-Queue
+4. **Brünnhilde verarbeitet Task**: Brünnhilde analysiert Task, erstellt Kanban-Board, delegiert an Sub-Valkyries
+5. **Valkyries arbeiten**: Sub-Valkyries arbeiten an ihren Aufgaben (wählen Tasks aus Kanban-Board), Brünnhilde koordiniert
+6. **Brünnhilde sammelt Ergebnisse**: Brünnhilde sammelt alle Statements und Ergebnisse von Valkyries
+7. **Brünnhilde prüft und strukturiert**: Brünnhilde prüft Vollständigkeit und erstellt strukturiertes `ValkyrieResult`
+8. **Actions benötigt**: Brünnhilde erkennt, dass Actions benötigt werden
+9. **Platform-Capabilities-Abfrage**: Brünnhilde fragt Platform-Capabilities nach verfügbaren Services
+10. **ThorActionRequest-Event**: Brünnhilde erstellt `ThorActionRequest`-Event (direkt zu Thor)
+11. **Thor verarbeitet Event**: Thor empfängt Event, verarbeitet es, führt Actions aus
+12. **ThorActionResult-Event**: Thor publiziert `ThorActionResult`-Event
+13. **Brünnhilde empfängt Ergebnis**: Brünnhilde empfängt Event, integriert es in `ValkyrieResult`
+14. **ValkyrieResult-Event**: Brünnhilde publiziert `ValkyrieResult`-Event
+15. **Odin empfängt Ergebnis**: Odin empfängt Event und gibt Response an User zurück
 
 ## CLI Interface
 
@@ -902,14 +1090,131 @@ valkyries history
 - **Per Default**: Alle Valkyries nutzen dasselbe LLM (konfigurierbar über Geri)
 - **Einheitliche Model-Auswahl**: Brünhild und alle Sub-Valkyries verwenden standardmäßig das gleiche Model
 - **Konsistente Ergebnisse**: Einheitliche Model-Auswahl sorgt für konsistente Code-Qualität
+- **Geri-Integration**: Model-Auswahl erfolgt über Geri (LLM Service)
 
 ### Individuelle Konfiguration
 - **Konfigurierbar**: Jede Valkyrie kann ein eigenes LLM konfiguriert bekommen
 - **Use-Case-spezifisch**: Verschiedene Valkyries können verschiedene Models nutzen (z.B. spezialisierte Coding-Models)
-- **Konfiguration**: Über `valkyries config` oder Konfigurationsdatei
+- **Konfiguration**: Über `valkyries config` oder Konfigurationsdatei (`valkyries.json`)
 - **Gilt auch außerhalb von Ragnarok**: Diese Konfigurationsmöglichkeit gilt für alle Valkyries-Installationen
+- **Hot-Reload**: Konfigurationsänderungen können zur Laufzeit neu geladen werden
 
-### Beispiel-Konfiguration
+### Konfigurationsdatei-Format
+
+**Datei**: `valkyries.json` (im Projekt-Root oder in `~/.config/valkyries/`)
+
+**Vollständiges Konfigurationsformat:**
+```json
+{
+  "defaultLLM": {
+    "model": "llama-3.1-8b",
+    "provider": "local",
+    "temperature": 0.2,
+    "max_tokens": 4096,
+    "top_p": 0.9,
+    "frequency_penalty": 0.0,
+    "presence_penalty": 0.0
+  },
+  "valkyries": {
+    "brünnhilde": {
+      "model": "llama-3.1-8b",
+      "provider": "local",
+      "temperature": 0.1,
+      "max_tokens": 8192
+    },
+    "gunnr": {
+      "model": "llama-3.1-8b",
+      "provider": "local",
+      "temperature": 0.2,
+      "max_tokens": 4096
+    },
+    "hildr": {
+      "model": "llama-3.1-8b",
+      "provider": "local",
+      "temperature": 0.1,
+      "max_tokens": 4096
+    },
+    "skögul": {
+      "model": "llama-3.1-8b",
+      "provider": "local",
+      "temperature": 0.2,
+      "max_tokens": 4096
+    },
+    "hrist": {
+      "model": "deepseek-coder-7b",
+      "provider": "local",
+      "temperature": 0.2,
+      "max_tokens": 4096
+    },
+    "mist": {
+      "model": "llama-3.1-8b",
+      "provider": "local",
+      "temperature": 0.2,
+      "max_tokens": 4096
+    },
+    "skeggjöld": {
+      "model": "llama-3.1-8b",
+      "provider": "local",
+      "temperature": 0.2,
+      "max_tokens": 2048
+    },
+    "göll": {
+      "model": "llama-3.1-8b",
+      "provider": "local",
+      "temperature": 0.3,
+      "max_tokens": 4096
+    },
+    "geirskögul": {
+      "model": "deepseek-coder-7b",
+      "provider": "local",
+      "temperature": 0.2,
+      "max_tokens": 4096
+    },
+    "thrúd": {
+      "model": "deepseek-coder-7b",
+      "provider": "local",
+      "temperature": 0.2,
+      "max_tokens": 4096
+    },
+    "hlökk": {
+      "model": "llama-3.1-8b",
+      "provider": "local",
+      "temperature": 0.3,
+      "max_tokens": 4096
+    },
+    "róta": {
+      "model": "llama-3.1-8b",
+      "provider": "local",
+      "temperature": 0.2,
+      "max_tokens": 4096
+    },
+    "sigrún": {
+      "model": "llama-3.1-8b",
+      "provider": "local",
+      "temperature": 0.1,
+      "max_tokens": 4096
+    }
+  },
+  "resourceLimits": {
+    "maxConcurrentTasks": 5,
+    "maxMemoryMB": 4096,
+    "maxExecutionTimeSeconds": 300
+  },
+  "qualitySettings": {
+    "minTestCoverage": 80,
+    "requireCodeReview": true,
+    "autoFormat": true,
+    "lintOnSave": true
+  },
+  "gitIntegration": {
+    "autoCommit": false,
+    "commitMessageTemplate": "feat: {task_description}",
+    "branchNaming": "valkyries/{task_id}"
+  }
+}
+```
+
+**Vereinfachtes Format (nur Model-Namen):**
 ```json
 {
   "defaultLLM": "llama-3.1-8b",
@@ -931,22 +1236,138 @@ valkyries history
 }
 ```
 
+**Konfigurationsfelder:**
+
+**LLM-Konfiguration:**
+- `model`: Model-Name (z.B. "llama-3.1-8b", "deepseek-coder-7b", "gpt-4")
+- `provider`: Provider-Typ ("local", "cloud", "yggdrasil")
+- `temperature`: Temperature für LLM (0.0-2.0, Standard: 0.2)
+- `max_tokens`: Maximale Token-Anzahl (Standard: 4096)
+- `top_p`: Top-P Sampling (0.0-1.0, Standard: 0.9)
+- `frequency_penalty`: Frequency Penalty (Standard: 0.0)
+- `presence_penalty`: Presence Penalty (Standard: 0.0)
+
+**Resource-Limits:**
+- `maxConcurrentTasks`: Maximale Anzahl gleichzeitiger Tasks
+- `maxMemoryMB`: Maximale Memory-Nutzung in MB
+- `maxExecutionTimeSeconds`: Maximale Ausführungszeit in Sekunden
+
+**Quality-Settings:**
+- `minTestCoverage`: Minimale Test-Coverage in Prozent
+- `requireCodeReview`: Erfordert Code-Review vor Commit
+- `autoFormat`: Automatisches Formatieren von Code
+- `lintOnSave`: Linting beim Speichern
+
+**Git-Integration:**
+- `autoCommit`: Automatisches Committen von Änderungen
+- `commitMessageTemplate`: Template für Commit-Messages
+- `branchNaming`: Branch-Naming-Pattern
+
+**Konfigurations-Validierung:**
+- **Schema-Validierung**: Konfiguration wird beim Laden validiert
+- **Model-Verfügbarkeit**: System prüft, ob konfigurierte Models verfügbar sind
+- **Fallback**: Bei fehlenden Models wird auf `defaultLLM` zurückgegriffen
+- **Fehlerbehandlung**: Ungültige Konfigurationen werden mit klaren Fehlermeldungen zurückgewiesen
+
+## Event-Dispatcher Communication
+
+**Event-basierte Kommunikation (Primär):**
+- **Odin ↔ Valkyries**: Event-basierte Kommunikation über Event-Dispatcher
+- **Plugin-interne FIFO-Queue**: Events werden plugin-intern auf FIFO-Queue gestellt und abgearbeitet
+- **Event-Publishing**: Plugins publizieren Events für Folge-Events oder Return-Events
+- **Platform-Capabilities**: Plugins nutzen Platform-Capabilities für Service-Discovery
+
+**gRPC Service Communication (Fallback/Support):**
+- **Einherjar Protocol**: gRPC für Funktions-Offenlegung
+- **Responsibility Service**: gRPC für Zuständigkeits-Management
+- **Type-Safe**: Protobuf garantiert korrekte Service-Interfaces
+- **Streaming**: Built-in Streaming für große Responses
+
+**gRPC Connection-Management:**
+- **Connection-Pooling**: Wiederverwendung von Verbindungen für bessere Performance
+- **Connection Reuse**: Connections werden effizient wiederverwendet
+- **Automatische Reconnection**: Kombination aus sofortigem Versuch + Exponential Backoff
+  - Sofortiger Reconnect-Versuch bei Verbindungsabbruch
+  - Nach erstem Fehler beginnt Exponential Backoff
+  - Maximale Wartezeit (z.B. 60 Sekunden)
+  - Kontinuierliche Versuche zur Wiederherstellung
+- **Connection Monitoring**: Verbindungsstatus wird überwacht
+
+**gRPC Error-Handling:**
+- **gRPC Status-Codes**: gRPC-Fehler werden über Status-Codes behandelt
+- **Retry-Mechanismen**: Automatischer Retry mit Exponential Backoff (siehe gemeinsame Klärungspunkte)
+- **Timeout-Konfiguration**: Adaptive Timeouts mit Minimum/Maximum
+- **Fallback**: Bei Fehler Fallback zu alternativen Routen
+
 ## Abhängigkeiten
 
-- **Edda Core Library**: DTOs, Protocols, Utils
-- **Thor**: Für Integration mit Odin (Queue-basierte Kommunikation)
+### Keine Core Library
+
+- **WICHTIG**: Es gibt keine Edda Core Library
+- **Separate Projekte**: Wenn gemeinsame Komponenten benötigt werden (DTOs, Protocols, Utils), sollte ein separates Projekt erstellt werden
+- **Selektive Nutzung**: Dies hält Apps klein, da genau gewählt werden kann, was benötigt wird
+- **Keine Abhängigkeit**: Valkyries sollte nicht auf Dateien/Protocols/Utils aus dem `edda` Verzeichnis verweisen (KEIN PROJEKT - nur Metadaten-Sammlung)
+
+### Service-Abhängigkeiten
+
+- **Odin**: Für Plugin-Orchestrierung (Valkyries ist ein Plugin für Odin)
+- **Thor**: Für Action-Execution, wenn Valkyries-Ergebnisse Actions benötigen (wenn Thor verfügbar)
 - **Geri**: LLM Service für Code-Generierung (konfigurierbar pro Valkyrie)
+
+### Technische Abhängigkeiten
+
 - Git Library
 - File System APIs
 - Execution Environment
 
+## Settings und Konfiguration
+
+### Allgemeine Settings-Prinzipien
+
+**Wichtig**: Diese Prinzipien gelten für alle Services und Platformen im Edda-System.
+
+#### Settings-Format
+- **Format**: Vermutlich JSON-Format (es sei denn im Rust-Kontext gibt es ein besseres Format, das ebenso einfach für Menschen zu verstehen ist)
+- **Menschlich lesbar**: Settings-Dateien müssen für Menschen einfach zu verstehen und zu bearbeiten sein
+- **Validierung**: Settings werden beim Laden validiert (Schema-Validierung)
+
+#### Platform-Integration
+- **Settings-Sammlung**: Platformen müssen alle Settings/Konfigurationsdateien sammeln, die auf dem Device bzw. auf der Platform aktuell verfügbar und aktiv sind
+- **Frontend-Konfiguration**: Settings müssen über Settings im Frontend konfigurierbar gemacht werden
+- **Zentrale Verwaltung**: Platform stellt zentrale Settings-Verwaltung zur Verfügung
+
+#### Hot-Reload
+- **Keine Neukompilierung**: Änderungen an den Settings sollen nicht dazu führen, dass das Projekt/der Service neu kompiliert werden muss
+- **Runtime-Reload**: Die neuen Werte können einfach zur Laufzeit neu geladen werden
+- **Service-Funktionen**: Services müssen entsprechende Funktionen zur Verfügung stellen (Hot-Reload, Settings-API, etc.)
+
+#### Service-spezifische Settings
+- **Projekt-spezifisch**: Was genau in einer Settings/Konfigurationsdatei steht, hängt sehr stark vom Service oder der Platform ab
+- **Dokumentation**: Service-spezifische Settings müssen in der jeweiligen README dokumentiert werden
+- **Beispiele**: Service-spezifische Settings-Beispiele sollten in der README enthalten sein
+
+### Valkyries-spezifische Settings
+
+**Settings-Inhalt (wird während Implementierung definiert)**
+- LLM-Konfiguration pro Valkyrie (siehe Abschnitt "LLM-Konfiguration")
+- Resource-Limits
+- Quality-Einstellungen
+- Git-Integration-Einstellungen
+
 ## Integration
 
-- **Odin**: Erstellt `ThorAction` und erhält `ThorResult`
+- **Odin**: 
+  - Empfängt `ValkyrieTask` von Odin (via Thor), sendet `ValkyrieResult` zurück
+  - Empfängt `ResponsibilityRequest` von Odin, sendet `ResponsibilityResponse` zurück
+  - Sendet `ResponsibilityReturn` an Odin, wenn Aufgabe nicht mehr Coding-Aufgaben sind
+  - Sendet `ResponsibilityRejection` an Odin, wenn Request nicht in Valkyries Bereich ist
+  - Implementiert Einherjar Protocol für Funktions-Offenlegung
 - **Thor**: Erkennt Coding-Aufgaben und vermittelt zwischen Odin und Brünhild
 - **Brünhild**: Verarbeitet Coding-Tasks und orchestriert Valkyries
 - **Valkyries**: Führen Sub-Tasks aus
-- **Queue-System**: Für Kommunikation zwischen Thor und Brünhild, sowie Brünhild und Valkyries
+- **Event-Dispatcher**: Kommunikation über Event-Dispatcher (pro Platform)
+- **Interne FIFO-Queue**: Events werden plugin-intern auf FIFO-Queue gestellt und abgearbeitet
+- **Platform-Capabilities**: Nutzt Platform-Capabilities für Service-Discovery
 
 ## Performance
 
@@ -1014,6 +1435,10 @@ valkyries history
 - Sollte User-Feedback geben
 - **Persistent Execution**: Muss ähnlich wie Claude Code/Ralph funktionieren (nicht aufhören bis fertig)
 - **LLM-Konfiguration**: Per Default nutzen alle Valkyries dasselbe LLM, aber jede Valkyrie kann individuell konfiguriert werden (gilt für alle Installationen)
+- **Muss Einherjar Protocol implementieren**: Für Funktions-Offenlegung und Zuständigkeits-Domains
+- **Muss Responsibility Service implementieren**: Für Zuständigkeits-Management (TakeResponsibility, ReturnResponsibility, RejectResponsibility)
+- **Muss Zuständigkeits-Rückgabe haben**: Wenn Aufgabe nicht mehr Coding-Aufgaben sind
+- **Muss Rückweisungs-Mechanismus haben**: Kann Requests zurückweisen, wenn nicht in Valkyries Bereich
 - **Performance**: Muss optimiert sein für schnelle Code-Generierung und parallele Execution
 - **Datenschutz**: Muss Privacy-by-Design implementieren und Code-Privacy gewährleisten
 - **Sicherheit**: Muss robuste Security-Mechanismen haben, insbesondere für Code-Execution

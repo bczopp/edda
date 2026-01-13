@@ -13,10 +13,20 @@ Skuld ist der LLM-Selection Service, der auf allen Devices installiert werden mu
 ## Verantwortlichkeiten
 
 ### 1. LLM-Selection
-- **Netzwerkplan-Analyse**: Analysiert Netzwerkplan mit verfügbaren Devices/Models
-- **Effektivster Weg**: Findet effektivsten Weg (Routing, Latency)
-- **Effektivstes Model**: Findet effektivstes Model (Quality, Performance)
-- **User-Vorgaben**: Berücksichtigt User-Vorgaben (Requirements, Preferences)
+- **Netzwerkplan-Analyse**: 
+  - **Analyse-Algorithmen**: Graph-basierte Analyse-Algorithmen für Netzwerkplan
+  - **Plan-Updates**: Reagiert auf Netzwerkplan-Updates (Event-basiert oder Polling)
+  - **Analyse-Caching**: Analyse-Ergebnisse werden gecacht für bessere Performance
+- **Effektivster Weg**: 
+  - **Routing-Algorithmen**: Dijkstra, A*, etc. für Routing-Optimierung
+  - **Latency-Minimierung**: Findet Weg mit minimaler Latency
+  - **Routing-Fehler**: Bei Routing-Fehlern wird automatisch auf alternative Route ausgewichen
+- **Effektivstes Model**: 
+  - **Model-Bewertungs-Algorithmen**: Multi-Faktor-Bewertung für Model-Quality und Performance
+  - **Model-Ausfälle**: Bei Model-Ausfall wird automatisch auf alternatives Model ausgewichen
+- **User-Vorgaben**: 
+  - **Vorgaben-Prioritäten**: User-Vorgaben haben Priorität über automatische Auswahl
+  - **Vorgaben-Konflikte**: Bei Vorgaben-Konflikten wird User um Klärung gebeten oder bestes Match gewählt
 - **Provider-Integration**: Bezieht Provider mit ein (wenn Marketplace aktiv)
 
 ### 2. Netzwerkplan-Verarbeitung
@@ -151,11 +161,94 @@ struct NetworkPlan {
 - Provider-Availability
 - Fair-Distribution-Score
 
+## gRPC Communication
+
+**gRPC Service Communication:**
+- **Odin ↔ Skuld**: gRPC für LLM-Selection
+- **Type-Safe**: Protobuf garantiert korrekte Service-Interfaces
+- **Streaming**: Built-in Streaming für große Responses
+
+**gRPC Connection-Management:**
+- **Connection-Pooling**: Wiederverwendung von Verbindungen für bessere Performance
+- **Connection Reuse**: Connections werden effizient wiederverwendet
+- **Automatische Reconnection**: Kombination aus sofortigem Versuch + Exponential Backoff
+  - Sofortiger Reconnect-Versuch bei Verbindungsabbruch
+  - Nach erstem Fehler beginnt Exponential Backoff
+  - Maximale Wartezeit (z.B. 60 Sekunden)
+  - Kontinuierliche Versuche zur Wiederherstellung
+- **Connection Monitoring**: Verbindungsstatus wird überwacht
+
+**gRPC Error-Handling:**
+- **gRPC Status-Codes**: gRPC-Fehler werden über Status-Codes behandelt
+- **Retry-Mechanismen**: Automatischer Retry mit Exponential Backoff (siehe gemeinsame Klärungspunkte)
+- **Timeout-Konfiguration**: Adaptive Timeouts mit Minimum/Maximum
+- **Fallback**: Bei Fehler Fallback zu alternativen Routen
+
+## Monitoring & Logging
+
+### Strukturiertes Logging
+
+**Strukturiertes Logging:**
+- Structured Logging mit strukturierten Daten
+- Log Levels: Verschiedene Log-Level (DEBUG, INFO, WARN, ERROR, etc.)
+- Context Tracking: Context wird mitgeloggt
+- Log Rotation: Automatische Log-Rotation
+- Umfassendes Logging für Debugging und Monitoring
+
+### Performance-Monitoring
+
+**Performance-Monitoring:**
+- Performance-Metriken: Response-Zeiten, Durchsatz, Resource-Usage
+- Performance-Tracking für alle LLM-Selection-Requests
+- Kontinuierliche Überwachung und Performance-Optimierung
+- Alerts bei Performance-Problemen
+
 ## Abhängigkeiten
 
-- **Edda Core Library**: DTOs, Protocols, Utils
+### Keine Core Library
+
+- **WICHTIG**: Es gibt keine Edda Core Library
+- **Separate Projekte**: Wenn gemeinsame Komponenten benötigt werden (DTOs, Protocols, Utils), sollte ein separates Projekt erstellt werden
+- **Selektive Nutzung**: Dies hält Apps klein, da genau gewählt werden kann, was benötigt wird
+- **Keine Abhängigkeit**: Skuld sollte nicht auf Dateien/Protocols/Utils aus dem `edda` Verzeichnis verweisen (KEIN PROJEKT - nur Metadaten-Sammlung)
+
+### Technische Abhängigkeiten
+
 - **Network-Stack**: Für Latency-Messungen (optional)
 - **Caching-Library**: Für Netzwerkplan-Cache
+
+## Settings und Konfiguration
+
+### Allgemeine Settings-Prinzipien
+
+**Wichtig**: Diese Prinzipien gelten für alle Services und Platformen im Edda-System.
+
+#### Settings-Format
+- **Format**: Vermutlich JSON-Format (es sei denn im Rust-Kontext gibt es ein besseres Format, das ebenso einfach für Menschen zu verstehen ist)
+- **Menschlich lesbar**: Settings-Dateien müssen für Menschen einfach zu verstehen und zu bearbeiten sein
+- **Validierung**: Settings werden beim Laden validiert (Schema-Validierung)
+
+#### Platform-Integration
+- **Settings-Sammlung**: Platformen müssen alle Settings/Konfigurationsdateien sammeln, die auf dem Device bzw. auf der Platform aktuell verfügbar und aktiv sind
+- **Frontend-Konfiguration**: Settings müssen über Settings im Frontend konfigurierbar gemacht werden
+- **Zentrale Verwaltung**: Platform stellt zentrale Settings-Verwaltung zur Verfügung
+
+#### Hot-Reload
+- **Keine Neukompilierung**: Änderungen an den Settings sollen nicht dazu führen, dass das Projekt/der Service neu kompiliert werden muss
+- **Runtime-Reload**: Die neuen Werte können einfach zur Laufzeit neu geladen werden
+- **Service-Funktionen**: Services müssen entsprechende Funktionen zur Verfügung stellen (Hot-Reload, Settings-API, etc.)
+
+#### Service-spezifische Settings
+- **Projekt-spezifisch**: Was genau in einer Settings/Konfigurationsdatei steht, hängt sehr stark vom Service oder der Platform ab
+- **Dokumentation**: Service-spezifische Settings müssen in der jeweiligen README dokumentiert werden
+- **Beispiele**: Service-spezifische Settings-Beispiele sollten in der README enthalten sein
+
+### Skuld-spezifische Settings
+
+**Settings-Inhalt (wird während Implementierung definiert)**
+- LLM-Selection-Algorithmus-Einstellungen
+- Netzwerkplan-Cache-Einstellungen
+- Provider-Prioritäten
 
 ## Integration
 

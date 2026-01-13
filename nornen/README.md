@@ -13,10 +13,22 @@ Nornen ist der Decision Service bei Yggdrasil, der Entscheidungen über eingehen
 ## Verantwortlichkeiten
 
 ### 1. Entscheidungen über Requests
-- **Request-Entscheidungen**: Entscheidet über eingehende/ausgehende Requests
-- **Request-Validation**: Validiert Requests basierend auf Business-Logik
-- **Request-Routing**: Entscheidet über Request-Routing
-- **Request-Priorisierung**: Priorisiert Requests basierend auf verschiedenen Faktoren
+- **Request-Entscheidungen**: 
+  - **Entscheidungs-Algorithmen**: Intelligente Entscheidungs-Algorithmen für Request-Entscheidungen (Multi-Faktor-Bewertung)
+  - **Entscheidungs-Konflikte**: Bei Entscheidungs-Konflikten wird höchste Priorität gewählt oder User wird um Klärung gebeten
+  - Entscheidet über eingehende/ausgehende Requests
+- **Request-Validation**: 
+  - **Validation-Regeln**: Validation-Regeln basierend auf Business-Logik (Schema-Validierung, Policy-Checks)
+  - **Validation-Fehler**: Bei Validation-Fehlern wird Fehler zurückgegeben, Request wird abgelehnt
+  - Validiert Requests basierend auf Business-Logik
+- **Request-Routing**: 
+  - **Routing-Strategien**: Intelligente Routing-Strategien (Best-Path, Load-Balancing, etc.)
+  - **Routing-Fehler**: Bei Routing-Fehlern wird automatisch auf alternative Route ausgewichen
+  - Entscheidet über Request-Routing
+- **Request-Priorisierung**: 
+  - **Priorisierungs-Strategien**: Priorisierungs-Strategien (Critical > High > Medium > Low)
+  - **Priorisierungs-Konflikte**: Bei Priorisierungs-Konflikten gewinnt höhere Priorität
+  - Priorisiert Requests basierend auf verschiedenen Faktoren
 
 ### 2. Provider-Registrierung
 - **Provider-Genehmigung**: Genehmigt oder lehnt Provider-Registrierungen ab
@@ -146,9 +158,50 @@ Nornen ist der Decision Service bei Yggdrasil, der Entscheidungen über eingehen
 
 ## Abhängigkeiten
 
-- **Edda Core Library**: DTOs, Protocols, Utils
+### Keine Core Library
+
+- **WICHTIG**: Es gibt keine Edda Core Library
+- **Separate Projekte**: Wenn gemeinsame Komponenten benötigt werden (DTOs, Protocols, Utils), sollte ein separates Projekt erstellt werden
+- **Selektive Nutzung**: Dies hält Apps klein, da genau gewählt werden kann, was benötigt wird
+- **Keine Abhängigkeit**: Nornen sollte nicht auf Dateien/Protocols/Utils aus dem `edda` Verzeichnis verweisen (KEIN PROJEKT - nur Metadaten-Sammlung)
+
+### Service-Abhängigkeiten
+
 - **Mimir**: Privacy Database Service (für Datenbank-Zugriff)
 - **Yggdrasil (Elixir)**: Hauptprozess, koordiniert alle Services
+
+## Settings und Konfiguration
+
+### Allgemeine Settings-Prinzipien
+
+**Wichtig**: Diese Prinzipien gelten für alle Services und Platformen im Edda-System.
+
+#### Settings-Format
+- **Format**: Vermutlich JSON-Format (es sei denn im Rust-Kontext gibt es ein besseres Format, das ebenso einfach für Menschen zu verstehen ist)
+- **Menschlich lesbar**: Settings-Dateien müssen für Menschen einfach zu verstehen und zu bearbeiten sein
+- **Validierung**: Settings werden beim Laden validiert (Schema-Validierung)
+
+#### Platform-Integration
+- **Settings-Sammlung**: Platformen müssen alle Settings/Konfigurationsdateien sammeln, die auf dem Device bzw. auf der Platform aktuell verfügbar und aktiv sind
+- **Frontend-Konfiguration**: Settings müssen über Settings im Frontend konfigurierbar gemacht werden
+- **Zentrale Verwaltung**: Platform stellt zentrale Settings-Verwaltung zur Verfügung
+
+#### Hot-Reload
+- **Keine Neukompilierung**: Änderungen an den Settings sollen nicht dazu führen, dass das Projekt/der Service neu kompiliert werden muss
+- **Runtime-Reload**: Die neuen Werte können einfach zur Laufzeit neu geladen werden
+- **Service-Funktionen**: Services müssen entsprechende Funktionen zur Verfügung stellen (Hot-Reload, Settings-API, etc.)
+
+#### Service-spezifische Settings
+- **Projekt-spezifisch**: Was genau in einer Settings/Konfigurationsdatei steht, hängt sehr stark vom Service oder der Platform ab
+- **Dokumentation**: Service-spezifische Settings müssen in der jeweiligen README dokumentiert werden
+- **Beispiele**: Service-spezifische Settings-Beispiele sollten in der README enthalten sein
+
+### Nornen-spezifische Settings
+
+**Settings-Inhalt (wird während Implementierung definiert)**
+- Request-Entscheidungs-Einstellungen
+- Provider-Registrierungs-Einstellungen
+- User-Konfiguration-Einstellungen
 
 ## Integration
 

@@ -4,12 +4,17 @@
 
 ### Core Services (alle in Rust)
 
-1. **Odin** - Main Process Service
+1. **Odin** - Main Process Service & Vision-Model Orchestrator
    - Zentraler Orchestrator
    - Command Processing
    - Action Planning
    - Device State Management
    - Service-Koordination
+   - Vision-Model-Interpretation (nutzt Geri für Bild/Video-Analyse)
+   - Verhaltensmuster-Erkennung (mit User-Zustimmung)
+   - Einherjar Protocol (Funktions-Entdeckung aller Götter)
+   - Responsibility Service (Zuständigkeits-Management)
+   - Dynamische Zuständigkeits-Weiterleitung
 
 2. **Thor** - Action Executor & Tool-Calling-Agent
    - Action Execution
@@ -24,17 +29,21 @@
    - Context-Enrichment
    - Semantic Search
 
-4. **Geri** - LLM Service
+4. **Geri** - LLM Service & Vision-Model Support
    - LLM-Integration (lokale und Cloud-Models)
    - Prompt-Processing
    - Response-Generierung
    - Model-Management
+   - Vision-Model-Support (Bild/Video-Interpretation für Odin)
+   - Video-Stream-Verarbeitung
 
-5. **Huginn & Muninn** - STT/TTS Service
-   - Speech-to-Text (STT)
-   - Text-to-Speech (TTS)
-   - Voice-Input-Verarbeitung
-   - Audio-Processing
+5. **Huginn & Muninn** - STT/TTS Service & Data Forwarding
+   - Speech-to-Text (STT) - bestehend
+   - Text-to-Speech (TTS) - bestehend
+   - Text-Input - bestehend
+   - Bild/Video/Video-Stream-Empfang - neu
+   - Daten-Weiterleitung an Odin (keine Interpretation)
+   - Mythologie-Integration: "Odin sieht mit den Augen des Raben"
 
 6. **Bifrost** - Communication Service
    - Device-to-Device Communication
@@ -74,46 +83,47 @@
    - Healthcare-Task-Verarbeitung
    - Treatment-Planning
    - Health-Monitoring
+   - Ausschließlich für persönliche und Gesundheitsfragen
+   - Zuständigkeits-Rückgabe und Rückweisungs-Mechanismus
+   - Einherjar Protocol-Implementierung
+   - Persönlichkeiten
 
-### Backend-Services (in Rust)
+### Platformen (TypeScript für Frontend, Rust für Platform-Logik und Services)
 
-12. **Midgard Backend** - Desktop/Laptop Backend
-    - Service-Integration
+**Hinweis**: Midgard, Alfheim, Asgard und Ragnarok sind Platformen, keine Services. Sie haben TypeScript-Frontends (GUI/TUI) und Platform-Logik in Rust, die mit Rust-Services via gRPC kommunizieren. Alle Backend-Logik ist in Rust implementiert.
+
+12. **Ragnarok** - Terminal Platform
+    - TUI-Frontend (statt GUI) - TypeScript
+    - Platform-Logik (Rust)
+    - Service-Integration via gRPC
     - Action-Handling
     - Device-Control
 
-13. **Alfheim Backend** - Mobile Backend
-    - Service-Integration
-    - Mobile-optimierte Actions
-    - Device-Control
+13. **Jotunheim** - IoT Platform
+    - Platform für IoT-Devices (ESP32, ESP8266, Raspberry Pi Pico, etc.)
+    - Platformspezifische Implementierung
+    - Connections, Konvertierung zu Anfragen an Services
+    - Ruft Services (Odin, Loki) via gRPC auf
 
-14. **Asgard Backend** - Homeserver Backend
-    - Service-Integration
-    - Server-Funktionalität
-    - Device-Control
-    - Network-Management
-
-15. **Ragnarok** - Terminal Agent
-    - TUI-Frontend (statt GUI)
-    - Service-Integration
-    - Action-Handling
-    - Device-Control
-
-16. **Jötnar** - IoT-Devices Client
-    - Lightweight Implementation
-    - Bifrost-Verbindungen
-    - Toolcalling Protocol
-    - Remote Control
+14. **Loki** - Script Execution Service
+    - Unabhängiger Service für Script-Execution
+    - User-generierte Scripte per gRPC zugänglich machen
+    - Jedes Script wird zu einer aufrufbaren gRPC-Funktion
+    - Direkte Ausführung von Scripts auf Device
+    - Koordination der 3 Kinder: Fenrir, Jörmungandr, Hel
+    - **Fenrir**: Aggressive Tasks, Hardware-Control
+    - **Jörmungandr**: Network/Communication
+    - **Hel**: Data/Storage
 
 ### Yggdrasil Rust-Microservices
 
-17. **Mimir (Mímisbrunnr)** - Privacy Database Service
+15. **Mimir (Mímisbrunnr)** - Privacy Database Service
     - **Programmiersprache**: Rust
     - **Aufgabe**: Privacy Database Service für personenbezogene Daten
     - **Der Brunnen**: Die Datenbank selbst
     - **Features**: Isolierte Datenbank, Verschlüsselung, Access Control, Audit-Logging, GDPR-Compliance
 
-18. **Nornen (Urd, Verdandi)** - Decision Service
+16. **Nornen (Urd, Verdandi)** - Decision Service
     - **Programmiersprache**: Rust
     - **Aufgabe**: Entscheidungen über Requests, Provider-Registrierung, User-Konfiguration, Admin API
     - **Urd**: Vergangenheit (Historie, Request-History, historische Statistiken)
@@ -121,22 +131,27 @@
     - **Hinweis**: Skuld ist ein separater Service, der auf allen Devices installiert werden muss
     - **Features**: Request-Entscheidungen, Provider-Registrierung, User-Konfiguration, Admin API, Analytics
 
-19. **Nidhöggr** - Connection Endpoint & Message Receiver
+17. **Nidhöggr** - Connection Endpoint & Message Receiver
     - **Programmiersprache**: Rust
     - **Aufgabe**: Server-Side Connection Endpoint bei Yggdrasil
     - **Features**: Empfängt Verbindungen (von Vedrfolnir), empfängt Nachrichten über Ratatoskr-Protocol, leitet Nachrichten direkt weiter an Nornen
 
-20. **Heidrun** - Token & Pricing Service
+18. **Njörðr** - Marketplace Service
+    - **Programmiersprache**: Rust
+    - **Aufgabe**: Marketplace-Management, Provider-Management, Request-Routing, Transaction-Management
+    - **Features**: Provider-Registration, Request-Routing, Fair-Distribution-Algorithm, Transaction-Management
+
+19. **Heidrun** - Token & Pricing Service
     - **Programmiersprache**: Rust
     - **Aufgabe**: Token-Berechnungen, Pricing, Settlement, Pre-Authorization
     - **Features**: Token-Counting, Cost-Calculation, Pricing-Model, Pre-Authorization
 
-21. **Eikthyrnir** - Quality Assessment Service
+20. **Eikthyrnir** - Quality Assessment Service
     - **Programmiersprache**: Rust
     - **Aufgabe**: Quality Assessment, Aggregation, Quality-Metriken
     - **Features**: Quality-Messung, Gewichteter Durchschnitt, Quality-Aggregation, Quality-Updates
 
-22. **Die vier Hirsche** (Dáinn, Dvalinn, Duneyrr, Duraþrór) - Data Management Service
+21. **Læraðr** (Dáinn, Dvalinn, Duneyrr, Duraþrór) - Data Management Service
     - **Programmiersprache**: Rust
     - **Aufgabe**: Data Management (Indexing, Validation, Aggregation, Retention)
     - **Dáinn**: Data Indexing
@@ -147,12 +162,12 @@
 
 ### Server-Services (in Elixir)
 
-23. **Yggdrasil** - Cloud-Server (Main Process)
+22. **Yggdrasil** - Cloud-Server (Main Process)
     - **Programmiersprache**: Elixir (Erlang VM/BEAM)
     - **Warum Elixir**: Millionen von gleichzeitigen Bifrost-Verbindungen
     - **Eigenständiger Server**: Kein eigener Odin, User-Devices kommunizieren direkt mit Yggdrasil
     - **Ratatoskr-Protocol**: Business-Protocol für Yggdrasil-Kommunikation (zusätzlich zu Bifrost)
-    - **Koordiniert**: Alle Rust-Microservices (Mimir, Nornen, Nidhöggr, Heidrun, Eikthyrnir, Hirsche)
+    - **Koordiniert**: Alle Rust-Microservices (Mimir, Nornen, Nidhöggr, Heidrun, Eikthyrnir, Læraðr)
     - Multi-Tenant-Architektur
     - Device Registry
     - User Management
@@ -171,7 +186,7 @@
 - **Yggdrasil**: Cloud-Server (Elixir für Millionen Verbindungen und Bifrost-Relay)
 
 ### Andere Sprachen
-- **Edda Core Library**: Multi-Sprache (Rust, Elixir, TypeScript)
+- **Separate Projekte**: Wenn gemeinsame Komponenten benötigt werden, sollten separate Projekte erstellt werden (WICHTIG: Keine Edda Core Library)
 
 ## Rust-Projektstruktur
 
@@ -211,12 +226,42 @@ freki/
 # ... etc. für alle Services
 ```
 
+## Platform-Konzept
+
+**Alle Orte (außer Yggdrasil) sind Platformen:**
+- **Midgard**: Desktop-Platform
+- **Alfheim**: Mobile-Platform
+- **Asgard**: Homeserver-Platform
+- **Ragnarok**: Terminal-Platform
+- **Jotunheim**: IoT-Platform
+
+**Platform-Rolle:**
+- **Connections**: Platformen kümmern sich um Connections (Netzwerk, UI, etc.)
+- **Konvertierung**: Platformen konvertieren Connections zu Anfragen an Services
+- **Platformspezifisch**: Komplett platformspezifische Implementierung
+- **Service-Aufrufe**: Rufen Services (Odin, Loki, etc.) via gRPC auf
+
+**Service-Unabhängigkeit:**
+- **Services in Rust**: Alle Services (Odin, Thor, Freki, Geri, Loki, etc.) sind unabhängig von Platformen
+- **gRPC-Kommunikation**: Platformen kommunizieren mit Services via gRPC
+- **Wiederverwendbar**: Services können von verschiedenen Platformen genutzt werden
+
 ## Kommunikation zwischen Services
 
 - **gRPC**: Für Service-zu-Service-Kommunikation
-- **Protobuf**: Für Message-Definitionen
-- **WebSocket**: Für Bifrost (Device-to-Device)
-- **MessagePack**: Für Jötnar-Devices (token-effizient)
+  - **Loki Function Calls**: gRPC für IoT-Device Toolcalling (via Loki Service für Jotunheim-Devices)
+  - **Loki Script Execution**: gRPC für Loki-Service (Script-Execution)
+  - **Cross-Device Actions**: gRPC für ThorAction/ThorResult zwischen Devices
+  - **On-Device Services**: gRPC für Odin ↔ Thor, Freki, Geri, Skuld
+  - **Plugin Communication**: gRPC für Odin ↔ Plugins
+  - **Yggdrasil Microservices**: gRPC für Yggdrasil ↔ Rust-Microservices
+  - **Einherjar Protocol**: gRPC für Funktions-Entdeckung und Capability-Offenlegung (alle Götter)
+  - **Responsibility Service**: gRPC für Zuständigkeits-Management (alle Götter)
+  - **Vision Service**: gRPC für Bild/Video-Analyse (Odin ↔ Geri)
+  - **Huginn Data Service**: gRPC für Daten-Weiterleitung (Text, Bilder, Videos, Video-Streams)
+- **Protobuf**: Für Message-Definitionen (gRPC Services)
+- **WebSocket**: Für Bifrost (Device-to-Device Messaging, Events, Connection Establishment)
+- **Ratatoskr Protocol**: WebSocket für Yggdrasil Business-Kommunikation
 
 ## Vorteile von Rust für Services
 
@@ -245,15 +290,17 @@ freki/
 - **Nidhöggr**: Connection Endpoint & Message Receiver
 - **Heidrun**: Token & Pricing
 - **Eikthyrnir**: Quality Assessment
-- **Die vier Hirsche**: Data Management
+- **Læraðr**: Data Management
 
-**Ratatoskr-Protocol:**
-- Business-Protocol für Yggdrasil-Kommunikation
-- WebSocket-basiert mit extra Security-Features
-- Für Marketplace, Payments, Provider-Registrierung
+**Kommunikations-Protokolle mit Yggdrasil:**
+- **Ratatoskr-Protocol**: WebSocket-basiert für persistente Business-Verbindungen (Marketplace, Payments, Provider-Registrierung)
+- **gRPC**: Für Request/Response-Patterns und effiziente API-Calls (Device-Registry, User-Management, etc.)
+- **Bifrost**: WebSocket-basiert für Device-zu-Device-Relay und Event-Notifications
 
 **Kommunikation:**
-- User-Devices (Vedrfolnir) ↔ Yggdrasil (Nidhöggr): Ratatoskr-Protocol (WebSocket)
+- User-Devices (Vedrfolnir) ↔ Yggdrasil (Nidhöggr): 
+  - Ratatoskr-Protocol (WebSocket) für persistente Business-Verbindungen
+  - gRPC für Request/Response-Patterns und einzelne API-Calls
 - Yggdrasil (Elixir) ↔ Rust-Microservices: gRPC
 - Nidhöggr → Nornen/andere Services: gRPC (direkte Weiterleitung)
 - Asynchron: Yggdrasil sendet Requests, Microservices antworten asynchron
