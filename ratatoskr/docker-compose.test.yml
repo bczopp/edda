@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  ratatoskr-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      RUST_LOG: debug
+    volumes:
+      - ./target:/app/target
+      - ./tests:/app/tests
+      - ./src:/app/src
+    command: cargo test --release

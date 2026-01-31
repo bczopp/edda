@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # PostgreSQL for Yggdrasil
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: yggdrasil_test
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: yggdrasil_test
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yggdrasil_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  yggdrasil-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      MIX_ENV: test
+      DATABASE_URL: postgres://yggdrasil_test:test_password@postgres:5432/yggdrasil_test
+    volumes:
+      - ./lib:/app/lib
+      - ./test:/app/test
+      - ./config:/app/config
+    command: mix test

@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package nornen;
+
+// Main Nornen Service
+service NornenService {
+    rpc CoordinateRequest(CoordinateRequest) returns (CoordinateResponse);
+}
+
+// Urd - Provider Registry Service
+service UrdService {
+    rpc RegisterProvider(RegisterProviderRequest) returns (RegisterProviderResponse);
+    rpc UpdateProvider(UpdateProviderRequest) returns (UpdateProviderResponse);
+    rpc QueryProviders(QueryProvidersRequest) returns (QueryProvidersResponse);
+    rpc ListProviders(ListProvidersRequest) returns (ListProvidersResponse);
+}
+
+// Verdandi - Request Routing Service
+service VerdandiService {
+    rpc RouteRequest(RouteRequestRequest) returns (RouteRequestResponse);
+    rpc SelectProvider(SelectProviderRequest) returns (SelectProviderResponse);
+}
+
+message CoordinateRequest {
+    string request_id = 1;
+    string request_type = 2;
+    map<string, string> context = 3;
+}
+
+message CoordinateResponse {
+    string decision = 1;
+    string provider_id = 2;
+    double confidence = 3;
+    string reasoning = 4;
+}
+
+message RegisterProviderRequest {
+    string provider_id = 1;
+    string name = 2;
+    repeated string capabilities = 3;
+    string endpoint = 4;
+    map<string, string> metadata = 5;
+}
+
+message RegisterProviderResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message UpdateProviderRequest {
+    string provider_id = 1;
+    string status = 2;
+    repeated string capabilities = 3;
+    map<string, string> metadata = 4;
+}
+
+message UpdateProviderResponse {
+    bool success = 1;
+}
+
+message QueryProvidersRequest {
+    repeated string capabilities = 1;
+    string status = 2;
+}
+
+message QueryProvidersResponse {
+    repeated ProviderInfo providers = 1;
+}
+
+message ListProvidersRequest {
+    int32 limit = 1;
+    int32 offset = 2;
+}
+
+message ListProvidersResponse {
+    repeated ProviderInfo providers = 1;
+    int32 total = 2;
+}
+
+message ProviderInfo {
+    string provider_id = 1;
+    string name = 2;
+    repeated string capabilities = 3;
+    string endpoint = 4;
+    string status = 5;
+    map<string, string> metadata = 6;
+}
+
+message RouteRequestRequest {
+    string request_id = 1;
+    repeated string required_capabilities = 2;
+    map<string, string> context = 3;
+}
+
+message RouteRequestResponse {
+    string provider_id = 1;
+    string endpoint = 2;
+    double confidence = 3;
+}
+
+message SelectProviderRequest {
+    repeated string required_capabilities = 1;
+    map<string, string> preferences = 2;
+}
+
+message SelectProviderResponse {
+    string provider_id = 1;
+    string endpoint = 2;
+    double score = 3;
+}

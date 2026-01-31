@@ -54,7 +54,6 @@ midgard/
   - **Text-Input**: User kann Commands als Text eingeben
   - **Voice-Input**: User kann Commands per Sprache übermitteln (via Huginn/Muninn STT/TTS)
   - **Flexibel**: User kann zwischen Text und Sprache wählen
-- **Local LLM Support**: Ollama, LM Studio
 - **LLM Integration**: Via Geri - Model-Auswahl basierend auf Konfiguration
 - **RAG Support**: Via Freki
 - **Action Execution**: Via Thor

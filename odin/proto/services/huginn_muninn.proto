@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package huginn_muninn;
+
+service HuginnMuninnService {
+    rpc Transcribe(TranscribeRequest) returns (TranscribeResponse);
+    rpc Synthesize(SynthesizeRequest) returns (SynthesizeResponse);
+    rpc ForwardData(ForwardDataRequest) returns (ForwardDataResponse);
+}
+
+message TranscribeRequest {
+    bytes audio_data = 1;
+}
+
+message TranscribeResponse {
+    string transcription = 1;
+}
+
+message SynthesizeRequest {
+    string text = 1;
+    string voice_id = 2;
+}
+
+message SynthesizeResponse {
+    bytes audio_data = 1;
+}
+
+message ForwardDataRequest {
+    bytes data = 1;
+    string data_type = 2;
+}
+
+message ForwardDataResponse {
+    bool success = 1;
+}

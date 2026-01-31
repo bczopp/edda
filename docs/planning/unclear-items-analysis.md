@@ -14,29 +14,38 @@
 - ⚠️ **Teilweise geklärt**: 3 Punkte (werden während Implementierung finalisiert)
 - ❌ **Offen**: 0 kritische Punkte (alle werden während Implementierung geklärt)
 
-**Hinweis**: Alle kritischen und wichtigen Punkte wurden bereits geklärt und in den entsprechenden README-Dateien dokumentiert.
+**Hinweis**: Alle kritischen und wichtigen Punkte wurden bereits geklärt und in den entsprechenden README-Dateien dokumentiert. Diese Analyse enthält nur noch die verbleibenden Implementierungsdetails, die während der Implementierung finalisiert werden.
 
 ---
 
 ## 1. Technische Implementierungsdetails
 
 ### 1.1 DTOs und Protocols (Separate Projekte)
-- ⚠️ **TypeScript-Interfaces**: Werden während Implementierung aus Protobuf generiert (automatisch, nur für Frontend-UI, nicht für Backend-Logik)
+- ⚠️ **TypeScript-Tool-Auswahl**: Konkretes Tool für Protobuf → TypeScript-Generierung wird während Implementierung ausgewählt
+  - **Tool-Optionen**: `ts-proto`, `protoc-gen-ts`, oder `@grpc/grpc-js` mit TypeScript-Plugin
+  - **Entscheidung**: Wird während Implementierung getroffen (Evaluation der Optionen basierend auf spezifischen Anforderungen)
 
 ---
 
 ## 3. Konfiguration und Settings
 
 ### 3.0 Allgemeine Settings/Konfigurations-Prinzipien
-- ⚠️ **Service-spezifische Inhalte**: Was genau in einer Settings/Konfigurationsdatei steht, hängt sehr stark vom Service oder der Platform ab - das müssen wir nochmal durchgehen, wenn wir mehr Infos haben (für alle Services und Platformen und sonstige Components)
+- ⚠️ **Service-spezifische Inhalte**: Was genau in einer Settings/Konfigurationsdatei steht, hängt sehr stark vom Service oder der Platform ab - wird während Implementierung für jeden Service/Platform definiert
+  - **Hinweis**: Allgemeine Settings-Prinzipien (Format, Validierung, Hot-Reload, Platform-Integration) sind bereits geklärt und in den README-Dateien dokumentiert
 
 ---
 
 ## 4. Workflows und Edge Cases
 
 ### 4.4 Network Expansion (Phase 4)
-- ⚠️ **Teilweise geklärt**: NAT-Traversal-Implementierung
-  - ❌ Welche Bibliotheken werden verwendet? (Wird während Implementierung entschieden - STUN/TURN/ICE)
+- ⚠️ **NAT-Traversal-Bibliotheken**: Welche spezifischen Rust-Bibliotheken werden verwendet?
+  - **Optionen**: `webrtc-rs`, `ice-rs`, `stun-rs`, `turn-rs`, oder eigene Implementierung
+  - **Kriterien für Auswahl**: 
+    - Performance (minimaler Memory-Footprint)
+    - Async/await Support (tokio-kompatibel)
+    - Cross-Platform (Windows, Linux, macOS)
+    - Wartbarkeit und Community-Support
+  - **Entscheidung**: Wird während Implementierung getroffen (Evaluation der Optionen)
 
 ---
 
@@ -51,10 +60,10 @@
 - (Alle wichtigen Punkte wurden bereits geklärt)
 
 ### Wird während Implementierung geklärt
-- **TypeScript-Interfaces**: Werden aus Protobuf generiert (automatisch)
+- **TypeScript-Tool-Auswahl**: Konkretes Tool für Protobuf → TypeScript-Generierung (`ts-proto`, `protoc-gen-ts`, etc.)
 - **Service-spezifische Settings-Inhalte**: Wird während Implementierung für jeden Service definiert
-- **NAT-Traversal-Bibliotheken**: Wird während Implementierung entschieden (STUN/TURN/ICE)
-- Konkrete Implementierungsdetails (Formeln, Algorithmen, Bibliotheken)
+- **NAT-Traversal-Bibliotheken**: Konkrete Rust-Bibliothek für STUN/TURN/ICE (`webrtc-rs`, `ice-rs`, etc.)
+- Konkrete Implementierungsdetails (Formeln, Algorithmen, weitere Bibliotheken)
 - Performance-Optimierungen
 - Edge Cases und Error-Handling-Details
 
@@ -66,8 +75,9 @@
 - (Alle kritischen Punkte wurden bereits geklärt)
 
 ### Während Implementierung klären
+- TypeScript-Tool-Auswahl für Protobuf-Generierung
 - Service-spezifische Settings-Inhalte für jeden Service/Platform
-- NAT-Traversal-Bibliotheken (STUN/TURN/ICE)
+- NAT-Traversal-Bibliotheken (konkrete Rust-Bibliothek)
 - Konkrete Implementierungsdetails (Formeln, Algorithmen, Bibliotheken)
 - Performance-Optimierungen
 - Edge Cases und Error-Handling-Details
@@ -77,8 +87,9 @@
 ## Nächste Schritte
 
 ### Während Implementierung (iterativ)
+- TypeScript-Tool für Protobuf-Generierung auswählen und integrieren
 - Service-spezifische Settings-Inhalte für jeden Service/Platform definieren
-- NAT-Traversal-Bibliotheken auswählen und integrieren
+- NAT-Traversal-Bibliotheken evaluieren, auswählen und integrieren
 - Konkrete Implementierungsdetails ausarbeiten (Formeln, Algorithmen, Bibliotheken)
 - Performance optimieren (Caching, Load-Balancing, Skalierung)
 - Edge Cases und Error-Handling implementieren

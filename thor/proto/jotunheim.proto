@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package jotunheim;
+
+// Jotunheim IoT service (Thor calls this for device commands/tool calls)
+service JotunheimService {
+  rpc SendDeviceCommand(DeviceCommandRequest) returns (DeviceCommandResponse);
+  rpc GetDeviceStatus(DeviceStatusRequest) returns (DeviceStatusResponse);
+  rpc CallTool(ToolCallRequest) returns (ToolCallResponse);
+}
+
+message DeviceCommandRequest {
+  string device_id = 1;
+  string command = 2;
+  string parameters = 3;
+}
+
+message DeviceCommandResponse {
+  bool success = 1;
+  bytes result = 2;
+  string error_message = 3;
+}
+
+
+message DeviceStatusRequest {
+  string device_id = 1;
+}
+
+message DeviceStatusResponse {
+  string device_id = 1;
+  string status = 2;
+  string capabilities = 3;
+  string last_seen = 4;
+}
+
+message ToolCallRequest {
+  string device_id = 1;
+  string tool_name = 2;
+  string parameters = 3;
+}
+
+message ToolCallResponse {
+  bool success = 1;
+  bytes result = 2;
+  string error_message = 3;
+}

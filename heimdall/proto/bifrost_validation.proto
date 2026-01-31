@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package heimdall.bifrost_validation;
+
+// Bifrost Validation Service
+service BifrostValidationService {
+    // Validate Bifrost connection
+    rpc ValidateConnection(ConnectionValidationRequest) returns (ConnectionValidationResponse);
+    
+    // Validate message over Bifrost
+    rpc ValidateMessage(MessageValidationRequest) returns (MessageValidationResponse);
+}
+
+// Connection Validation Request
+message ConnectionValidationRequest {
+    string source_device_id = 1;
+    string target_device_id = 2;
+    string source_user_id = 3;
+    string target_user_id = 4;
+    string connection_type = 5; // "DIRECT" or "RELAY"
+    string network_id = 6; // Optional: for guest network checks
+    int64 timestamp = 7;
+    bytes signature = 8; // Signature of request with source device private key
+}
+
+// Connection Validation Response
+message ConnectionValidationResponse {
+    bool allowed = 1;
+    string reason = 2;
+    string validation_token = 3; // Token for validated connection
+    int64 expires_at = 4;
+    string status = 5; // "ACTIVE", "IDLE", "SUSPICIOUS", "BLOCKED"
+    bytes signature = 6; // Signature of response with Heimdall private key
+}
+
+// Message Validation Request
+message MessageValidationRequest {
+    string connection_token = 1; // From ConnectionValidationResponse
+    bytes message = 2;
+    bytes signature = 3; // Signature of message with device private key
+    int64 timestamp = 4;
+}
+
+// Message Validation Response
+message MessageValidationResponse {
+    bool valid = 1;
+    string reason = 2; // Reason if invalid
+}

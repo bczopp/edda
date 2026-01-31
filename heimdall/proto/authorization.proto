@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package heimdall.authorization;
+
+// Authorization Service
+service AuthorizationService {
+    // Check if device has permission for action
+    rpc CheckPermission(PermissionCheckRequest) returns (PermissionCheckResponse);
+    
+    // Check if device has role
+    rpc CheckRole(RoleCheckRequest) returns (RoleCheckResponse);
+}
+
+// Permission Check Request
+message PermissionCheckRequest {
+    string device_id = 1;
+    string user_id = 2;
+    string resource_type = 3;
+    string action = 4;
+    string resource_id = 5; // Optional: specific resource
+    map<string, string> context = 6; // Optional: context for conditional permissions
+}
+
+// Permission Check Response
+message PermissionCheckResponse {
+    bool allowed = 1;
+    string reason = 2; // Reason for allow/deny
+    repeated string granted_permissions = 3;
+}
+
+// Role Check Request
+message RoleCheckRequest {
+    string device_id = 1;
+    string user_id = 2;
+    string role_name = 3;
+}
+
+// Role Check Response
+message RoleCheckResponse {
+    bool has_role = 1;
+    repeated string roles = 2; // All roles for device/user
+}

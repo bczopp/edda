@@ -1,0 +1,28 @@
+{
+  "grpc": {
+    "port": 50057,
+    "host": "0.0.0.0"
+  },
+  "database": {
+    "url": "postgresql://user:password@localhost:5432/forseti",
+    "max_connections": 10
+  },
+  "python": {
+    "python_path": "python3",
+    "venv_path": "/var/lib/forseti/venv",
+    "ml_frameworks": {
+      "pytorch": true,
+      "tensorflow": true,
+      "jax": true
+    }
+  },
+  "training": {
+    "max_concurrent_jobs": 4,
+    "default_device": "cpu",
+    "gpu_enabled": false
+  },
+  "export": {
+    "export_directory": "/var/lib/forseti/exports",
+    "supported_formats": ["gguf", "onnx", "safetensors"]
+  }
+}

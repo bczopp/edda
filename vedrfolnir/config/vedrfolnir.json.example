@@ -1,0 +1,15 @@
+{
+  "yggdrasil": {
+    "ratatoskr_endpoint": "wss://yggdrasil.edda.ai/ratatoskr",
+    "grpc_endpoint": "https://yggdrasil.edda.ai:50000"
+  },
+  "connection": {
+    "timeout_seconds": 30,
+    "retry_attempts": 3,
+    "retry_delay_seconds": 5
+  },
+  "tls": {
+    "verify_certificates": true,
+    "ca_cert_path": null
+  }
+}

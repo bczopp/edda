@@ -1,0 +1,42 @@
+# Ein Container pro Projekt: Odin-Tests + alle Mocks (TCP + gRPC-Geri) in einem Image.
+# Keine separaten mock-* Container – Mocks laufen als Hintergrundprozesse im Test-Container.
+
+FROM rust:1.83-slim
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    pkg-config libssl-dev protobuf-compiler netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+
+# 1) TCP-Mock (Thor, Freki, Huginn, Muninn, Loki, Heimdall, Skuld)
+COPY tests/mocks/Cargo.toml tests/mocks/Cargo.toml
+COPY tests/mocks/src tests/mocks/src
+RUN cd tests/mocks && cargo build --release
+
+# 2) gRPC-Mock Geri – Proto als ../proto relativ zu grpc_geri
+COPY proto /app/proto
+COPY tests/mocks/grpc_geri /app/grpc_geri
+WORKDIR /app/grpc_geri
+RUN cargo build --release
+WORKDIR /app
+
+# Mock-Binaries sichern (bevor tests/ kopiert wird und tests/mocks/target überschreiben könnte)
+RUN mkdir -p /app/mocks_bin && \
+    cp /app/tests/mocks/target/release/odin-mock-services /app/mocks_bin/ && \
+    cp /app/grpc_geri/target/release/grpc_geri /app/mocks_bin/
+
+# 3) Odin
+COPY Cargo.toml build.rs ./
+COPY src ./src
+COPY proto ./proto
+COPY tests ./tests
+RUN if [ ! -f Cargo.lock ]; then cargo generate-lockfile; fi
+RUN cargo build --release
+
+COPY tests/scripts/run-tests-with-mocks.sh /app/run-tests-with-mocks.sh
+RUN chmod +x /app/run-tests-with-mocks.sh
+
+ENV RUST_LOG=debug
+ENV PATH="/app/mocks_bin:/app/target/release:$PATH"
+
+CMD ["/app/run-tests-with-mocks.sh"]

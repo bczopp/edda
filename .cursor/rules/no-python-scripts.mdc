@@ -1,0 +1,8 @@
+---
+name: no-python-scripts
+description: This is a new rule
+---
+
+# Overview
+
+as the users local machine does not provide any programming language, DO NOT use python or any other language to analyze any file. it will not work. there are better ways to do that.

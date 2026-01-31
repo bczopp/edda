@@ -1,0 +1,38 @@
+{
+  "security_policy": {
+    "fail_safe": true,
+    "default_deny": true
+  },
+  "token_configuration": {
+    "heimdall_token_expiration_hours": 24,
+    "session_token_expiration_hours": 1,
+    "refresh_token_expiration_days": 30,
+    "proactive_renewal_minutes": 5
+  },
+  "permission_system": {
+    "enable_rbac": true,
+    "enable_conditional_permissions": true
+  },
+  "session_management": {
+    "session_timeout_hours": 1,
+    "enable_hijacking_detection": true
+  },
+  "oauth": {
+    "providers": [
+      {
+        "name": "google",
+        "client_id": "",
+        "client_secret": "",
+        "enabled": false
+      },
+      {
+        "name": "github",
+        "client_id": "",
+        "client_secret": "",
+        "enabled": false
+      }
+    ]
+  },
+  "grpc_port": 50051,
+  "database_url": "postgres://localhost/heimdall"
+}

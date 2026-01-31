@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package thor;
+
+// Thor Action Executor Service
+service ThorService {
+    // Execute action
+    rpc ExecuteAction(ThorAction) returns (ThorResult);
+    
+    // Execute action stream (for interactive operations)
+    rpc ExecuteActionStream(stream ThorActionStreamRequest) returns (stream ThorActionStreamResponse);
+}
+
+// Thor Action
+message ThorAction {
+    string action_id = 1;
+    string action_type = 2; // FILE_OPERATION, APP_CONTROL, SYSTEM_COMMAND, NETWORK_OPERATION, TERMINAL_OPERATION
+    string device_id = 3;
+    string user_id = 4;
+    bytes action_data = 5; // JSON-encoded action parameters
+    map<string, string> metadata = 6;
+}
+
+// Thor Result
+message ThorResult {
+    string action_id = 1;
+    bool success = 2;
+    string error_message = 3;
+    bytes result_data = 4; // JSON-encoded result
+    map<string, string> metadata = 5;
+}
+
+// Action Stream Request (for interactive operations)
+message ThorActionStreamRequest {
+    string action_id = 1;
+    oneof request {
+        ThorAction start_action = 2;
+        bytes input_data = 3; // For terminal input
+        bool stop_action = 4;
+    }
+}
+
+// Action Stream Response
+message ThorActionStreamResponse {
+    string action_id = 1;
+    oneof response {
+        bytes output_data = 2; // For terminal output
+        ThorResult final_result = 3;
+        string error = 4;
+    }
+}

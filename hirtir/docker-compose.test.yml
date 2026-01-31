@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  hirtir-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      RUST_LOG: debug
+    volumes:
+      - ./target:/app/target
+      - ./tests:/app/tests
+      - ./hirtir:/app/hirtir
+      - ./shared:/app/shared
+    command: cargo test --release

@@ -424,6 +424,47 @@ service LokiService {
 - **Heimdall**: Für Security (optional, wenn Encryption unterstützt)
 - **Programmiersprache**: Rust (esp-rs für ESP32, etc.)
 
+## Einherjar Protocol Integration
+
+Loki auf Jotunheim-Devices gibt alle verfügbaren Funktionen via Einherjar Protocol bekannt:
+
+**Statische Funktionen:**
+- `RegisterScript` - Neues Script registrieren
+- `ListScripts` - Registrierte Scripts auflisten
+- `GetCapabilities` - Device-Capabilities abfragen
+- `GetChildrenStatus` - Status von Fenrir, Jörmungandr, Hel abfragen
+
+**Dynamische User-Script-Funktionen:**
+- `Script_<script_name>()` - Für jedes registrierte User-Script
+- Automatisch erstellt nach `RegisterScript()`
+- Via Einherjar Protocol für alle Services sichtbar
+
+**Beispiel:**
+1. User registriert Script "temperature_monitor" via `RegisterScript()`
+2. Loki erstellt dynamische Funktion: `Script_temperature_monitor()`
+3. Funktion wird via Einherjar Protocol bekannt gegeben
+4. Jeder Service (Thor, Odin, etc.) kann Script aufrufen: `Script_temperature_monitor(params)`
+
+**Integration-Flow:**
+```
+Service (Thor/Odin) → Fragt Device-Capabilities via Einherjar Protocol
+    ↓
+Loki antwortet: ["RegisterScript", "ListScripts", "Script_temperature_monitor", ...]
+    ↓
+Service ruft auf: RegisterScript(name="led_control", content="...", language="lua")
+    ↓
+Loki registriert Script → Erstellt Script_led_control() → Via Einherjar bekannt
+    ↓
+Service ruft auf: Script_led_control(params) → Loki führt aus → Result
+```
+
+**Vorteile:**
+- **Generisch**: Jeder Service kann Loki-Funktionen nutzen (nicht nur Thor)
+- **Type-Safe**: gRPC + Protobuf garantiert korrekte Typen
+- **Dynamisch**: Scripts können zur Laufzeit hinzugefügt werden
+- **Discovery**: Services entdecken Funktionen automatisch via Einherjar
+- **Resource-Effizient**: Loki ist extrem lightweight für IoT-Devices
+
 ## Resource-Management
 
 **Extrem Lightweight (Essentiell für Jotunheim):**

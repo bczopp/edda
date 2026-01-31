@@ -213,6 +213,14 @@ Follow this workflow for all coding tasks:
 - **Reproducible**: Test environment must be reproducible across all development machines
 - **CI/CD ready**: Container setup must work in CI/CD pipelines
 
+#### Package-Manager
+
+**WICHTIG**: Bei Action-Execution oder Testing mit TypeScript/JavaScript-Projekten:
+
+- **TypeScript/JavaScript**: IMMER bun verwenden (nie npm oder pnpm)
+- **Python**: pip, poetry
+- **Rust**: cargo
+
 ### Test-Driven Development (MANDATORY)
 
 - **Strict TDD**: Test-Driven Development is MANDATORY - no exceptions
@@ -258,6 +266,37 @@ Follow this workflow for all coding tasks:
 - **Secure defaults**: Secure default configurations
 - **No hardcoded secrets**: Never hardcode secrets or credentials
 - **Audit logging**: Log all action executions for security audits
+
+### Security for Extended Action-Types
+
+**Terminal-Emulation**:
+- **Mittleres Risiko**: Interactive Programs können potenziell gefährlich sein
+- **Sandboxing**: PTY sollte in Sandbox laufen (wenn möglich)
+- **Command-Validation**: Commands validieren vor Ausführung
+- **Timeout-Enforcement**: Strikte Timeouts für interactive Sessions
+
+**UI-Automation**:
+- **Hohes Risiko**: Kann beliebige UI-Actions ausführen
+- **Heimdall-Integration**: Strenge Permission-Checks für UI-Automation
+- **User-Confirmation**: Bei kritischen Actions (z.B. "Klicke Delete-Button") User-Bestätigung erforderlich
+- **Element-Validation**: UI-Elemente validieren vor Interaktion
+- **Audit-Logging**: Alle UI-Actions loggen
+
+**Scheduler-Operations**:
+- **Mittleres Risiko**: Kann persistente Tasks erstellen
+- **Permission-Checks**: Scheduler-Permissions via Heimdall prüfen
+- **Audit-Logging**: Alle Scheduler-Changes loggen
+- **Task-Validation**: Scheduled Tasks validieren (kein arbitrary code)
+
+**Jotunheim-Operations**:
+- **Mittleres Risiko**: Kann IoT-Devices und physische Geräte steuern
+- **Heimdall-Integration**: Device-Permissions prüfen
+- **Device-Validation**: Nur autorisierte Devices steuern
+- **Action-Confirmation**: Bei kritischen Actions (z.B. "Tür öffnen") Bestätigung erforderlich
+- **Tool-Calling**: Generisches Tool-Calling via Einherjar Protocol
+  - Funktionen werden vom Device bekannt gegeben
+  - Thor validiert Permissions vor Function-Call
+  - Audit-Logging für alle Device-Interactions
 
 ### GDPR Compliance (EU/German Data Protection)
 

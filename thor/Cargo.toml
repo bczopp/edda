@@ -1,0 +1,65 @@
+[package]
+name = "thor"
+version = "0.1.0"
+edition = "2021"
+authors = ["Edda Team"]
+description = "Action Executor Service for Edda - Executes actions (file operations, application control, system commands, etc.)"
+
+[dependencies]
+# Async Runtime
+tokio = { version = "1.35", features = ["full"] }
+tokio-stream = "0.1"
+
+# gRPC
+tonic = "0.11"
+prost = "0.12"
+prost-types = "0.12"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Error Handling
+anyhow = "1.0"
+thiserror = "1.0"
+async-trait = "0.1"
+
+# Utilities
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# Configuration
+config = "0.14"
+notify = "6.1" # For file watching (hot-reload)
+
+# System APIs
+# For file operations, process management, etc.
+# Platform-specific features will be conditionally compiled
+
+# PTY for terminal operations
+portable-pty = "0.5"
+
+# HTTP client for network operations
+reqwest = { version = "0.11", features = ["json"] }
+
+[dev-dependencies]
+# Testing
+tokio-test = "0.4"
+mockall = "0.12"
+
+# Test containers (testcontainers-modules 0.14 requires testcontainers ^0.26)
+testcontainers = "0.26"
+testcontainers-modules = { version = "0.14", features = ["postgres"] }
+tempfile = "3.8"
+
+[features]
+default = []
+unix = []
+windows = []
+
+[build-dependencies]
+tonic-build = "0.11"

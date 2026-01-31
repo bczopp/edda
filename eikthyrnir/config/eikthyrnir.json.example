@@ -1,0 +1,18 @@
+{
+  "grpc": {
+    "port": 50053,
+    "host": "0.0.0.0"
+  },
+  "database": {
+    "url": "postgresql://user:password@localhost:5432/eikthyrnir",
+    "max_connections": 10
+  },
+  "redis": {
+    "url": "redis://localhost:6379",
+    "ttl_seconds": 3600
+  },
+  "aggregation": {
+    "frequency": "hybrid",
+    "batch_size": 100
+  }
+}

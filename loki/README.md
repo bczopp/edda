@@ -186,8 +186,40 @@ service LokiService {
 
 ### Service-Integration
 - **Odin**: Kann Loki für Script-Execution nutzen (optional)
-- **Thor**: Kann Loki für Script-basierte Actions nutzen (optional)
+- **Thor**: Nutzt Loki via generisches Tool-Calling (Einherjar Protocol)
+- **Alle Services**: Können Loki-Funktionen via Einherjar Protocol entdecken und aufrufen
 - **Heimdall**: Für Security (optional, wenn Encryption unterstützt)
+
+## Function Discovery & Capability Exposure
+
+### Einherjar Protocol Integration
+
+Loki implementiert das **Einherjar Protocol** für Function Discovery:
+
+**Verfügbare Funktionen:**
+- `GetCapabilities()` - Device-Capabilities abfragen
+- `ListScripts()` - Registrierte Scripts auflisten  
+- `RegisterScript()` - Neues Script registrieren
+- `Script_<script_name>()` - Dynamische Script-Funktionen (zur Laufzeit generiert)
+
+**Integration:**
+- Jeder Service (Thor, Odin, etc.) kann via Einherjar Protocol Loki's Funktionen abfragen
+- Loki gibt alle verfügbaren Funktionen bekannt
+- Services rufen Funktionen direkt via gRPC auf
+
+**Beispiel-Workflow:**
+1. Service fragt Device: `GetCapabilities()`
+2. Device antwortet: `["RegisterScript", "ListScripts", "Script_temperature_monitor", ...]`
+3. Service ruft auf: `RegisterScript(name="led_control", content="...", language="lua")`
+4. Loki registriert Script und erstellt dynamische Funktion: `Script_led_control()`
+5. Funktion wird via Einherjar Protocol bekannt gegeben
+6. Service kann nun aufrufen: `Script_led_control(params)`
+
+**Vorteile:**
+- **Generisch**: Nicht auf Thor beschränkt - alle Services können Loki nutzen
+- **Discovery**: Services entdecken Funktionen automatisch
+- **Type-Safe**: gRPC + Protobuf garantiert korrekte Typen
+- **Dynamisch**: User-Scripts werden zur Laufzeit zu aufrufbaren Funktionen
 
 ## Resource-Management
 

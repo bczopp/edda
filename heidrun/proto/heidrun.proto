@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package heidrun;
+
+service HeidrunService {
+    rpc CountTokens(CountTokensRequest) returns (CountTokensResponse);
+    rpc CalculatePrice(CalculatePriceRequest) returns (CalculatePriceResponse);
+    rpc ProcessSettlement(ProcessSettlementRequest) returns (ProcessSettlementResponse);
+    rpc PreAuthorize(PreAuthorizeRequest) returns (PreAuthorizeResponse);
+}
+
+message CountTokensRequest {
+    string text = 1;
+    string model = 2;
+}
+
+message CountTokensResponse {
+    int64 token_count = 1;
+}
+
+message CalculatePriceRequest {
+    int64 token_count = 1;
+    string model = 2;
+    string provider_id = 3;
+}
+
+message CalculatePriceResponse {
+    double price = 1;
+    double commission = 2;
+    double net_price = 3;
+}
+
+message ProcessSettlementRequest {
+    string provider_id = 1;
+    string period_start = 2;
+    string period_end = 3;
+}
+
+message ProcessSettlementResponse {
+    string settlement_id = 1;
+    double amount = 2;
+    string status = 3;
+}
+
+message PreAuthorizeRequest {
+    string user_id = 1;
+    double amount = 2;
+    string currency = 3;
+}
+
+message PreAuthorizeResponse {
+    string authorization_id = 1;
+    bool approved = 2;
+}

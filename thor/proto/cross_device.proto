@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package cross_device;
+
+// Cross-device action service (Thor on target device receives and executes)
+service CrossDeviceService {
+  rpc ExecuteCrossDeviceAction(CrossDeviceActionRequest) returns (CrossDeviceActionResult);
+}
+
+message CrossDeviceActionRequest {
+  string action_id = 1;
+  string target_device_id = 2;
+  string user_id = 3;
+  bytes action_data = 4;
+}
+
+message CrossDeviceActionResult {
+  string action_id = 1;
+  bool success = 2;
+  bytes result_data = 3;
+  string error_message = 4;
+}

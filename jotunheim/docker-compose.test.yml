@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Mock Loki Service
+  mock-loki:
+    build:
+      context: ./tests/mocks
+      dockerfile: Dockerfile.mock-service
+    environment:
+      SERVICE_NAME: loki
+      SERVICE_PORT: 50057
+      RUST_LOG: debug
+    ports:
+      - "50057:50057"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50057 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  jotunheim-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    depends_on:
+      mock-loki:
+        condition: service_healthy
+    environment:
+      RUST_LOG: debug
+      LOKI_URL: http://mock-loki:50057
+    volumes:
+      - ./target:/app/target
+      - ./tests:/app/tests
+      - ./jotunheim:/app/jotunheim
+      - ./esp32:/app/esp32
+      - ./generic:/app/generic
+      - ./shared:/app/shared
+    command: cargo test --release

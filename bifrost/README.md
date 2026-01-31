@@ -4,11 +4,14 @@
 
 Bifrost ist der Secure WebSocket Service für Inter-Device Communication. Er ermöglicht sichere, verschlüsselte Kommunikation zwischen Devices im Edda-Netzwerk.
 
+**Mesh-Layer-Design**: Siehe [docs/MESH_LAYER_DESIGN.md](docs/MESH_LAYER_DESIGN.md) für Paketformat (MeshPacket/Data), Managed Flood, Hop-Limit, Discovery und IP-Transport-Entscheid.
+
 ## Features
 
 - **Secure WebSocket Communication**: WebSocket-basierte Kommunikation mit TLS-Verschlüsselung
 - **TLS Encryption**: Alle Verbindungen sind verschlüsselt
-- **Message Routing**: Routing von Messages zwischen Devices
+- **Device-Mesh (Meshtastic-inspiriert)**: Bifrost nutzt ein Multi-Hop-Mesh zwischen den Devices eines Users; Verbindungen erfordern Mesh-Membership
+- **Message Routing**: Routing von Messages zwischen Devices (direkt oder über mehrere Hop)
 - **Device Discovery**: Automatische Device-Discovery im Netzwerk
 - **Connection Management**: Verwaltung von Device-Verbindungen
 - **Error Recovery**: Automatische Wiederverbindung (sofort + Exponential Backoff)
@@ -48,6 +51,46 @@ Bifrost ist der Secure WebSocket Service für Inter-Device Communication. Er erm
 
 ### Connection Establishment
 
+**Mesh-Membership (Device-Mesh):**
+- **WICHTIG**: Bifrost-Verbindungen erfordern Mesh-Membership; Devices müssen im gleichen User-Mesh sein
+- Bifrost enthält einen Mesh-Layer (Meshtastic-inspiriert): Multi-Hop-Routing (Managed Flood), Discovery, Transports (IP, optional LoRa)
+- Schichten:
+  - **Mesh-Layer**: Membership, Discovery, Multi-Hop-Routing, Transports (IP/LoRa)
+  - **Bifrost-Protokoll (Layer 7)**: WebSocket-Kommunikation ÜBER den Mesh-Layer
+- Ohne Mesh-Membership: Bifrost-Verbindung wird blockiert
+- Mesh-Check: Bei jedem Connection-Request wird Mesh-Membership geprüft (Heimdall)
+
+**Connection-Workflow (mit Mesh-Check):**
+
+1. **Device A möchte mit Device B kommunizieren**
+   - Device A prüft Mesh-Membership (über Heimdall)
+   - Device A prüft ob Device B im gleichen User-Mesh ist
+   - **Wenn kein Mesh**: Connection wird blockiert, Fehler wird zurückgegeben
+
+2. **Mesh-Membership aktiv → Bifrost-Verbindung kann aufgebaut werden**
+   - Device A sendet Connection-Request an Device B (über Mesh-Pfad, ggf. Multi-Hop)
+   - Request wird an Heimdall weitergeleitet für Validation
+   - Heimdall prüft:
+     - Ist Device A authentifiziert? (Heimdall-Token)
+     - Hat Device A Permission für Device B?
+     - Sind beide Devices im gleichen User-Mesh?
+     - Mesh-Membership-Validation
+
+3. **Heimdall-Validation erfolgreich → Connection wird zugelassen**
+   - Device B erhält Connection-Request (direkt oder über Mesh-Relays)
+   - Device B akzeptiert Verbindung
+   - WebSocket-Verbindung wird etabliert (über Mesh-Layer)
+
+4. **Bidirektionale Kommunikation**
+   - Messages werden über WebSocket gesendet (Application Layer)
+   - WebSocket läuft über Mesh-Layer (Multi-Hop bei Bedarf)
+   - Defense in Depth: Mesh-Verschlüsselung + TLS + Heimdall-Validation
+
+5. **Mesh-Monitoring**
+   - Bifrost überwacht kontinuierlich Mesh-Connectivity
+   - Bei Mesh-Ausfall: Bifrost-Verbindungen werden automatisch geschlossen oder über alternative Hops geroutet
+   - Bei Mesh-Wiederherstellung: Automatische Wiederverbindung
+
 **User-Isolation und Verbindungsregeln:**
 
 **1. Devices eines Users (gleicher User)**
@@ -59,6 +102,10 @@ Bifrost ist der Secure WebSocket Service für Inter-Device Communication. Er erm
 **2. Devices unterschiedlicher User (verschiedene User)**
 - **NICHT direkt verbindbar**: Devices unterschiedlicher User dürfen sich NICHT direkt verbinden
 - **Immer über Yggdrasil**: Alle Verbindungen zwischen verschiedenen Usern müssen über Yggdrasil erfolgen
+- **Yggdrasil-Relay als Sicherheitsfeature**: Yggdrasil fungiert als Relay zwischen User-Meshes
+  - Verhindert direkte Verbindungen zwischen verschiedenen Usern
+  - Erzwingt zentrale Kontrolle über Cross-User-Kommunikation
+  - Ermöglicht Security-Monitoring und Access-Control
 - **Sicherheit**: Verhindert, dass Devices fremdgesteuert werden, wenn es nicht gewollt ist
 - **Bezahlmaßnahmen**: Yggdrasil verwaltet auch Bezahlmaßnahmen für Cross-User-Verbindungen
 

@@ -1,0 +1,22 @@
+FROM elixir:1.15-alpine
+
+WORKDIR /app
+
+# Install dependencies
+RUN apk add --no-cache \
+    build-base \
+    postgresql-client
+
+# Copy mix files
+COPY mix.exs mix.lock ./
+
+# Install dependencies
+RUN mix deps.get
+
+# Copy source code
+COPY lib ./lib
+COPY config ./config
+COPY test ./test
+
+# Default command for tests
+CMD ["mix", "test"]

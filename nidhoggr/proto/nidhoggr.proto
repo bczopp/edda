@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package nidhoggr;
+
+service NidhoggrService {
+    rpc EstablishConnection(EstablishConnectionRequest) returns (EstablishConnectionResponse);
+    rpc CloseConnection(CloseConnectionRequest) returns (CloseConnectionResponse);
+}
+
+message EstablishConnectionRequest {
+    string device_id = 1;
+    string endpoint_type = 2; // "bifrost", "ratatoskr", etc.
+}
+
+message EstablishConnectionResponse {
+    string connection_id = 1;
+}
+
+message CloseConnectionRequest {
+    string connection_id = 1;
+}
+
+message CloseConnectionResponse {
+    bool success = 1;
+}

@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  laeradr-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      RUST_LOG: debug
+    volumes:
+      - ./target:/app/target
+      - ./tests:/app/tests
+      - ./laeradr:/app/laeradr
+      - ./dainn:/app/dainn
+      - ./dvalinn:/app/dvalinn
+      - ./duneyrr:/app/duneyrr
+      - ./durathror:/app/durathror
+      - ./shared:/app/shared
+    command: cargo test --release

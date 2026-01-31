@@ -1,0 +1,5 @@
+{
+  "grpc_port": 50053,
+  "qdrant_url": "http://localhost:6333",
+  "embedding_model": "all-MiniLM-L6-v2"
+}

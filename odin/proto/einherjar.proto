@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package einherjar;
+
+// Einherjar Protocol - Service Discovery and Capability Exposure
+// All services and plugins must implement this protocol
+service EinherjarProtocol {
+    // Get capabilities of a service/plugin
+    rpc GetCapabilities(CapabilityRequest) returns (CapabilityResponse);
+}
+
+message CapabilityRequest {
+    // Empty or optional filter parameters
+    // Can be extended in the future for filtering
+}
+
+message CapabilityResponse {
+    string god_name = 1;  // e.g., "Thor", "Frigg", "Valkyries"
+    string purpose = 2;   // Purpose of the god (e.g., "Action Execution", "Healthcare", "Coding")
+    repeated FunctionDefinition functions = 3;
+    repeated string responsibility_domains = 4;  // Domains this god is responsible for
+    repeated string responsibility_keywords = 5;  // Keywords that indicate responsibility
+}
+
+message FunctionDefinition {
+    string name = 1;
+    string description = 2;
+    repeated ParameterDefinition parameters = 3;
+    string return_type = 4;
+    repeated string capabilities = 5;
+    repeated string responsibility_keywords = 6;  // Keywords for this specific function
+}
+
+message ParameterDefinition {
+    string name = 1;
+    string type = 2;  // JSON Schema type
+    string description = 3;
+    bool required = 4;
+    repeated string enum_values = 5;  // Optional enum values
+}

@@ -416,7 +416,7 @@ valkyries/
 - **Security-Best-Practices**: Implementiert Security-Best-Practices
 
 **Spezialisierte Tools & Technologien:**
-- **Scanning**: OWASP ZAP, Snyk, npm audit, pip-audit, Safety
+- **Scanning**: OWASP ZAP, Snyk, bun audit, pip-audit, Safety
 - **SAST**: SonarQube, CodeQL, Semgrep, Bandit
 - **Dependency-Scanning**: Dependabot, Renovate, Snyk
 - **Secret-Detection**: GitGuardian, TruffleHog, detect-secrets
@@ -555,7 +555,7 @@ valkyries/
 - **Config-Formate**: JSON, YAML, TOML, .env, XML
 - **Build-Tools**: webpack, Vite, Rollup, esbuild
 - **Linters**: ESLint, Prettier, Pylint, RuboCop
-- **Package-Manager**: npm, yarn, pnpm, pip, poetry, cargo
+- **Package-Manager**: bun (für TypeScript/Frontend), pip, poetry, cargo
 - **Secret-Management**: Vault, AWS Secrets Manager, Azure Key Vault
 
 **Context-Isolation:**

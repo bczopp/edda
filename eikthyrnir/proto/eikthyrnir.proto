@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package eikthyrnir;
+
+service EikthyrnirService {
+    rpc AssessQuality(AssessQualityRequest) returns (AssessQualityResponse);
+    rpc AggregateQuality(AggregateQualityRequest) returns (AggregateQualityResponse);
+    rpc GetQualityMetrics(GetQualityMetricsRequest) returns (GetQualityMetricsResponse);
+}
+
+message AssessQualityRequest {
+    string provider_id = 1;
+    string service_id = 2;
+    QualityData data = 3;
+}
+
+message AssessQualityResponse {
+    double quality_score = 1;
+    map<string, double> metrics = 2;
+}
+
+message AggregateQualityRequest {
+    string provider_id = 1;
+    string period_start = 2;
+    string period_end = 3;
+}
+
+message AggregateQualityResponse {
+    double aggregated_score = 1;
+    map<string, double> aggregated_metrics = 2;
+}
+
+message GetQualityMetricsRequest {
+    string provider_id = 1;
+    int32 limit = 2;
+}
+
+message GetQualityMetricsResponse {
+    repeated QualityMetric metrics = 1;
+}
+
+message QualityData {
+    double response_time = 1;
+    double accuracy = 2;
+    double availability = 3;
+    map<string, double> custom_metrics = 4;
+}
+
+message QualityMetric {
+    string metric_id = 1;
+    string provider_id = 2;
+    double value = 3;
+    string timestamp = 4;
+}

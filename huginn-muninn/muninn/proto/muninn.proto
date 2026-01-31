@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package muninn;
+
+service MuninnService {
+    rpc SynthesizeSpeech(SynthesizeSpeechRequest) returns (SynthesizeSpeechResponse);
+}
+
+message SynthesizeSpeechRequest {
+    string text = 1;
+    string voice = 2; // Optional: voice selection
+}
+
+message SynthesizeSpeechResponse {
+    bytes audio_data = 1;
+}

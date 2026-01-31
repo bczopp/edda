@@ -1,0 +1,102 @@
+syntax = "proto3";
+
+package heimdall;
+
+service AuthenticationService {
+    rpc RequestChallenge(ChallengeRequest) returns (ChallengeResponse);
+    rpc ProveIdentity(ProofRequest) returns (AuthenticationTokenResponse);
+}
+
+service AuthorizationService {
+    rpc CheckPermission(PermissionCheckRequest) returns (PermissionCheckResponse);
+}
+
+service TokenService {
+    rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+}
+
+service BifrostValidationService {
+    rpc ValidateConnection(ConnectionValidationRequest) returns (ConnectionValidationResponse);
+}
+
+message ChallengeRequest {
+    string device_id = 1;
+    bytes public_key = 2;
+    bytes signature = 3;
+    int64 timestamp = 4;
+}
+
+message ChallengeResponse {
+    string challenge = 1;
+    int64 timestamp = 2;
+    int64 expires_in = 3;
+    bytes signature = 4;
+}
+
+message ProofRequest {
+    string device_id = 1;
+    string challenge = 2;
+    bytes proof = 3;
+    int64 timestamp = 4;
+    bytes signature = 5;
+}
+
+message AuthenticationTokenResponse {
+    string token = 1;
+    string token_id = 2;
+    int64 expires_at = 3;
+    string refresh_token = 4;
+    int64 refresh_expires_at = 5;
+    repeated string permissions = 6;
+}
+
+message PermissionCheckRequest {
+    string device_id = 1;
+    string user_id = 2;
+    string resource_type = 3;
+    string action = 4;
+    string resource_id = 5;
+    map<string, string> context = 6;
+}
+
+message PermissionCheckResponse {
+    bool allowed = 1;
+    string reason = 2;
+    repeated string granted_permissions = 3;
+}
+
+message ValidateTokenRequest {
+    string token = 1;
+    string device_id = 2;
+}
+
+message ValidateTokenResponse {
+    bool valid = 1;
+    string token_id = 2;
+    string device_id = 3;
+    string user_id = 4;
+    int64 expires_at = 5;
+    bool is_revoked = 6;
+    repeated string permissions = 7;
+    string reason = 8;
+}
+
+message ConnectionValidationRequest {
+    string source_device_id = 1;
+    string target_device_id = 2;
+    string source_user_id = 3;
+    string target_user_id = 4;
+    string connection_type = 5;
+    string network_id = 6;
+    int64 timestamp = 7;
+    bytes signature = 8;
+}
+
+message ConnectionValidationResponse {
+    bool allowed = 1;
+    string reason = 2;
+    string validation_token = 3;
+    int64 expires_at = 4;
+    string status = 5;
+    bytes signature = 6;
+}

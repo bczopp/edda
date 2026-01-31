@@ -110,7 +110,7 @@ efficiency_score = (model_size_score * 0.20) +
 - **Automatische Anpassung**: Gewichtungen werden dynamisch angepasst basierend auf aktueller Last
 
 ### 4. Provider Integration
-- **Lokale Modelle**: Ollama, LM Studio, Custom Local Models
+- **Lokale Modelle**: llama.cpp (Standard), BitNet.cpp (1-bit, extreme Effizienz), Custom Local Models
 - **Cloud LLMs**: OpenAI, Anthropic, Google, etc. (nur wenn API-Keys/Credentials hinterlegt sind)
 - **Unified API**: Einheitliche API für alle Provider
 - **Keine Hierarchie**: Lokale und Cloud Models haben gleiche Priorität
@@ -188,7 +188,8 @@ efficiency_score = (model_size_score * 0.20) +
 ## Provider Support
 
 ### Local Providers
-- **Ollama**: Lokale Modelle, verschiedene Größen
+- **llama.cpp**: Lokale Modelle (Standard), verschiedene Größen, minimaler Overhead
+- **BitNet.cpp**: 1-bit Modelle, extreme Effizienz (90% weniger RAM, 5-10x schneller)
 - **LM Studio**: Lokale Modelle mit API
 - **Custom Local Models**: Direkte Integration
 
@@ -277,7 +278,7 @@ efficiency_score = (model_size_score * 0.20) +
 ```
 
 **Model-Konfiguration:**
-- **Lokale Models**: Konfiguration für lokale Models (Ollama, LM Studio, etc.)
+- **Lokale Models**: Konfiguration für lokale Models (llama.cpp + BitNet.cpp für 1-bit)
 - **Cloud-Models**: Konfiguration für Cloud-Models (OpenAI, Anthropic, etc.)
 - **Model-Registry**: Models werden in Registry verwaltet
 - **Model-Versionierung**: Unterstützung für mehrere Model-Versionen

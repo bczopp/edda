@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package ratatoskr;
+
+// Message Types
+enum MessageType {
+    UNKNOWN = 0;
+    CONNECTION_REQUEST = 1;
+    CONNECTION_RESPONSE = 2;
+    BUSINESS_REQUEST = 3;  // Generic business request - payload is interpreted by receiving service
+    HEARTBEAT = 4;
+    DISCONNECT = 5;
+    ERROR = 6;
+}
+
+// RatatoskrRequest Message
+message RatatoskrRequest {
+    MessageType message_type = 1;
+    string request_id = 2;
+    string device_id = 3;
+    string user_id = 4;
+    int64 timestamp = 5;
+    bytes nonce = 6;
+    bytes signature = 7;
+    bytes payload = 8;
+    map<string, string> metadata = 9;
+}
+
+// RatatoskrResponse Message
+message RatatoskrResponse {
+    MessageType message_type = 1;
+    string request_id = 2;
+    int64 timestamp = 3;
+    bool success = 4;
+    string error_code = 5;
+    string error_message = 6;
+    bytes payload = 7;
+    map<string, string> metadata = 8;
+}
+
+// Connection Request Payload
+message ConnectionRequestPayload {
+    string device_identity = 1;
+    string authentication_token = 2;
+    string version = 3;
+}
+
+// Connection Response Payload
+message ConnectionResponsePayload {
+    bool accepted = 1;
+    string session_id = 2;
+    int64 expires_at = 3;
+    string server_version = 4;
+}

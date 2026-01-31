@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package huginn;
+
+service HuginnService {
+    rpc TranscribeAudio(TranscribeAudioRequest) returns (TranscribeAudioResponse);
+    rpc ForwardData(ForwardDataRequest) returns (ForwardDataResponse);
+}
+
+message TranscribeAudioRequest {
+    bytes audio_data = 1;
+}
+
+message TranscribeAudioResponse {
+    string transcription = 1;
+}
+
+message ForwardDataRequest {
+    bytes data = 1;
+    string data_type = 2; // "text", "image", "video", "video_stream"
+}
+
+message ForwardDataResponse {
+    bool success = 1;
+}

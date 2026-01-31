@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package vedrfolnir;
+
+service VedrfolnirService {
+    rpc EstablishConnection(EstablishConnectionRequest) returns (EstablishConnectionResponse);
+    rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+    rpc CloseConnection(CloseConnectionRequest) returns (CloseConnectionResponse);
+}
+
+message EstablishConnectionRequest {
+    string protocol = 1; // "ratatoskr" or "grpc"
+    string endpoint = 2;
+    map<string, string> auth_headers = 3;
+}
+
+message EstablishConnectionResponse {
+    string connection_id = 1;
+    bool success = 2;
+    string error_message = 3;
+}
+
+message SendMessageRequest {
+    string connection_id = 1;
+    bytes message = 2;
+}
+
+message SendMessageResponse {
+    bool success = 1;
+    bytes response = 2;
+    string error_message = 3;
+}
+
+message CloseConnectionRequest {
+    string connection_id = 1;
+}
+
+message CloseConnectionResponse {
+    bool success = 1;
+}

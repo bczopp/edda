@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package geri;
+
+service GeriService {
+    rpc ProcessPrompt(ProcessPromptRequest) returns (ProcessPromptResponse);
+    rpc ProcessVision(ProcessVisionRequest) returns (ProcessVisionResponse);
+}
+
+message ProcessPromptRequest {
+    string prompt = 1;
+    string context = 2; // Optional RAG context
+    string model_name = 3; // Optional: specific model
+    uint32 max_tokens = 4;
+}
+
+message ProcessPromptResponse {
+    string text = 1;
+    uint32 tokens_used = 2;
+    string model_used = 3;
+}
+
+message ProcessVisionRequest {
+    bytes image_data = 1;
+    string prompt = 2; // Optional: specific question about image
+    string model_name = 3; // Optional: specific vision model
+}
+
+message ProcessVisionResponse {
+    string description = 1;
+    bytes analysis_data = 2; // JSON-encoded analysis
+    string model_used = 3;
+}

@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package skuld;
+
+service SkuldService {
+    rpc SelectModel(SelectModelRequest) returns (SelectModelResponse);
+}
+
+message SelectModelRequest {
+    string prompt = 1;
+    uint64 max_size = 2; // Optional: max model size
+    double min_reliability = 3; // Optional: min reliability score
+    uint64 max_latency_ms = 4; // Optional: max latency
+}
+
+message SelectModelResponse {
+    string model_name = 1;
+    double score = 2;
+    map<string, double> factor_scores = 3;
+}

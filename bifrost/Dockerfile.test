@@ -1,0 +1,24 @@
+FROM rust:1.88-slim
+
+WORKDIR /app
+
+# Install dependencies for building and testing
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Cargo files and source (Cargo needs src/ for manifest targets)
+COPY Cargo.toml ./
+COPY src ./src
+RUN cargo generate-lockfile
+
+# Copy tests
+COPY tests ./tests
+
+# Build the project
+RUN cargo build --release --tests
+
+# Default command for tests
+CMD ["cargo", "test", "--release", "--", "--test-threads=1"]

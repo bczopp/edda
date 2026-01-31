@@ -1,0 +1,23 @@
+# Ein Container pro Projekt: odin-test enthält alle Mocks (TCP + gRPC-Geri) und führt die Tests aus.
+# Keine separaten mock-* Services – Mocks laufen im selben Container als Hintergrundprozesse.
+
+services:
+  odin-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      RUST_LOG: debug
+      THOR_URL: http://127.0.0.1:50052
+      FREKI_URL: http://127.0.0.1:50053
+      GERI_URL: http://127.0.0.1:50054
+      HUGINN_URL: http://127.0.0.1:50055
+      MUNINN_URL: http://127.0.0.1:50056
+      LOKI_URL: http://127.0.0.1:50057
+      HEIMDALL_URL: http://127.0.0.1:50051
+      SKULD_URL: http://127.0.0.1:50058
+    volumes:
+      - ./target:/app/target
+      - ./src:/app/src
+      - ./tests:/app/tests
+    command: ["/app/run-tests-with-mocks.sh"]

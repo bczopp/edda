@@ -1,0 +1,51 @@
+[package]
+name = "bifrost"
+version = "0.1.0"
+edition = "2021"
+authors = ["Edda Team"]
+description = "Communication Service for Edda - WebSocket-based device-to-device communication"
+
+[features]
+default = ["native-tls"]
+# TLS backend for WebSocket (wss://). Exactly one should be enabled.
+native-tls = ["tokio-tungstenite/native-tls"]
+rustls-tls = ["tokio-tungstenite/rustls"]
+
+[dependencies]
+# Async Runtime
+tokio = { version = "1.35", features = ["full"] }
+tokio-tungstenite = { version = "0.21", default-features = false }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.3"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Error Handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Utilities
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# Configuration
+config = "0.14"
+notify = "6.1"
+
+# WebSocket
+futures-util = "0.3"
+async-trait = "0.1"
+rand = "0.8"
+
+# Crypto (Key Generation Phase 3.3.1)
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockall = "0.12"
+tempfile = "3.8"

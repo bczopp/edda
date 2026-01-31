@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # Mock Nornen Service
+  mock-nornen:
+    build:
+      context: ./tests/mocks
+      dockerfile: Dockerfile.mock-service
+    environment:
+      SERVICE_NAME: nornen
+      SERVICE_PORT: 50055
+      RUST_LOG: debug
+    ports:
+      - "50055:50055"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50055 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Mock Heidrun Service
+  mock-heidrun:
+    build:
+      context: ./tests/mocks
+      dockerfile: Dockerfile.mock-service
+    environment:
+      SERVICE_NAME: heidrun
+      SERVICE_PORT: 50057
+      RUST_LOG: debug
+    ports:
+      - "50057:50057"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50057 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Mock Mimir Service
+  mock-mimir:
+    build:
+      context: ./tests/mocks
+      dockerfile: Dockerfile.mock-service
+    environment:
+      SERVICE_NAME: mimir
+      SERVICE_PORT: 50059
+      RUST_LOG: debug
+    ports:
+      - "50059:50059"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50059 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  nidhoggr-test:
+    build:
+      context: ..
+      dockerfile: nidhoggr/Dockerfile.test
+    depends_on:
+      mock-nornen:
+        condition: service_healthy
+      mock-heidrun:
+        condition: service_healthy
+      mock-mimir:
+        condition: service_healthy
+    environment:
+      RUST_LOG: debug
+      NORNEN_URL: http://mock-nornen:50055
+      HEIDRUN_URL: http://mock-heidrun:50057
+      MIMIR_URL: http://mock-mimir:50059
+    volumes:
+      - ./target:/app/nidhoggr/target
+      - ./tests:/app/nidhoggr/tests
+      - ./src:/app/nidhoggr/src
+    command: cargo test --release

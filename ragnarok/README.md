@@ -180,14 +180,10 @@ ragnarok/
 - **Resource-Optimierung**: Wenn externes Model genutzt wird, wird mitgeliefertes Model nicht geladen
 - **Konfigurierbar**: Über `ragnarok config` oder Konfigurationsdatei
 
-#### Model-Anbindung
-- **llama.cpp**: Primäre Anbindung über llama.cpp für minimale Overhead
-- **Direkte Anbindung**: So wenig Overhead wie möglich
-- **Rust**: Implementierung in Rust (wie alle anderen Services)
-- **llama.cpp-Integration**: Version-Check und Update-Mechanismus für llama.cpp
-- **Model-Konfiguration**: Verwaltung von Model-Konfigurationen
-- **Model-Switching**: Mechanismen zum Wechseln zwischen verschiedenen Models
-- **Model-Loading-Fehler**: Robustes Error-Handling bei Model-Loading-Fehlern
+#### LLM-Service-Integration
+- **Geri (via gRPC)**: LLM Service für alle LLM-Anfragen
+- **Keine direkte Model-Anbindung**: Ragnarok nutzt Geri Service, LLM-Provider-Details sind Geri-interne Konfiguration
+- **Service-basiert**: Konsistent mit allen anderen Platformen
 
 ### Claude Code & Cursor Features
 
@@ -298,48 +294,17 @@ Odin (Main Process)
 - **Gleiche Architektur**: Beide nutzen Odin, Thor, Brünnhilde, etc.
 - **Gleiche Features**: Beide haben die gleichen Features, nur unterschiedliche UI
 
-## LLM-Konfiguration
+## LLM-Service-Integration
 
-### Standard-Konfiguration
-- **Per Default**: Alle Valkyries nutzen dasselbe LLM (konfigurierbar)
-- **Mitgeliefertes Model**: Standardmäßig wird das mitgelieferte Model verwendet
-- **Einheitliche Model-Auswahl**: Brünhild und alle Sub-Valkyries verwenden standardmäßig das gleiche Model
-- **Resource-Optimierung**: Wenn externes Model konfiguriert wird, wird mitgeliefertes Model nicht geladen
+### Geri-Service (via gRPC)
+- **LLM-Service**: Ragnarok nutzt Geri-Service für alle LLM-Anfragen
+- **Model-Auswahl**: Model-Auswahl erfolgt über Geri-Konfiguration (nicht Ragnarok-spezifisch)
+- **Service-basiert**: Konsistent mit allen anderen Platformen (Midgard, Alfheim, Asgard)
 
-### Konfigurations-Management
-- **Konfigurations-Verwaltung**: Verwaltung von Konfigurationen in der TUI
-- **Konfigurations-Dateien**: Speicherung von Konfigurationen in Dateien
-- **Konfigurations-Änderungen**: Behandlung von Konfigurations-Änderungen (Hot-Reload, Restart)
-
-### LLM-Konfiguration
-- **LLM-Konfiguration pro Valkyrie**: Verwaltung von LLM-Konfiguration pro Valkyrie
-- **TUI für Model-Auswahl**: TUI-Komponenten für Model-Auswahl
-- **Konfigurations-Änderungen**: Behandlung von Konfigurations-Änderungen (Hot-Reload, Restart)
-
-### Individuelle Konfiguration
-- **Konfigurierbar**: Jede Valkyrie kann ein eigenes LLM konfiguriert bekommen
-- **Use-Case-spezifisch**: Verschiedene Valkyries können verschiedene Models nutzen (z.B. spezialisierte Coding-Models)
-- **Konfiguration**: Über `ragnarok config` oder Konfigurationsdatei
-- **Valkyries-Konfiguration**: Die LLM-Konfiguration für Valkyries wird in `valkyries/README.md` dokumentiert (gilt für alle Valkyries-Installationen, nicht nur Ragnarok)
-
-### Konfigurierbare Modelle
-- **Lokales Model**: Anderes lokales Model über llama.cpp
-- **Cloud-Model**: Cloud-Model über API-Keys und URL
-- **Pro Valkyrie**: Jede Valkyrie kann eigenes Model haben (konfigurierbar)
-
-### Beispiel-Konfiguration
-```json
-{
-  "defaultLLM": "llama-3.1-8b",
-  "valkyries": {
-    "brünhild": "llama-3.1-8b",
-    "frontend": "llama-3.1-8b",
-    "backend": "deepseek-coder-7b",
-    "test": "llama-3.1-8b",
-    "docs": "llama-3.1-8b"
-  }
-}
-```
+### Valkyries-Integration
+- **Valkyries nutzen Geri**: Alle Valkyries (Brünnhilde, Frontend, Backend, etc.) kommunizieren mit Geri via gRPC
+- **Model-Präferenzen**: Model-Präferenzen können über Geri-Anfragen angegeben werden
+- **Keine direkte Model-Verwaltung**: Model-Verwaltung ist Geri-interne Verantwortung
 
 ## Settings und Konfiguration
 

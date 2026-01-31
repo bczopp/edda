@@ -1,0 +1,13 @@
+[package]
+name = "dainn"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Data Indexing Service for Læraðr"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+uuid = { version = "1.6", features = ["v4"] }

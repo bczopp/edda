@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package heimdall.mesh_membership;
+
+// Mesh Membership Service
+// Bifrost nutzt Device-Mesh (Meshtastic-inspiriert) für Mesh-Membership.
+service MeshMembershipService {
+    // Register device for mesh membership
+    rpc RegisterDevice(MeshMembershipRequest) returns (MeshMembershipResponse);
+    
+    // Generate mesh authentication token
+    rpc GenerateMeshAuthToken(MeshAuthTokenRequest) returns (MeshAuthTokenResponse);
+}
+
+// Mesh Membership Request
+message MeshMembershipRequest {
+    string device_id = 1;
+    string device_name = 2;
+    string device_type = 3;
+    bytes mesh_public_key = 4; // Public key für Mesh-Membership
+    string owner_user_id = 5;
+    int64 timestamp = 6;
+    bytes signature = 7; // Signature of request with device private key
+}
+
+// Mesh Membership Response
+message MeshMembershipResponse {
+    bool registered = 1;
+    bool requires_approval = 2; // True if device needs owner approval
+    string message = 3;
+    string mesh_device_id = 4; // ID in mesh registry
+}
+
+// Mesh Auth Token Request
+message MeshAuthTokenRequest {
+    string device_id = 1;
+    string mesh_device_id = 2; // From MeshMembershipResponse
+    int64 timestamp = 3;
+    bytes signature = 4; // Signature of request with device private key
+}
+
+// Mesh Auth Token Response
+message MeshAuthTokenResponse {
+    string mesh_token = 1; // Mesh-Auth-Token
+    string role = 2; // "admin", "user", "guest"
+    int64 expires_at = 3;
+    bytes signature = 4; // Signature of token with Heimdall private key
+}

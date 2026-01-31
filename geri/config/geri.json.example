@@ -1,0 +1,5 @@
+{
+  "grpc_port": 50054,
+  "default_local_llm": "llama3-8b",
+  "vision_model": "gpt-4v"
+}

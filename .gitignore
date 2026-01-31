@@ -1,0 +1,16 @@
+# Rust build artifacts (blockieren Git – nicht committen)
+**/target/
+
+# Cargo lock in Bibliotheken (optional; bei Apps oft erwünscht)
+# Cargo.lock
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

@@ -172,13 +172,118 @@ Ratatoskr ist ein WebSocket-basiertes Business-Protocol für die Kommunikation z
 - **Odin**: Nutzt Vedrfolnir für Yggdrasil-Kommunikation
 - **Yggdrasil Services**: Nornen, Mimir, Heidrun, etc. empfangen Requests über Nidhöggr
 
+## Implementierungs-Status
+
+✅ **Vollständig implementiert** - Alle Phasen des IMPLEMENTATION_PLANs sind abgeschlossen:
+
+- ✅ Phase 1: Projekt-Setup (Dependencies, Verzeichnisstruktur, Test-Infrastruktur)
+- ✅ Phase 2: Protocol-Definition (Message-Definitions: RatatoskrRequest, RatatoskrResponse)
+- ✅ Phase 3: Message-Serialization (MessageSerializer mit Protobuf)
+- ✅ Phase 4: Message-Validation (MessageValidator: Schema, Nonce, Signature, Timestamp)
+- ✅ Phase 5: Connection-Protocol (CONNECTION_REQUEST/RESPONSE, Handshake)
+- ✅ Phase 6: Security-Features (Message-Signature mit Ed25519, Nonce-Management)
+- ✅ Phase 7: Documentation & Examples
+- ✅ Phase 8: Testing (Unit-Tests, Integration-Tests)
+
+## Struktur
+
+```
+ratatoskr/
+├── src/
+│   ├── proto/              # Protobuf-Definitionen (generiert)
+│   ├── messages/           # Request/Response Helper
+│   │   ├── request.rs      # RatatoskrRequest Helper
+│   │   └── response.rs     # RatatoskrResponse Helper
+│   └── protocol/           # Protocol-Implementation
+│       ├── serializer.rs   # Message Serialization/Deserialization
+│       ├── validator.rs    # Message Validation
+│       ├── security.rs     # Security Features (Signing, Nonce)
+│       └── connection.rs   # Connection Protocol
+├── proto/
+│   └── ratatoskr.proto     # Protobuf Definition
+├── tests/                  # Unit- und Integration-Tests
+└── example/                # Beispiel-Implementierung
+```
+
+## Verwendung
+
+### Als Dependency
+
+Füge Ratatoskr zu deinem `Cargo.toml` hinzu:
+
+```toml
+[dependencies]
+ratatoskr = { path = "../ratatoskr" }
+```
+
+### Beispiel: Connection Request erstellen
+
+```rust
+use ratatoskr::messages::*;
+use ratatoskr::protocol::*;
+use ratatoskr::proto::ratatoskr::*;
+
+// Connection Request erstellen
+let request = RatatoskrRequest::new_connection_request(
+    "req-123".to_string(),
+    "device-456".to_string(),
+    "user-789".to_string(),
+    "device-identity".to_string(),
+    "auth-token".to_string(),
+    "1.0.0".to_string(),
+);
+
+// Nonce generieren und setzen
+let nonce_manager = NonceManager::new();
+request.nonce = nonce_manager.generate_nonce();
+
+// Message signieren
+let signing_key = SigningKey::generate(&mut OsRng);
+let signer = MessageSigner::new(signing_key);
+signer.sign_request(&mut request)?;
+
+// Message serialisieren
+let serializer = MessageSerializer::new();
+let serialized = serializer.serialize_request(&request)?;
+```
+
+### Beispiel: Message validieren
+
+```rust
+use ratatoskr::protocol::*;
+
+// Message deserialisieren
+let serializer = MessageSerializer::new();
+let request = serializer.deserialize_request(&data)?;
+
+// Message validieren
+let validator = MessageValidator::new();
+validator.validate_request(&request)?;
+
+// Nonce prüfen (Replay-Schutz)
+let nonce_manager = NonceManager::new();
+nonce_manager.validate_and_record_nonce(&request.nonce)?;
+
+// Signatur verifizieren
+let verifying_key = signer.verifying_key();
+signer.verify_request(&request, &verifying_key)?;
+```
+
+## Testing
+
+Alle Tests laufen in Containern:
+
+```bash
+# Tests ausführen
+docker-compose -f docker-compose.test.yml run --rm ratatoskr-test cargo test
+```
+
 ## Implementierungs-Notizen
 
-- **WebSocket-basiert**: Implementierung als WebSocket-Protokoll
-- **Binary Format**: Effizientes binäres Nachrichtenformat
-- **Message-Signierung**: Digitale Signaturen für alle Messages
-- **Audit-Logging**: Vollständiges Audit-Logging
-- **Rate-Limiting**: Intelligentes Rate-Limiting
-- **Error-Handling**: Robustes Error-Handling
-- **Connection-Pooling**: Effizientes Connection-Pooling auf Server-Seite
+- **WebSocket-basiert**: Implementierung als WebSocket-Protokoll (für Nidhöggr/Vedrfolnir)
+- **Protobuf Format**: Effizientes binäres Nachrichtenformat mit Protobuf
+- **Message-Signierung**: Digitale Signaturen für alle Messages (Ed25519)
+- **Nonce-Management**: Replay-Schutz durch Nonce-Validierung
+- **Error-Handling**: Robustes Error-Handling mit thiserror
+- **TDD**: Alle Features wurden mit Test-Driven Development implementiert
 

@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package responsibility;
+
+// Responsibility Service - Manages responsibility for requests
+// All services and plugins must implement this protocol
+service ResponsibilityService {
+    // Take responsibility for a request
+    rpc TakeResponsibility(TakeResponsibilityRequest) returns (TakeResponsibilityResponse);
+    
+    // Return responsibility (when task is complete or no longer applicable)
+    rpc ReturnResponsibility(ReturnResponsibilityRequest) returns (ReturnResponsibilityResponse);
+    
+    // Reject responsibility (when service cannot handle the request)
+    rpc RejectResponsibility(RejectResponsibilityRequest) returns (RejectResponsibilityResponse);
+}
+
+message TakeResponsibilityRequest {
+    string request_id = 1;
+    string user_id = 2;
+    string device_id = 3;
+    string input = 4;
+    string input_type = 5;  // "text", "audio", "image", "video"
+    string reason = 6;  // Why this service is taking responsibility
+}
+
+message TakeResponsibilityResponse {
+    bool accepted = 1;
+    string message = 2;
+}
+
+message ReturnResponsibilityRequest {
+    string request_id = 1;
+    string reason = 2;  // Why responsibility is being returned
+}
+
+message ReturnResponsibilityResponse {
+    bool acknowledged = 1;
+    string message = 2;
+}
+
+message RejectResponsibilityRequest {
+    string request_id = 1;
+    string reason = 2;  // Why responsibility is being rejected
+    repeated string suggested_alternatives = 3;  // Suggested alternative services
+}
+
+message RejectResponsibilityResponse {
+    bool acknowledged = 1;
+    string message = 2;
+}

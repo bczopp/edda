@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package laeradr;
+
+service LaeradrService {
+    rpc IndexData(IndexDataRequest) returns (IndexDataResponse);
+    rpc ValidateData(ValidateDataRequest) returns (ValidateDataResponse);
+    rpc AggregateData(AggregateDataRequest) returns (AggregateDataResponse);
+    rpc ArchiveData(ArchiveDataRequest) returns (ArchiveDataResponse);
+}
+
+message IndexDataRequest {
+    string data_id = 1;
+    bytes data = 2;
+    map<string, string> metadata = 3;
+}
+
+message IndexDataResponse {
+    bool success = 1;
+    string index_id = 2;
+}
+
+message ValidateDataRequest {
+    string schema_id = 1;
+    bytes data = 2;
+}
+
+message ValidateDataResponse {
+    bool valid = 1;
+    repeated string errors = 2;
+}
+
+message AggregateDataRequest {
+    string aggregation_type = 1;
+    repeated string data_ids = 2;
+    map<string, string> parameters = 3;
+}
+
+message AggregateDataResponse {
+    bool success = 1;
+    bytes aggregated_data = 2;
+}
+
+message ArchiveDataRequest {
+    string data_id = 1;
+    string archive_location = 2;
+}
+
+message ArchiveDataResponse {
+    bool success = 1;
+    string archive_id = 2;
+}

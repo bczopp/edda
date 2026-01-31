@@ -1,0 +1,346 @@
+syntax = "proto3";
+
+package gladsheim.v1;
+
+// GladsheimService - Service Manager & Runtime Manager
+//
+// Gladsheim verwaltet den Lifecycle aller Services (Götter), managed Ressourcen (RAM, CPU)
+// und überwacht ihre Gesundheit. Gladsheim besteht aus vier mythologischen Dienern:
+// - Thjalfi (Service Loader): Start/Stop/Restart Services
+// - Byggvir (Resource Manager): Resource-Monitoring & Limits
+// - Roskva (Health Monitor): Health-Checks & Auto-Restart
+// - Skirnir (Service Registry): Registry & Service-Discovery
+service GladsheimService {
+  // Service Lifecycle Management (Thjalfi)
+  
+  // StartService startet einen Service
+  // Workflow:
+  // 1. Skirnir prüft ob Service bereits läuft
+  // 2. Heimdall-Authorization (nur autorisierte Services)
+  // 3. Thjalfi lädt Service in RAM und startet Prozess
+  // 4. Byggvir alloziert RAM/CPU für Service
+  // 5. Roskva startet Health-Monitoring
+  // 6. Skirnir registriert Service als "running"
+  rpc StartService(StartServiceRequest) returns (ServiceStatus);
+  
+  // StopService stoppt einen Service gracefully
+  // Workflow:
+  // 1. Thjalfi sendet SIGTERM an Service
+  // 2. Timeout-Wait (konfigurierbar)
+  // 3. Force-Kill (SIGKILL) bei Timeout
+  // 4. Byggvir gibt Ressourcen frei
+  // 5. Roskva stoppt Health-Monitoring
+  // 6. Skirnir aktualisiert Status auf "stopped"
+  rpc StopService(StopServiceRequest) returns (ServiceStatus);
+  
+  // RestartService stoppt und startet Service (Stop + Start)
+  rpc RestartService(RestartServiceRequest) returns (ServiceStatus);
+  
+  // Service Status Queries (Skirnir)
+  
+  // GetServiceStatus gibt aktuellen Status eines Services zurück
+  // Performance-Requirement: < 10ms
+  rpc GetServiceStatus(ServiceStatusRequest) returns (ServiceStatus);
+  
+  // ListServices gibt Liste aller Services zurück
+  // Performance-Requirement: < 20ms
+  rpc ListServices(ListServicesRequest) returns (ServiceList);
+  
+  // Health Monitoring (Roskva)
+  
+  // GetServiceHealth gibt aktuellen Health-Status eines Services zurück
+  rpc GetServiceHealth(ServiceHealthRequest) returns (ServiceHealth);
+  
+  // SubscribeServiceHealth streamt Health-Updates für einen Service
+  // Server-Side-Streaming: Client erhält Health-Updates in Echtzeit
+  rpc SubscribeServiceHealth(HealthSubscribeRequest) returns (stream HealthUpdate);
+  
+  // Resource Management (Byggvir)
+  
+  // GetResourceUsage gibt aktuelle Resource-Usage eines Services zurück
+  rpc GetResourceUsage(ResourceUsageRequest) returns (ResourceUsage);
+  
+  // SetResourceLimits setzt Resource-Limits für einen Service
+  rpc SetResourceLimits(ResourceLimitsRequest) returns (ResourceLimits);
+  
+  // GetResourceLimits gibt aktuelle Resource-Limits eines Services zurück
+  rpc GetResourceLimits(ServiceRequest) returns (ResourceLimits);
+}
+
+// Request Messages
+
+// StartServiceRequest - Request zum Starten eines Services
+message StartServiceRequest {
+  // Name des Services (z.B. "thor", "freki", "geri")
+  string service_name = 1;
+  
+  // Environment-Variables für Service-Prozess (optional)
+  map<string, string> environment_vars = 2;
+  
+  // Resource-Limits für Service (optional, sonst Platform-Defaults)
+  ResourceLimits resource_limits = 3;
+  
+  // Working-Directory für Service-Prozess (optional)
+  string working_directory = 4;
+  
+  // Arguments für Service-Prozess (optional)
+  repeated string args = 5;
+}
+
+// StopServiceRequest - Request zum Stoppen eines Services
+message StopServiceRequest {
+  // Name des Services
+  string service_name = 1;
+  
+  // Force-Stop: Sofort SIGKILL statt graceful SIGTERM (default: false)
+  bool force = 2;
+  
+  // Timeout für graceful shutdown in Millisekunden (optional, sonst Config-Default)
+  optional uint32 timeout_ms = 3;
+}
+
+// RestartServiceRequest - Request zum Restarten eines Services
+message RestartServiceRequest {
+  // Name des Services
+  string service_name = 1;
+  
+  // Force-Stop vor Restart (default: false)
+  bool force_stop = 2;
+  
+  // Timeout für Stop in Millisekunden (optional)
+  optional uint32 stop_timeout_ms = 3;
+}
+
+// ServiceStatusRequest - Request für Service-Status
+message ServiceStatusRequest {
+  // Name des Services
+  string service_name = 1;
+}
+
+// ListServicesRequest - Request für Service-Liste
+message ListServicesRequest {
+  // Filter nach Service-State (optional, leer = alle)
+  repeated ServiceState filter_states = 1;
+  
+  // Include Resource-Usage in Response (default: false)
+  bool include_resources = 2;
+  
+  // Include Health-Status in Response (default: false)
+  bool include_health = 3;
+}
+
+// ServiceHealthRequest - Request für Service-Health-Status
+message ServiceHealthRequest {
+  // Name des Services
+  string service_name = 1;
+}
+
+// HealthSubscribeRequest - Request für Health-Streaming
+message HealthSubscribeRequest {
+  // Name des Services
+  string service_name = 1;
+  
+  // Update-Interval in Millisekunden (optional, default: Config-Interval)
+  optional uint32 update_interval_ms = 2;
+}
+
+// ResourceUsageRequest - Request für Resource-Usage
+message ResourceUsageRequest {
+  // Name des Services
+  string service_name = 1;
+}
+
+// ResourceLimitsRequest - Request zum Setzen von Resource-Limits
+message ResourceLimitsRequest {
+  // Name des Services
+  string service_name = 1;
+  
+  // Neue Resource-Limits
+  ResourceLimits limits = 2;
+}
+
+// ServiceRequest - Generischer Service-Request
+message ServiceRequest {
+  // Name des Services
+  string service_name = 1;
+}
+
+// Response Messages
+
+// ServiceStatus - Aktueller Status eines Services
+message ServiceStatus {
+  // Name des Services
+  string service_name = 1;
+  
+  // Aktueller State
+  ServiceState state = 2;
+  
+  // Process-ID (0 wenn nicht running)
+  int32 process_id = 3;
+  
+  // Start-Zeit (Unix-Timestamp in Sekunden, 0 wenn nie gestartet)
+  int64 start_time_unix = 4;
+  
+  // Stop-Zeit (Unix-Timestamp in Sekunden, 0 wenn running)
+  int64 stop_time_unix = 5;
+  
+  // Resource-Usage (optional, nur wenn requested)
+  optional ResourceUsage resource_usage = 6;
+  
+  // Health-Status (optional, nur wenn requested)
+  optional ServiceHealth health_status = 7;
+  
+  // Error-Message (nur bei State = CRASHED oder Fehler)
+  optional string error_message = 8;
+  
+  // Restart-Count (Anzahl der Restarts seit letztem erfolgreichen Start)
+  uint32 restart_count = 9;
+}
+
+// ServiceList - Liste aller Services
+message ServiceList {
+  // Liste der Services
+  repeated ServiceStatus services = 1;
+  
+  // Gesamt-Anzahl Services
+  uint32 total_count = 2;
+  
+  // Anzahl running Services
+  uint32 running_count = 3;
+  
+  // Anzahl stopped Services
+  uint32 stopped_count = 4;
+  
+  // Anzahl crashed Services
+  uint32 crashed_count = 5;
+}
+
+// ServiceHealth - Health-Status eines Services
+message ServiceHealth {
+  // Name des Services
+  string service_name = 1;
+  
+  // Health-Status
+  HealthStatus status = 2;
+  
+  // Health-Message (z.B. Error-Details bei UNHEALTHY)
+  string message = 3;
+  
+  // Letzte Health-Check-Zeit (Unix-Timestamp in Sekunden)
+  int64 last_check_unix = 4;
+  
+  // Next Health-Check-Zeit (Unix-Timestamp in Sekunden)
+  int64 next_check_unix = 5;
+  
+  // Health-Check-Failures (Anzahl aufeinanderfolgender Failures)
+  uint32 consecutive_failures = 6;
+  
+  // Health-Check-Strategy (HTTP, gRPC, Process)
+  string check_strategy = 7;
+}
+
+// HealthUpdate - Health-Update für Streaming
+message HealthUpdate {
+  // Service-Health
+  ServiceHealth health = 1;
+  
+  // Timestamp des Updates (Unix-Timestamp in Sekunden)
+  int64 update_time_unix = 2;
+  
+  // State-Change: true wenn State sich geändert hat
+  bool state_changed = 3;
+}
+
+// ResourceUsage - Aktuelle Resource-Usage eines Services
+message ResourceUsage {
+  // Memory-Usage in Bytes
+  uint64 memory_bytes = 1;
+  
+  // CPU-Usage in Prozent (0.0 - 100.0)
+  float cpu_percent = 2;
+  
+  // Memory-Usage in MB (convenience field)
+  float memory_mb = 3;
+  
+  // Measurement-Timestamp (Unix-Timestamp in Sekunden)
+  int64 measured_at_unix = 4;
+}
+
+// ResourceLimits - Resource-Limits für einen Service
+message ResourceLimits {
+  // Max Memory in Bytes (0 = unlimited)
+  uint64 max_memory_bytes = 1;
+  
+  // Max CPU in Prozent (0.0 = unlimited, max: 100.0 * num_cores)
+  float max_cpu_percent = 2;
+  
+  // Max Memory in MB (convenience field, 0 = unlimited)
+  float max_memory_mb = 3;
+  
+  // Warning-Threshold für Memory (Prozent von max_memory, default: 80%)
+  optional float memory_warning_percent = 4;
+  
+  // Warning-Threshold für CPU (Prozent von max_cpu, default: 80%)
+  optional float cpu_warning_percent = 5;
+}
+
+// Enums
+
+// ServiceState - Mögliche States eines Services
+enum ServiceState {
+  // Unknown State (sollte nie vorkommen)
+  SERVICE_STATE_UNKNOWN = 0;
+  
+  // Service startet gerade (zwischen spawn und running)
+  SERVICE_STATE_STARTING = 1;
+  
+  // Service läuft normal
+  SERVICE_STATE_RUNNING = 2;
+  
+  // Service stoppt gerade (zwischen stop-request und stopped)
+  SERVICE_STATE_STOPPING = 3;
+  
+  // Service ist gestoppt (normal exit)
+  SERVICE_STATE_STOPPED = 4;
+  
+  // Service ist abgestürzt (abnormal exit)
+  SERVICE_STATE_CRASHED = 5;
+  
+  // Service wird neu gestartet (nach Crash, Teil von Auto-Restart)
+  SERVICE_STATE_RESTARTING = 6;
+}
+
+// HealthStatus - Health-Status eines Services
+enum HealthStatus {
+  // Health-Status unbekannt (noch kein Check durchgeführt)
+  HEALTH_STATUS_UNKNOWN = 0;
+  
+  // Service ist healthy
+  HEALTH_STATUS_HEALTHY = 1;
+  
+  // Service ist unhealthy (Health-Check fehlgeschlagen)
+  HEALTH_STATUS_UNHEALTHY = 2;
+  
+  // Health-Check läuft gerade
+  HEALTH_STATUS_CHECKING = 3;
+  
+  // Health-Check-Timeout
+  HEALTH_STATUS_TIMEOUT = 4;
+}
+
+// Error Messages (für detaillierte Error-Informationen)
+
+// GladsheimError - Standard-Error-Response
+message GladsheimError {
+  // Error-Code (z.B. "SERVICE_NOT_FOUND", "UNAUTHORIZED", "TIMEOUT")
+  string code = 1;
+  
+  // Error-Message (menschenlesbar)
+  string message = 2;
+  
+  // Service-Name (falls relevant)
+  optional string service_name = 3;
+  
+  // Details (zusätzliche Informationen, JSON-Format)
+  optional string details = 4;
+}

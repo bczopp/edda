@@ -10,7 +10,7 @@ Edda is a distributed, privacy-focused AI assistant system built with a microser
 
 Edda follows a microservices architecture where each service is independently deployable and responsible for a specific domain:
 
-- **Core Services**: Odin (orchestration with vision-model support), Thor (action execution), Freki (RAG), Geri (LLM with vision-model support), Huginn/Muninn (STT/TTS + data forwarding for images/videos), Bifrost (communication), Heimdall (security), Skuld (LLM selection), Loki (script execution)
+- **Core Services**: Odin (orchestration with vision-model support), Thor (action execution), Freki (RAG), Geri (LLM with vision-model support), Huginn/Muninn (STT/TTS + data forwarding for images/videos), Bifrost (communication), Heimdall (security), Skuld (LLM selection), Loki (script execution), Forseti (ML/DL/RL)
 - **Device Platforms**: Midgard (desktop), Alfheim (mobile), Asgard (homeserver), Ragnarok (terminal), Jotunheim (IoT)
 - **Plugins**: Valkyries (coding agent), Frigg (healthcare)
 - **Infrastructure**: Yggdrasil (cloud server), Mimir (privacy database), Nornen (decision service), and other supporting services
@@ -34,7 +34,7 @@ Services communicate via:
   - **Responsibility Service**: gRPC for responsibility management (all gods/services)
   - **Vision Service**: gRPC for image/video analysis (Odin ↔ Geri)
   - **Huginn Data Service**: gRPC for data forwarding (text, images, videos, video streams)
-- **Bifrost Protocol**: WebSocket-based device-to-device communication (messaging, events, connection establishment)
+- **Bifrost Protocol**: Device-Mesh (Meshtastic-inspiriert, IP + optional LoRa) + WebSocket/Application-Protocol für device-to-device communication (messaging, events, connection establishment)
 - **Ratatoskr Protocol**: WebSocket-based business-logic communication with Yggdrasil (persistent connections for Marketplace, Payments, etc.)
 
 ## Core Development Principles
@@ -199,6 +199,13 @@ Follow this workflow for all coding tasks:
 - **List dependencies**: List any new dependencies
 - **Migration notes**: Include migration notes if breaking changes
 
+### Settings und Hot-Reload (Konfiguration)
+
+- **Verpflichtend:** Infra- und Core-Services, die in IMPLEMENTATION_PLAN oder AGENTS.md „Hot-Reload“ oder „Runtime-Konfigurationsänderung“ erwähnen, müssen Hot-Reload unterstützen.
+- **Technik:** `notify` + `Arc<RwLock<Settings>>` + Validierung beim Laden; eigener Fehlertyp (z. B. thiserror) für Settings-Fehler.
+- **Optional:** Plattformen und reine Protokolle (z. B. Ratatoskr) – „Load once“ reicht.
+- **Dokumentation:** In IMPLEMENTATION_PLAN und/oder README pro Projekt kurz „Hot-Reload: ja/nein“ vermerken.
+
 ## Project Structure
 
 ```
@@ -289,6 +296,7 @@ edda/
 - **All tests in containers**: ALL tests MUST run in containers - nothing on local system
 - **No local installation**: No dependencies, tools, or services installed on local development machine
 - **Docker/Container setup**: Each project must provide Docker/container setup for testing
+- **Docker-Build-Kontext:** Standard (`context: .`, `dockerfile: Dockerfile.test`) und Ausnahme bei Path-Dependencies siehe `docs/test-infrastructure-template.md` (Abschnitt „Docker-Build-Kontext“).
 - **Isolated test environment**: Tests run in completely isolated container environment
 - **Reproducible**: Test environment must be reproducible across all development machines
 - **CI/CD ready**: Container setup must work in CI/CD pipelines
@@ -390,6 +398,7 @@ edda/
 - **Test Utilities**: Reuse test utilities and helpers to avoid redundancy
 - **Test Fixtures**: Use test fixtures for common test data
 - **Test Factories**: Use test factories for creating test objects
+- **Verzeichnisstruktur:** Alle Projekte verwenden, wo sinnvoll, `tests/utils` und bei Bedarf `tests/mocks`; die Trennung `tests/integration/` vs. `tests/unit/` (oder Tests direkt unter `tests/`) ist empfohlen. Details siehe `docs/test-infrastructure-template.md`.
 
 **Test Naming:**
 - **Descriptive Names**: Use descriptive test names that explain what is being tested
@@ -409,6 +418,7 @@ edda/
 - **Code comments**: Comment complex logic and algorithms
 - **Architecture decisions**: Document significant architecture decisions
 - **Changelog**: Maintain changelog for releases
+- **IMPLEMENTATION_PLAN:** Bei Merge/Abnahme: IMPLEMENTATION_PLAN-Status des betroffenen Projekts prüfen und anpassen (Checkboxen, „completed“-Vermerke nach Abschluss einer Phase oder eines Meilensteins).
 
 ### API Documentation
 

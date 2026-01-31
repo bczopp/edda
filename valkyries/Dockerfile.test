@@ -1,0 +1,24 @@
+FROM rust:1.75-slim
+
+WORKDIR /app
+
+# Install dependencies for building
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Cargo files (when they exist)
+COPY Cargo.toml Cargo.lock* ./
+COPY build.rs* ./
+
+# Copy source code (when it exists)
+COPY src* ./src/
+COPY proto* ./proto/
+COPY tests* ./tests/
+
+# Build the project (if Cargo.toml exists)
+RUN if [ -f Cargo.toml ]; then cargo build --release; fi
+
+# Default command for tests
+CMD ["cargo", "test", "--release"]

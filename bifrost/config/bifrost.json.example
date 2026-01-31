@@ -1,0 +1,6 @@
+{
+  "websocket_port": 8080,
+  "heimdall_url": "http://localhost:50051",
+  "max_connections": 1000,
+  "message_timeout_seconds": 30
+}

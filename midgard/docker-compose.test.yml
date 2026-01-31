@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # Mock Services for Midgard
+  mock-odin:
+    build:
+      context: ./tests/mocks
+      dockerfile: Dockerfile.mock-service
+    environment:
+      SERVICE_NAME: odin
+      SERVICE_PORT: 50050
+      RUST_LOG: debug
+    ports:
+      - "50050:50050"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50050 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mock-thor:
+    build:
+      context: ./tests/mocks
+      dockerfile: Dockerfile.mock-service
+    environment:
+      SERVICE_NAME: thor
+      SERVICE_PORT: 50052
+      RUST_LOG: debug
+    ports:
+      - "50052:50052"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50052 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mock-geri:
+    build:
+      context: ./tests/mocks
+      dockerfile: Dockerfile.mock-service
+    environment:
+      SERVICE_NAME: geri
+      SERVICE_PORT: 50054
+      RUST_LOG: debug
+    ports:
+      - "50054:50054"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50054 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mock-freki:
+    build:
+      context: ./tests/mocks
+      dockerfile: Dockerfile.mock-service
+    environment:
+      SERVICE_NAME: freki
+      SERVICE_PORT: 50053
+      RUST_LOG: debug
+    ports:
+      - "50053:50053"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50053 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  midgard-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    depends_on:
+      mock-odin:
+        condition: service_healthy
+      mock-thor:
+        condition: service_healthy
+      mock-geri:
+        condition: service_healthy
+      mock-freki:
+        condition: service_healthy
+    environment:
+      RUST_LOG: debug
+      ODIN_URL: http://mock-odin:50050
+      THOR_URL: http://mock-thor:50052
+      GERI_URL: http://mock-geri:50054
+      FREKI_URL: http://mock-freki:50053
+    volumes:
+      - ./target:/app/target
+      - ./tests:/app/tests
+      - ./src:/app/src
+    command: cargo test --release

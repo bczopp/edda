@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package loki;
+
+service LokiService {
+    rpc ExecuteScript(ExecuteScriptRequest) returns (ExecuteScriptResponse);
+}
+
+message ExecuteScriptRequest {
+    string script_id = 1;
+    string script_content = 2;
+    string script_type = 3; // "lua", "python", etc.
+    map<string, string> parameters = 4;
+}
+
+message ExecuteScriptResponse {
+    bool success = 1;
+    string output = 2;
+    string error = 3;
+}

@@ -1,0 +1,14 @@
+[package]
+name = "jotunheim-esp32"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "ESP32 implementation for Jotunheim IoT Platform"
+
+[dependencies]
+shared = { path = "../shared" }
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockall = "0.12"
+tempfile = "3.8"

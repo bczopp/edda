@@ -1,0 +1,22 @@
+{
+  "grpc": {
+    "port": 50055,
+    "host": "0.0.0.0"
+  },
+  "dainn": {
+    "index_path": "/var/lib/laeradr/indexes",
+    "commit_interval_seconds": 60
+  },
+  "dvalinn": {
+    "schema_directory": "/etc/laeradr/schemas"
+  },
+  "duneyrr": {
+    "batch_size": 1000,
+    "aggregation_interval_seconds": 300
+  },
+  "durathror": {
+    "s3_endpoint": "https://s3.amazonaws.com",
+    "bucket_name": "laeradr-archives",
+    "retention_days": 365
+  }
+}

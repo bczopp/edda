@@ -134,6 +134,10 @@ enum ActionType {
   NETWORK_OPERATION = 2;   // Netzwerk-Operationen
   DEVICE_CONTROL = 3;      // Device-Control
   APPLICATION_CONTROL = 4; // Application-Control
+  TERMINAL_OPERATION = 5;  // Terminal-Emulation (PTY)
+  UI_AUTOMATION = 6;       // UI-Automation (Klicks, Cursor)
+  SCHEDULER_OPERATION = 7; // Scheduler (Cron, Task Scheduler, etc.)
+  JOTUNHEIM_OPERATION = 8; // Jotunheim-Devices (IoT, Tool-Calling via Einherjar)
 }
 
 enum ActionPriority {
@@ -240,8 +244,45 @@ message ResultMetadata {
 - Shell Commands
 - System Configuration
 
+### TERMINAL_OPERATION
+- Terminal-Emulation mit PTY (Pseudo-Terminal)
+- Interactive Programs (vim, htop, nano)
+- PTY-Management
+- Input/Output-Streaming
+- Terminal-Size-Management (Rows, Columns)
+
+### UI_AUTOMATION
+- UI-Steuerung (Klicks, Cursor, Text-Input)
+- Click, Double-Click, Right-Click
+- Drag & Drop
+- Cursor-Movement
+- Text-Input via UI
+- Platform-spezifisch (Windows UI Automation API, macOS Accessibility API, Linux AT-SPI)
+- Element-Recognition (Buttons, Textfields, etc.)
+
+### SCHEDULER_OPERATION
+- Timer & Scheduled Tasks
+- Cron (Linux/macOS)
+- Task Scheduler (Windows)
+- launchd (macOS)
+- Google Calendar (optional, Cloud)
+- Create/Delete/Update/List scheduled tasks
+
+### JOTUNHEIM_OPERATION
+- IoT-Device-Control via Jotunheim-Bridge
+- Device-On/Off
+- Device-Value-Setting (Helligkeit, Temperatur, etc.)
+- Device-Status-Query
+- Integration mit Jotunheim (IoT-Platform)
+- Generisches Tool-Calling für alle Jotunheim-Device-Funktionen
+  - Thor fragt Device-Capabilities via Einherjar Protocol ab
+  - Device gibt verfügbare Funktionen bekannt (z.B. RegisterScript, ListScripts, Script_*)
+  - Thor ruft Funktionen direkt via gRPC auf
+
 
 ## Workflow
+
+### Standard-Workflow
 
 1. **Action empfangen**
    - Odin sendet `ThorAction`
@@ -426,10 +467,52 @@ message ResultMetadata {
 - **System APIs**: Für Action Execution
 - **Resource Management**
 
+### Package-Management (für TypeScript/JavaScript)
+
+**WICHTIG**: Für alle TypeScript/JavaScript-Dependencies muss **bun** verwendet werden (nicht npm oder pnpm).
+
+- **Installation**: `bun install`
+- **Script-Ausführung**: `bun run <script>`
+- **Grund**: 10-100x schneller als npm, native TypeScript-Support, bessere Performance
+
 ### Plugin-Integration (optional, modular)
 
 - **Keine direkte Plugin-Kommunikation**: Thor kommuniziert nicht direkt mit anderen Plugins (Valkyries, Frigg)
 - **Action-Execution für Plugin-Ergebnisse**: Wenn Odin strukturierte Ergebnisse von Plugins erhält, die Actions benötigen, leitet Odin diese an Thor zur Action-Execution weiter
+
+### Technische Abhängigkeiten (Erweitert)
+
+**Core**:
+- Rust (tokio, tonic, serde, tracing, anyhow)
+
+**Terminal-Emulation**:
+- `pty` oder `portable-pty`: PTY-Management für interactive Programs
+- `tokio-pty`: Async PTY für tokio
+- Use Cases: vim, htop, nano, interactive shell-sessions
+
+**UI-Automation**:
+- `windows-rs`: Windows UI Automation API
+- `cocoa`: macOS Accessibility API
+- `atspi`: Linux AT-SPI (Assistive Technology Service Provider Interface)
+- Use Cases: Klicks, Cursor-Steuerung, Text-Input in UI
+
+**Scheduler-Integration**:
+- `cron_parser`: Crontab-Parsing für Linux/macOS
+- `windows-service`: Windows Task Scheduler API
+- `google-calendar3`: Google Calendar API (optional, Cloud)
+- Use Cases: Timer, scheduled tasks, reminders
+
+**Jotunheim-Integration**:
+- Jotunheim-Client (gRPC, generiert aus Proto)
+- Device-Registry-Integration (via Heimdall)
+- Generisches Tool-Calling via Einherjar Protocol
+  - Thor fragt Device-Capabilities ab
+  - Device gibt verfügbare Funktionen bekannt
+  - Thor ruft Funktionen direkt auf (z.B. RegisterScript, Script_*)
+- Use Cases: Licht-Steuerung, Heizung, IoT-Geräte, Sensor-Reading, Custom-Scripts
+
+**Package-Management (TypeScript/JavaScript)**:
+- **bun**: Bevorzugt für alle TS/JS-Dependencies (nicht npm oder pnpm!)
 
 ## Integration
 

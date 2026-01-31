@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    volumes:
+      - .:/app
+      - target_cache:/app/target
+    working_dir: /app
+    command: cargo test
+
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    volumes:
+      - .:/app
+      - target_cache:/app/target
+    working_dir: /app
+    stdin_open: true
+    tty: true
+
+volumes:
+  target_cache:

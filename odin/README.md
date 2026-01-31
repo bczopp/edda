@@ -619,6 +619,17 @@ Plugins können über den Marketplace veröffentlicht und verkauft werden. Der M
 - Error Handling & Recovery
 - Logging & Monitoring
 
+## Testing
+
+**Alle Tests laufen in Containern** – keine lokalen Dependencies (Rust/Cargo) auf der Entwicklungsmaschine nötig.
+
+- **Canonical run** (aus Odin-Verzeichnis):  
+  `docker compose -f docker-compose.test.yml run --rm odin-test`
+- **Oder** (Linux/macOS):  
+  `./scripts/run-tests-in-container.sh`
+
+**Ein Container pro Projekt:** Es gibt nur den Service `odin-test`. Alle Mocks (TCP für Thor/Freki/Huginn/Muninn/Loki/Heimdall/Skuld, gRPC für Geri) laufen als Hintergrundprozesse im selben Container; danach wird `cargo test --release` ausgeführt. Keine separaten mock-* Container. Siehe `Dockerfile.test`, `docker-compose.test.yml` und `tests/scripts/run-tests-with-mocks.sh`.
+
 ## Integration
 
 - **Midgard**: Läuft als Hauptprozess auf Desktop/Laptop (mit GUI-Frontend)

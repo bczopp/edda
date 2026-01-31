@@ -37,6 +37,13 @@ Heimdall ist der Security Service, der den Transport über Bifrost-Verbindungen 
   - **Trend-Analyse**: Langfristige Trends werden identifiziert
   - **Metriken-Sammlung**: Security-Metriken werden kontinuierlich gesammelt (z.B. Anzahl von Angriffen, erfolgreiche Authentifizierungen)
 
+### 5. Mesh-Membership / Device-Attestation
+- **Device Registry**: Zentrale Registry für Mesh-Devices (User-Mesh-Zugehörigkeit)
+- **Mesh-Auth-Tokens**: Erstellung und Validierung von Mesh-Auth-Tokens (Bifrost Device-Mesh)
+- **Email-Benachrichtigung**: Email an Owner bei neuen Devices
+- **Permission Management**: Granulare Rechte-Verwaltung (Admin, User, Guest)
+- **Device Approval**: Owner-basierte Device-Freigabe nach Email-Bestätigung
+
 ## Service-Interfaces
 
 ### Inputs
@@ -44,12 +51,16 @@ Heimdall ist der Security Service, der den Transport über Bifrost-Verbindungen 
 - Authorization Requests
 - Connection Validation Requests
 - Token Validation Requests
+- Mesh-Membership Requests
+- Mesh-Auth-Token Validation Requests
 
 ### Outputs
 - Authentication Tokens
 - Authorization Decisions
 - Security Alerts
 - Audit Logs
+- Mesh-Auth-Tokens
+- Mesh-Membership Responses
 
 ## Workflow
 
@@ -267,6 +278,84 @@ Heimdall ist der Security Service, der den Transport über Bifrost-Verbindungen 
   - Device wird temporär gesperrt
   - Security-Alert wird ausgelöst
   - User wird benachrichtigt
+
+### Mesh-Membership / Device-Attestation
+
+**Hinweis**: Valhalla (VPN) wurde verworfen. Stattdessen validiert Heimdall **Mesh-Membership**: „Darf dieses Device in diesem User-Mesh mitmachen?“ – Bifrost nutzt ein Device-Mesh (Meshtastic-inspiriert).
+
+**Mesh-Membership-Workflow:**
+
+1. **Device möchte am User-Mesh teilnehmen**
+   - Device sendet Mesh-Membership-Request an Heimdall
+   - Request enthält: device_id, device_name, device_type, public_key
+
+2. **Heimdall prüft Device-Status**
+   - Prüft ob Device in Heimdall registriert ist
+   - **REGISTRIERT** → Mesh-Auth-Token wird generiert und zurückgegeben
+   - **NICHT REGISTRIERT** → Email-Benachrichtigung an Owner
+
+3. **Email-Benachrichtigung an Owner (für neue Devices)**
+   - Email enthält: Device-ID, Device-Name, Device-Typ, Timestamp
+   - Email enthält Link zur Device-Autorisierung
+   - Owner klickt Link → öffnet Midgard/Alfheim/Asgard UI
+
+4. **Owner autorisiert Device**
+   - Owner sieht Device-Details
+   - Owner kann Rechte festlegen (Admin, User, Guest):
+     - **Admin**: Vollzugriff auf Mesh und alle Devices
+     - **User**: Standard-Mesh-Zugriff
+     - **Guest**: Eingeschränkter Mesh-Zugriff (nur bestimmte Devices/Ressourcen)
+   - Owner bestätigt → Device wird in Heimdall registriert
+   - Heimdall erstellt Mesh-Auth-Token für Device
+
+5. **Mesh-Zugriff wird gewährt**
+   - Device erhält Mesh-Auth-Token
+   - Device kann am Bifrost-Device-Mesh teilnehmen
+   - Bifrost integriert Device in User-Mesh
+
+**Mesh-Auth-Token-Struktur:**
+```json
+{
+  "device_id": "device-uuid",
+  "user_id": "user-uuid",
+  "role": "Admin|User|Guest",
+  "token": "mesh_token_...",
+  "issued_at": 1234567890,
+  "expires_at": 1237246890,
+  "public_key": [1, 2, 3, ...]
+}
+```
+
+**Mesh-Token-Validation:**
+- Device verwendet Mesh-Auth-Token für Mesh-Membership (Bifrost)
+- Heimdall validiert Token bei Mesh-Membership-Request:
+  - Token-Signatur-Prüfung
+  - Token-Expiration-Prüfung
+  - Device-Status-Prüfung (is_active)
+  - Role/Permission-Prüfung
+- Bei erfolgreicher Validation: Mesh-Zugriff wird gewährt
+- Bei fehlgeschlagener Validation: Mesh-Zugriff wird verweigert
+
+**Mesh-Device-Registry:**
+- Heimdall verwaltet Registry aller Mesh-Devices (User-Mesh-Zugehörigkeit)
+- Device-Info enthält:
+  - Device-ID, Owner-User-ID, Device-Name, Device-Type
+  - Public-Key
+  - Role (Admin, User, Guest)
+  - Registered-At, Last-Seen, Is-Active
+- Registry wird mit Yggdrasil synchronisiert (für globales Mesh)
+
+**Bereits registriertes Device:**
+- Mesh-Teilnahme wird automatisch hergestellt
+- Keine Email-Benachrichtigung
+- Mesh-Auth-Token wird automatisch generiert
+- Bei Verbindungsabbruch: Automatische Wiederverbindung
+
+**Device-Deaktivierung:**
+- Owner kann Device deaktivieren
+- Deaktiviertes Device kann nicht am Mesh teilnehmen
+- Bestehende Mesh-Verbindungen werden geschlossen
+- Device kann später wieder aktiviert werden
 
 ## Security Features
 
@@ -492,13 +581,14 @@ Heimdall ist der Security Service, der den Transport über Bifrost-Verbindungen 
 
 ### Strukturiertes Logging
 
-**Strukturiertes Logging:**
-- Structured Logging mit strukturierten Daten
-- Log Levels: Verschiedene Log-Level (DEBUG, INFO, WARN, ERROR, etc.)
-- Context Tracking: Context wird mitgeloggt
-- Log Rotation: Automatische Log-Rotation
-- Umfassendes Logging für Debugging und Monitoring
-- Audit-Logs für Security-Audits
+**Technik:** `tracing` + `tracing-subscriber` (Bootstrap in `main.rs`). Filter über Umgebungsvariable `RUST_LOG`.
+
+**Security-relevante Log-Level (Empfehlung):**
+- **Produktion:** `RUST_LOG=heimdall=info` – normale Betriebslogs, Auth-/Token-Ereignisse auf INFO
+- **Debug:** `RUST_LOG=heimdall=debug` – detailliertere Abläufe (z. B. Validierung, Cache)
+- **Security-Events:** Auth-Fehler, Token-Revocation, Connection-Blockierung werden mit `warn`/`error` geloggt; Audit-Events in der Datenbank (AuditLogger)
+
+**Log-Rotation:** Über das Laufzeit-Environment steuerbar (z. B. Systemd, Docker, Log-Aggregator); `tracing-subscriber` schreibt auf stderr/stdout, Rotation extern konfigurierbar.
 
 ### Performance-Monitoring
 

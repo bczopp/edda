@@ -1,0 +1,31 @@
+services:
+  # Mock Heimdall Service (no host port mapping – only reachable via Docker network)
+  mock-heimdall:
+    build:
+      context: ./tests/mocks
+      dockerfile: Dockerfile.mock-service
+    environment:
+      SERVICE_NAME: heimdall
+      SERVICE_PORT: 50051
+      RUST_LOG: debug
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50051 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  bifrost-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    depends_on:
+      mock-heimdall:
+        condition: service_healthy
+    environment:
+      RUST_LOG: debug
+      HEIMDALL_URL: http://mock-heimdall:50051
+    volumes:
+      - ./target:/app/target
+      - ./tests:/app/tests
+      - ./src:/app/src
+    command: cargo test --release

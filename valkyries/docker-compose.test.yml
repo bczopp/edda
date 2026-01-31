@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # Mock Odin Service
+  mock-odin:
+    build:
+      context: ./tests/mocks
+      dockerfile: Dockerfile.mock-service
+    environment:
+      SERVICE_NAME: odin
+      SERVICE_PORT: 50050
+      RUST_LOG: debug
+    ports:
+      - "50050:50050"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50050 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  valkyries-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    depends_on:
+      mock-odin:
+        condition: service_healthy
+    environment:
+      RUST_LOG: debug
+      ODIN_URL: http://mock-odin:50050
+    volumes:
+      - ./target:/app/target
+      - ./tests:/app/tests
+      - ./src:/app/src
+    command: cargo test --release

@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # Qdrant Vector Database for Freki
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6333/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Mock Odin Service
+  mock-odin:
+    build:
+      context: ./tests/mocks
+      dockerfile: Dockerfile.mock-service
+    environment:
+      SERVICE_NAME: odin
+      SERVICE_PORT: 50050
+      RUST_LOG: debug
+    ports:
+      - "50050:50050"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50050 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  freki-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    depends_on:
+      qdrant:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mock-odin:
+        condition: service_healthy
+    environment:
+      RUST_LOG: debug
+      QDRANT_URL: http://qdrant:6333
+      REDIS_URL: redis://redis:6379
+      ODIN_URL: http://mock-odin:50050
+    volumes:
+      - ./target:/app/target
+      - ./tests:/app/tests
+      - ./src:/app/src
+    command: cargo test --release

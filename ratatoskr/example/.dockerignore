@@ -1,0 +1,11 @@
+target
+.git
+.gitignore
+*.md
+.env
+*.pem
+*.key
+Dockerfile
+docker-compose*.yml
+*.ps1
+*.sh

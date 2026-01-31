@@ -1,0 +1,31 @@
+[package]
+name = "gladsheim"
+version = "0.1.0"
+edition = "2021"
+authors = ["Edda Team"]
+description = "Service Manager for Edda - Service lifecycle, resource management, health monitoring"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full"] }
+tonic = "0.11"
+prost = "0.12"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+anyhow = "1.0"
+thiserror = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+config = "0.14"
+notify = "6.1"
+sysinfo = "0.30"
+reqwest = { version = "0.11", features = ["json"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockall = "0.12"
+tempfile = "3.8"
+
+[build-dependencies]
+tonic-build = "0.11"

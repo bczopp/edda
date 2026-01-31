@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # Mock Yggdrasil Service
+  mock-yggdrasil:
+    build:
+      context: ./tests/mocks
+      dockerfile: Dockerfile.mock-service
+    environment:
+      SERVICE_NAME: yggdrasil
+      SERVICE_PORT: 4000
+      RUST_LOG: debug
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 4000 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  vedrfolnir-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    depends_on:
+      mock-yggdrasil:
+        condition: service_healthy
+    environment:
+      RUST_LOG: debug
+      YGGDRASIL_URL: http://mock-yggdrasil:4000
+    volumes:
+      - ./target:/app/target
+      - ./tests:/app/tests
+      - ./src:/app/src
+    command: cargo test --release
