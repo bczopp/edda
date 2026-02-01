@@ -1,0 +1,154 @@
+# Bifrost: Communication Service CI (Phase 1.2.3)
+# Runs tests in container and lint (clippy, fmt).
+name: Bifrost CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['bifrost/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['bifrost/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd bifrost
+          docker compose -f docker-compose.test.yml run --rm bifrost-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            bifrost/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: bifrost-${{ runner.os }}-cargo-${{ hashFiles('bifrost/Cargo.toml') }}
+          restore-keys: bifrost-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path bifrost/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path bifrost/Cargo.toml -- -D warnings
+
+  coverage:
+    name: Code coverage (tarpaulin)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            bifrost/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: bifrost-${{ runner.os }}-cargo-${{ hashFiles('bifrost/Cargo.toml') }}
+          restore-keys: bifrost-${{ runner.os }}-cargo-
+
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Run cargo tarpaulin
+        run: |
+          cd bifrost
+          cargo tarpaulin --out Lcov --output-dir coverage --manifest-path Cargo.toml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bifrost-coverage
+          path: bifrost/coverage
+
+  doc:
+    name: Rustdoc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            bifrost/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: bifrost-${{ runner.os }}-cargo-${{ hashFiles('bifrost/Cargo.toml') }}
+          restore-keys: bifrost-${{ runner.os }}-cargo-
+
+      - name: cargo doc
+        run: cargo doc --no-deps --manifest-path bifrost/Cargo.toml
+
+      - name: Upload Rustdoc
+        uses: actions/upload-artifact@v4
+        with:
+          name: bifrost-rustdoc
+          path: bifrost/target/doc
+
+  security:
+    name: Security (cargo-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            bifrost/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: bifrost-${{ runner.os }}-cargo-${{ hashFiles('bifrost/Cargo.toml') }}
+          restore-keys: bifrost-${{ runner.os }}-cargo-
+
+      - name: Generate Cargo.lock if missing
+        run: |
+          cd bifrost
+          if [ ! -f Cargo.lock ]; then cargo generate-lockfile; fi
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Run cargo audit
+        run: cargo audit --manifest-path bifrost/Cargo.toml

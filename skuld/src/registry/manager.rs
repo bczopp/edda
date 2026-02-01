@@ -64,4 +64,3 @@ pub struct ModelInfo {
     pub provider: Option<String>,
     pub is_active: bool,
 }
-}

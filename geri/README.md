@@ -4,6 +4,8 @@
 
 Geri ist einer von Odins Wölfen und stellt den LLM (Large Language Model) Service bereit. Er verarbeitet Prompts, die bereits durch Freki (RAG) angereichert wurden.
 
+**Tests ausführen:** Von `geri/`: `docker compose -f docker-compose.test.yml run --rm geri-test` oder `./scripts/run-tests.sh` / `.\scripts\run-tests.ps1`. Von Repo-Root: `geri/scripts/run-tests.sh` bzw. `.\geri\scripts\run-tests.ps1`. **CI:** Bei Push/PR auf `geri/**` läuft die Pipeline [.github/workflows/geri.yml](../.github/workflows/geri.yml) (Test im Container, Lint).
+
 ## Verantwortlichkeiten
 
 ### 1. Model Management

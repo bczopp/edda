@@ -72,7 +72,7 @@ impl ConnectionState {
             }
         };
         let reliability = 1.0 - loss_ratio;
-        let combined = (latency_score * 0.5 + reliability * 0.5).clamp(0.0, 1.0);
+        let combined = (latency_score * 0.35 + reliability * 0.65).clamp(0.0, 1.0);
         (combined * MAX_SCORE as f64) as u8
     }
 }

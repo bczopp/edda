@@ -1,6 +1,9 @@
 # Rust build artifacts (blockieren Git – nicht committen)
 **/target/
 
+# Coverage (cargo-tarpaulin)
+**/coverage/
+
 # Cargo lock in Bibliotheken (optional; bei Apps oft erwünscht)
 # Cargo.lock
 

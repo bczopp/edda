@@ -14,9 +14,23 @@ pub struct DatabaseConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MimirConfig {
+    pub url: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CacheConfig {
+    pub enabled: bool,
+    pub max_size: usize,
+    pub ttl_seconds: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NornenSettings {
     pub grpc_port: u16,
     pub database: DatabaseConfig,
+    pub mimir: Option<MimirConfig>,
+    pub cache: Option<CacheConfig>,
 }
 
 impl Default for NornenSettings {
@@ -28,6 +42,9 @@ impl Default for NornenSettings {
                 max_connections: 10,
                 min_connections: 2,
             },
+            mimir: Some(MimirConfig {
+                url: "http://localhost:50051".to_string(),
+            }),
         }
     }
 }

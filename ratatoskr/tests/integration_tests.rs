@@ -1,7 +1,6 @@
 use ratatoskr::protocol::*;
 use ratatoskr::messages::*;
-use ratatoskr::proto::ratatoskr::*;
-use ed25519_dalek::{SigningKey, VerifyingKey};
+use ed25519_dalek::SigningKey;
 use rand::rngs::OsRng;
 
 #[tokio::test]

@@ -1,3 +1,6 @@
+use async_trait::async_trait;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -8,135 +11,91 @@ pub enum CronError {
     IoError(#[from] std::io::Error),
     #[error("Permission denied")]
     PermissionDenied,
+    #[error("Parse error: {0}")]
+    ParseError(String),
 }
 
-/// Cron scheduler for Linux/macOS
-pub struct CronScheduler;
+/// Crontab storage abstraction (for tests and real crontab).
+#[async_trait]
+pub trait CrontabStore: Send + Sync {
+    async fn read(&self) -> Result<String, CronError>;
+    async fn write(&self, content: &str) -> Result<(), CronError>;
+}
 
-impl CronScheduler {
+/// In-memory crontab store for tests (no local crontab required).
+pub struct InMemoryCrontabStore {
+    content: RwLock<String>,
+}
+
+impl InMemoryCrontabStore {
     pub fn new() -> Self {
-        Self
+        Self { content: RwLock::new(String::new()) }
     }
+}
 
-    /// Validate cron expression
-    pub fn validate_expression(expr: &str) -> Result<(), CronError> {
-        let parts: Vec<&str> = expr.split_whitespace().collect();
-        if parts.len() != 5 {
-            return Err(CronError::InvalidExpression(
-                "Cron expression must have exactly 5 parts (minute hour day month weekday)".to_string()
-            ));
-        }
-        
-        // Basic validation - check that parts are valid
-        for (i, part) in parts.iter().enumerate() {
-            if !Self::validate_part(part, i) {
-                return Err(CronError::InvalidExpression(
-                    format!("Invalid part {} in cron expression: {}", i, part)
-                ));
-            }
-        }
-        
+#[async_trait]
+impl CrontabStore for InMemoryCrontabStore {
+    async fn read(&self) -> Result<String, CronError> {
+        Ok(self.content.read().await.clone())
+    }
+    async fn write(&self, content: &str) -> Result<(), CronError> {
+        *self.content.write().await = content.to_string();
         Ok(())
     }
+}
 
-    fn validate_part(part: &str, _index: usize) -> bool {
-        // Allow wildcards, ranges, and step values
-        if part == "*" {
-            return true;
+impl Default for InMemoryCrontabStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Parse crontab content (Thor format: "# Thor job: name=<name>" followed by "<schedule> <command>").
+pub fn parse_crontab(content: &str) -> Result<Vec<CronJob>, CronError> {
+    let mut jobs = Vec::new();
+    let mut pending_name: Option<String> = None;
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            pending_name = None;
+            continue;
         }
-        
-        // Check for step values (e.g., */5, 0-59/10)
-        if part.contains('/') {
-            let parts: Vec<&str> = part.split('/').collect();
-            if parts.len() != 2 {
-                return false;
-            }
-            // Validate the step number
-            if let Ok(_) = parts[1].parse::<u32>() {
-                return true;
-            }
-            return false;
+        if let Some(name) = trimmed.strip_prefix("# Thor job: name=") {
+            pending_name = Some(name.trim().to_string());
+            continue;
         }
-        
-        // Check for ranges (e.g., 0-59, 1-5)
-        if part.contains('-') {
-            let parts: Vec<&str> = part.split('-').collect();
-            if parts.len() != 2 {
-                return false;
-            }
-            if parts[0].parse::<u32>().is_ok() && parts[1].parse::<u32>().is_ok() {
-                return true;
-            }
-            return false;
+        if trimmed.starts_with('#') {
+            pending_name = None;
+            continue;
         }
-        
-        // Check for lists (e.g., 1,3,5)
-        if part.contains(',') {
-            for item in part.split(',') {
-                if item.parse::<u32>().is_err() {
-                    return false;
-                }
-            }
-            return true;
+        let parts: Vec<&str> = trimmed.split_whitespace().collect();
+        if parts.len() < 6 {
+            continue;
         }
-        
-        // Single number
-        part.parse::<u32>().is_ok()
+        let schedule = parts[0..5].join(" ");
+        let command = parts[5..].join(" ").trim().to_string();
+        if cron_parser::parse(&schedule, &chrono::Utc::now()).is_err() {
+            return Err(CronError::InvalidExpression(schedule.clone()));
+        }
+        let name = pending_name.take().unwrap_or_else(|| format!("job_{}", jobs.len()));
+        jobs.push(CronJob { name, schedule, command });
     }
+    Ok(jobs)
+}
 
-    /// Create a cron job
-    pub async fn create_job(
-        &self,
-        _job_name: &str,
-        schedule: &str,
-        _command: &str,
-    ) -> Result<(), CronError> {
-        Self::validate_expression(schedule)?;
-        
-        // In a real implementation, this would:
-        // 1. Parse the crontab file
-        // 2. Add the new job
-        // 3. Write back to crontab
-        // For now, we'll just validate and return success
-        // Actual implementation would use `crontab` command or direct file manipulation
-        
-        Ok(())
+/// Format jobs as crontab content (Thor format).
+pub fn format_crontab(jobs: &[CronJob]) -> String {
+    let mut out = String::new();
+    for job in jobs {
+        out.push_str("# Thor job: name=");
+        out.push_str(&job.name);
+        out.push('\n');
+        out.push_str(&job.schedule);
+        out.push(' ');
+        out.push_str(&job.command);
+        out.push('\n');
     }
-
-    /// Delete a cron job
-    pub async fn delete_job(&self, _job_name: &str) -> Result<(), CronError> {
-        // In a real implementation, this would:
-        // 1. Parse the crontab file
-        // 2. Remove the job with matching name
-        // 3. Write back to crontab
-        
-        Ok(())
-    }
-
-    /// List all cron jobs
-    pub async fn list_jobs(&self) -> Result<Vec<CronJob>, CronError> {
-        // In a real implementation, this would:
-        // 1. Parse the crontab file
-        // 2. Return list of jobs
-        
-        Ok(Vec::new())
-    }
-
-    /// Update a cron job
-    pub async fn update_job(
-        &self,
-        job_name: &str,
-        schedule: &str,
-        command: &str,
-    ) -> Result<(), CronError> {
-        Self::validate_expression(schedule)?;
-        
-        // Delete old job and create new one
-        self.delete_job(job_name).await?;
-        self.create_job(job_name, schedule, command).await?;
-        
-        Ok(())
-    }
+    out
 }
 
 #[derive(Debug, Clone)]
@@ -144,6 +103,103 @@ pub struct CronJob {
     pub name: String,
     pub schedule: String,
     pub command: String,
+}
+
+/// Cron scheduler for Linux/macOS.
+pub struct CronScheduler {
+    store: Option<Arc<dyn CrontabStore>>,
+}
+
+impl CronScheduler {
+    pub fn new() -> Self {
+        Self { store: None }
+    }
+
+    /// New scheduler with a store (e.g. InMemoryCrontabStore for tests).
+    pub fn new_with_store(store: Arc<dyn CrontabStore>) -> Self {
+        Self { store: Some(store) }
+    }
+
+    /// Validate cron expression using cron-parser.
+    pub fn validate_expression(expr: &str) -> Result<(), CronError> {
+        cron_parser::parse(expr, &chrono::Utc::now())
+            .map_err(|e| CronError::InvalidExpression(format!("{}", e)))?;
+        Ok(())
+    }
+
+    /// Create a cron job.
+    pub async fn create_job(
+        &self,
+        job_name: &str,
+        schedule: &str,
+        command: &str,
+    ) -> Result<(), CronError> {
+        Self::validate_expression(schedule)?;
+        if let Some(ref store) = self.store {
+            let mut jobs = parse_crontab(&store.read().await?)?;
+            if jobs.iter().any(|j| j.name == job_name) {
+                return Err(CronError::ParseError(format!("Job already exists: {}", job_name)));
+            }
+            jobs.push(CronJob {
+                name: job_name.to_string(),
+                schedule: schedule.to_string(),
+                command: command.to_string(),
+            });
+            store.write(&format_crontab(&jobs)).await?;
+        }
+        Ok(())
+    }
+
+    /// Delete a cron job.
+    pub async fn delete_job(&self, job_name: &str) -> Result<(), CronError> {
+        if let Some(ref store) = self.store {
+            let mut jobs = parse_crontab(&store.read().await?)?;
+            let len_before = jobs.len();
+            jobs.retain(|j| j.name != job_name);
+            if jobs.len() == len_before {
+                return Err(CronError::ParseError(format!("Job not found: {}", job_name)));
+            }
+            store.write(&format_crontab(&jobs)).await?;
+        }
+        Ok(())
+    }
+
+    /// List all cron jobs.
+    pub async fn list_jobs(&self) -> Result<Vec<CronJob>, CronError> {
+        if let Some(ref store) = self.store {
+            return parse_crontab(&store.read().await?);
+        }
+        Ok(Vec::new())
+    }
+
+    /// Update a cron job.
+    pub async fn update_job(
+        &self,
+        job_name: &str,
+        schedule: &str,
+        command: &str,
+    ) -> Result<(), CronError> {
+        Self::validate_expression(schedule)?;
+        if let Some(ref store) = self.store {
+            let mut jobs = parse_crontab(&store.read().await?)?;
+            let found = jobs.iter_mut().find(|j| j.name == job_name);
+            match found {
+                Some(j) => {
+                    j.schedule = schedule.to_string();
+                    j.command = command.to_string();
+                }
+                None => {
+                    jobs.push(CronJob {
+                        name: job_name.to_string(),
+                        schedule: schedule.to_string(),
+                        command: command.to_string(),
+                    });
+                }
+            }
+            store.write(&format_crontab(&jobs)).await?;
+        }
+        Ok(())
+    }
 }
 
 impl Default for CronScheduler {

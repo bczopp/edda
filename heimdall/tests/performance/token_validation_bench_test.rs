@@ -1,8 +1,27 @@
-//! Performance-Test-Skelett: Token-Validierung (18.3.1).
-//! Ziel: Token-Validierung < 10ms (siehe README/IMPLEMENTATION_PLAN).
+//! Performance-Tests: Token-Validierung und Benchmarks (Phase 15.2.1, 18.3.1).
+//! Ziel: Token-Validierung < 10ms, Permission-Check < 5ms (siehe README/IMPLEMENTATION_PLAN).
 
 #[cfg(test)]
-mod tests {
+mod benchmark_runner {
+    use heimdall::utils::performance::PerformanceBenchmark;
+
+    /// run_all_benchmarks mit Mock-Validatoren (no-op) erfüllt Ziele < 10ms / < 5ms.
+    #[tokio::test]
+    async fn run_all_benchmarks_meets_targets_with_fast_mocks() {
+        let token_validator = || {
+            Box::pin(async move { Ok::<(), Box<dyn std::error::Error + Send + Sync>>(()) })
+        };
+        let permission_checker = || {
+            Box::pin(async move { Ok::<(), Box<dyn std::error::Error + Send + Sync>>(()) })
+        };
+
+        let result = PerformanceBenchmark::run_all_benchmarks(token_validator, permission_checker).await;
+        assert!(result.is_ok(), "benchmarks should meet targets: {:?}", result.err());
+    }
+}
+
+#[cfg(test)]
+mod token_validation {
     use std::sync::Arc;
     use std::time::Instant;
 

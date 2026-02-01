@@ -36,6 +36,8 @@ Yggdrasil erweitert Asgard um:
 
 **Netzwerk-Sicherheit ist oberste Priorität**: User dürfen nicht in andere Netze eindringen können, nicht einmal wissen, dass andere Netze existieren oder wie diese heißen.
 
+**Tests ausführen:** Von `yggdrasil/`: `docker compose -f docker-compose.test.yml run --rm yggdrasil-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `yggdrasil/**` läuft [.github/workflows/yggdrasil.yml](../.github/workflows/yggdrasil.yml) (Test im Container, Elixir).
+
 ## Projektstruktur
 
 ```

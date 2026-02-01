@@ -1,0 +1,54 @@
+# Midgard: Desktop Platform CI
+# Runs tests in container and lint (clippy, fmt).
+name: Midgard CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['midgard/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['midgard/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd midgard
+          docker compose -f docker-compose.test.yml run --rm midgard-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            midgard/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: midgard-${{ runner.os }}-cargo-${{ hashFiles('midgard/Cargo.toml') }}
+          restore-keys: midgard-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path midgard/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path midgard/Cargo.toml -- -D warnings

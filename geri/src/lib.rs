@@ -3,3 +3,7 @@ pub mod vision;
 pub mod evaluation;
 pub mod grpc;
 pub mod utils;
+pub mod model;
+pub mod prompt;
+pub mod cost;
+pub mod selection;

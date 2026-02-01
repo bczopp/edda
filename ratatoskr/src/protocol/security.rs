@@ -87,8 +87,8 @@ impl MessageSigner {
 
     /// Create a new MessageSigner from bytes
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, ed25519_dalek::SignatureError> {
-        let signing_key = SigningKey::from_bytes(bytes.try_into().map_err(|_| {
-            ed25519_dalek::SignatureError::from_source()
+        let signing_key = SigningKey::from_bytes(bytes.try_into().map_err(|e| {
+            ed25519_dalek::SignatureError::from_source(e)
         })?);
         Ok(Self { signing_key })
     }

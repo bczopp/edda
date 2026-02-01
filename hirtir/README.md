@@ -8,6 +8,8 @@ Die vier Hirsche sind ein Rust-Microservice für Yggdrasil, der Data Management 
 
 **Programmiersprache**: Rust
 
+**Tests ausführen:** Von `hirtir/`: `docker compose -f docker-compose.test.yml run --rm hirtir-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `hirtir/**` läuft [.github/workflows/hirtir.yml](../.github/workflows/hirtir.yml) (Test im Container, Lint).
+
 ## Verantwortlichkeiten
 
 ### 1. Dáinn - Data Indexing

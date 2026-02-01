@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package heimdall.authentication;
+
+// Authentication Service
+service AuthenticationService {
+    // Request a challenge for device authentication
+    rpc RequestChallenge(ChallengeRequest) returns (ChallengeResponse);
+    
+    // Prove device identity with signed challenge
+    rpc ProveIdentity(ProofRequest) returns (AuthenticationTokenResponse);
+    
+    // Generate token after successful authentication
+    rpc GenerateToken(TokenGenerationRequest) returns (AuthenticationTokenResponse);
+}
+
+// Challenge Request
+message ChallengeRequest {
+    string device_id = 1;
+    bytes public_key = 2;
+    bytes signature = 3; // Signature of device_id + public_key with device private key
+    int64 timestamp = 4;
+}
+
+// Challenge Response
+message ChallengeResponse {
+    string challenge = 1;
+    int64 timestamp = 2;
+    int64 expires_in = 3; // Seconds until challenge expires
+    bytes signature = 4; // Signature of challenge + timestamp with Heimdall private key
+}
+
+// Proof Request
+message ProofRequest {
+    string device_id = 1;
+    string challenge = 2;
+    bytes proof = 3; // Signed challenge with device private key
+    int64 timestamp = 4;
+    bytes signature = 5; // Signature of device_id + challenge + proof with device private key
+}
+
+// Token Generation Request
+message TokenGenerationRequest {
+    string device_id = 1;
+    string user_id = 2;
+    repeated string permissions = 3;
+}
+
+// Authentication Token Response
+message AuthenticationTokenResponse {
+    string token = 1;
+    string token_id = 2;
+    int64 expires_at = 3;
+    string refresh_token = 4;
+    int64 refresh_expires_at = 5;
+    repeated string permissions = 6;
+}

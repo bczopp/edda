@@ -58,11 +58,11 @@ Dieser Plan beschreibt die kleinstmöglichen Schritte zur Implementierung von Ge
 #### 1.1.2 Verzeichnisstruktur erstellen
 - [x] `geri/src/main.rs` erstellen
 - [x] `geri/src/lib.rs` erstellen
-- [ ] `geri/src/model/` für Model-Management erstellen
-- [ ] `geri/src/providers/` für Provider-Integration erstellen (vorhanden: llm/, evaluation/, vision/)
-- [ ] `geri/src/prompt/` für Prompt-Processing erstellen
-- [ ] `geri/src/cost/` für Cost-Management erstellen
-- [ ] `geri/src/selection/` für Model-Selection erstellen
+- [x] `geri/src/model/` für Model-Management erstellen (mod.rs Stub)
+- [x] Provider-Integration: `llm/`, `evaluation/`, `vision/` vorhanden
+- [x] `geri/src/prompt/` für Prompt-Processing erstellen (mod.rs Stub)
+- [x] `geri/src/cost/` für Cost-Management erstellen (mod.rs Stub)
+- [x] `geri/src/selection/` für Model-Selection erstellen (mod.rs Stub)
 - [x] `geri/src/vision/` für Vision-Model-Support erstellen
 - [x] `geri/src/grpc/` für gRPC-Service erstellen
 - [x] `geri/src/utils/` für Utilities erstellen
@@ -86,44 +86,39 @@ Dieser Plan beschreibt die kleinstmöglichen Schritte zur Implementierung von Ge
   - Mock-OpenAI-API
   - Mock-Anthropic-API
   - Mock-Odin-Service
-- [ ] Test-Container-Startup-Scripts erstellen
-- [ ] **WICHTIG**: Alle Tests müssen in Containern laufen - keine lokalen Dependencies, Tools oder Services auf der Entwicklungsmaschine installieren
+  - [x] Test-Container-Startup-Scripts erstellen (scripts/run-tests.ps1, scripts/run-tests.sh)
+  - [ ] **WICHTIG**: Alle Tests müssen in Containern laufen - keine lokalen Dependencies, Tools oder Services auf der Entwicklungsmaschine installieren
 
 #### 1.2.2 Test-Framework konfigurieren
-- [ ] Test-Dependencies hinzufügen (tokio-test, mockall, wiremock, etc.)
-- [ ] Test-Utilities und Helpers erstellen
-- [ ] Mock-Setup für Provider-APIs
-- [ ] Test-Data-Generators für Prompts erstellen
+- [x] Test-Dependencies hinzufügen (tokio-test, mockall, tempfile, wiremock)
+- [x] Test-Utilities und Helpers erstellen (tests/utils/test_helpers.rs)
+- [x] Mock-Setup für Provider-APIs (wiremock für HTTP-Mocks; mock-odin in docker-compose)
+- [x] Test-Data-Generators für Prompts erstellen (tests/utils/prompt_test_data.rs: sample_system_prompt, sample_user_prompt, sample_rag_context, etc.)
 
 #### 1.2.3 CI/CD-Pipeline
-- [ ] GitHub Actions / GitLab CI Workflow erstellen
-- [ ] Automatische Test-Ausführung bei Commits konfigurieren
-- [ ] Code-Coverage-Reporting einrichten (cargo-tarpaulin)
-- [ ] Linting und Formatting (cargo clippy, cargo fmt)
+- [x] GitHub Actions Workflow erstellen (`.github/workflows/geri.yml`)
+- [x] Automatische Test-Ausführung bei Push/PR auf `geri/**` (Test im Container)
+- [x] Linting und Formatting (cargo fmt --check, cargo clippy)
+- [ ] Code-Coverage-Reporting (cargo-tarpaulin) – optional
 
 ### 1.3 Settings-System
 
 **Abhängigkeiten**: 1.1 (Projekt-Initialisierung)
 
 #### 1.3.1 Settings-Schema definieren
-- [ ] Settings-Struktur entwerfen (JSON-Format, siehe README.md)
-  - models (local, cloud)
-  - default_model
-  - vision_models
-  - fallback
-  - performance
+- [x] Settings-Struktur (GeriSettings: grpc_port, default_local_llm, vision_model) – `src/utils/config.rs`
+- [ ] Erweiterung optional: models, default_model, fallback, performance
 
 #### 1.3.2 Settings-Validierung
-- [ ] Tests für Settings-Validierung schreiben
-- [ ] Rust-Structs für Settings definieren
-- [ ] Settings-Validator implementieren (TDD)
-- [ ] Tests ausführen und bestehen
+- [x] Tests für Settings-Validierung schreiben (`src/utils/config.rs`: test_validate_default_ok, invalid_port, empty_default_local_llm, empty_vision_model)
+- [x] Rust-Structs für Settings definieren (GeriSettings)
+- [x] Settings-Validator implementieren (GeriSettings::validate, SettingsError)
+- [x] Validierung in load() und Hot-Reload integriert
 
 #### 1.3.3 Settings-Loader & Hot-Reload
-- [ ] Tests für Settings-Loader schreiben
-- [ ] Settings-Loader implementieren (TDD)
-- [ ] Hot-Reload-Mechanismus implementieren (TDD)
-- [ ] Tests ausführen und bestehen
+- [x] Settings-Loader implementiert (SettingsManager::load, get)
+- [x] Hot-Reload-Mechanismus implementiert (start_hot_reload, notify)
+- [ ] Tests für Settings-Loader (optional, z. B. mit tempfile)
 
 ---
 
@@ -159,26 +154,20 @@ Dieser Plan beschreibt die kleinstmöglichen Schritte zur Implementierung von Ge
 **Abhängigkeiten**: 2.1 (Protobuf Definitions)
 
 #### 2.2.1 gRPC Server Setup
-- [ ] Tests für gRPC-Server-Setup schreiben
-- [ ] gRPC-Server-Setup implementieren (TDD)
-  - tonic-Server konfigurieren
-  - Health-Check-Service
-- [ ] Tests ausführen und bestehen
+- [x] Tests für gRPC-Handler schreiben (`tests/grpc_server_test.rs`: process_prompt, process_vision)
+- [x] gRPC-Server-Setup (tonic, `src/grpc/server.rs`, `start_grpc_server`)
+- [ ] Health-Check-Service (tonic health) – optional
 
 #### 2.2.2 Wolf Service (LLM-Service)
-- [ ] Tests für Wolf-Service schreiben
-- [ ] `WolfServiceImpl` implementieren (TDD)
-  - `ProcessPrompt()` RPC → WolfRequest verarbeiten
-  - WolfResponse generieren
-- [ ] Tests ausführen und bestehen
+- [x] Tests für ProcessPrompt schreiben (grpc_server_test)
+- [x] `GeriServiceImpl::process_prompt` (ProcessPromptRequest → ProcessPromptResponse, Anbindung LLMProvider)
+- [x] Response-Felder an Proto angepasst (model_used)
 
 #### 2.2.3 Vision Service
-- [ ] Tests für Vision-Service schreiben
-- [ ] `VisionServiceImpl` implementieren (TDD)
-  - `AnalyzeImage()` RPC → ImageAnalysisRequest verarbeiten
-  - `AnalyzeVideo()` RPC → VideoAnalysisRequest verarbeiten
-  - `AnalyzeVideoStream()` RPC → VideoStreamChunk verarbeiten (Streaming)
-- [ ] Tests ausführen und bestehen
+- [x] Tests für ProcessVision schreiben (grpc_server_test)
+- [x] `GeriServiceImpl::process_vision` (ProcessVisionRequest → ProcessVisionResponse, Anbindung VisionProcessor)
+- [x] Vision-Anbindung an VisionProcessor/Proto angepasst (process, analysis_data, model_used)
+- [ ] Video/Streaming (AnalyzeVideo, AnalyzeVideoStream) – optional
 
 ---
 
@@ -189,21 +178,14 @@ Dieser Plan beschreibt die kleinstmöglichen Schritte zur Implementierung von Ge
 **Abhängigkeiten**: 2.1 (Protobuf Definitions)
 
 #### 3.1.1 LLM-Provider-Trait
-- [ ] Tests für LLM-Provider-Trait schreiben
-- [ ] `LLMProvider` Trait definieren
-  - `generate_text()` Methode
-  - `stream_text()` Methode (Streaming)
-  - `count_tokens()` Methode
-  - `get_model_info()` Methode
-- [ ] Tests ausführen und bestehen
+- [x] Tests für LLM-Provider (`tests/unit/llm_provider_test.rs`, `tests/grpc_server_test.rs`)
+- [x] `LLMProvider` Trait – `src/llm/provider.rs` (process_prompt, model_name)
+- [ ] stream_text(), count_tokens(), get_model_info() – optional / spätere Phase
 
 #### 3.1.2 Vision-Provider-Trait
-- [ ] Tests für Vision-Provider-Trait schreiben
-- [ ] `VisionProvider` Trait definieren
-  - `analyze_image()` Methode
-  - `analyze_video()` Methode
-  - `stream_video_analysis()` Methode (Streaming)
-- [ ] Tests ausführen und bestehen
+- [x] Vision-Processor – `src/vision/processor.rs` (process = analyze_image-äquivalent)
+- [ ] VisionProvider-Trait (optional, aktuell konkreter VisionProcessor)
+- [ ] analyze_video(), stream_video_analysis() – optional
 
 ---
 

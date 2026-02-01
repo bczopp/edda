@@ -6,6 +6,8 @@ Loki ist ein unabhängiger Service für Script-Execution, der user-generierte Sc
 
 **Wichtig**: Loki ist ein unabhängiger Service und nicht Teil der Jotunheim-Platform. Jotunheim-Platform ruft Loki via gRPC auf, aber Loki kann auch von anderen Platformen genutzt werden.
 
+**Tests ausführen:** Von `loki/`: `docker compose -f docker-compose.test.yml run --rm loki-test` oder `./scripts/run-tests.sh` / `.\scripts\run-tests.ps1`. Von Repo-Root: `loki/scripts/run-tests.sh` bzw. `.\loki\scripts\run-tests.ps1`. **CI:** Bei Push/PR auf `loki/**` läuft die Pipeline [.github/workflows/loki.yml](../.github/workflows/loki.yml) (Test im Container, Lint).
+
 ## Verantwortlichkeiten
 
 ### 1. Script-Execution

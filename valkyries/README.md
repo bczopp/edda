@@ -2,6 +2,8 @@
 
 ## Übersicht
 
+**Tests ausführen:** Von `valkyries/`: `docker compose -f docker-compose.test.yml run --rm valkyries-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `valkyries/**` läuft die Pipeline [.github/workflows/valkyries.yml](../.github/workflows/valkyries.yml) (Test im Container, Lint).
+
 Valkyries ist ein Plugin für Coding-Aufgaben, das von Odin orchestriert wird. Wenn Coding-Aufgaben erkannt werden, delegiert Odin die Aufgabe an Valkyries (wenn verfügbar). Brünhild führt die Valkyries an und koordiniert Sub-Agents für verschiedene Aufgaben.
 
 **Plugin-Architektur**: Valkyries ist ein optionales Plugin, das modular zur Odin-Installation hinzugefügt werden kann. Odin entscheidet selbst, ob eine Aufgabe an Valkyries delegiert werden muss (bei Coding-Aufgaben) oder ob Odin selbst antworten kann (bei einfachen Fragen).

@@ -1,7 +1,12 @@
-use tonic::transport::Channel;
-use thiserror::Error;
+use crate::heimdall_authz::{
+    authorization_service_client::AuthorizationServiceClient,
+    PermissionCheckRequest,
+};
 use std::sync::Arc;
+use thiserror::Error;
 use tokio::sync::OnceCell;
+use tonic::transport::Channel;
+use tonic::Request;
 
 #[derive(Debug, Error)]
 pub enum PermissionError {
@@ -9,47 +14,91 @@ pub enum PermissionError {
     ConnectionError(String),
     #[error("Permission denied: {0}")]
     Denied(String),
+    #[error("Heimdall RPC error: {0}")]
+    RpcError(#[from] tonic::Status),
 }
 
 pub struct PermissionChecker {
-    #[allow(dead_code)]
     heimdall_url: String,
-    #[allow(dead_code)]
-    client: Arc<OnceCell<tonic::client::Grpc<Channel>>>,
+    channel: Arc<OnceCell<Channel>>,
+    /// When true, return Ok(true) if Heimdall is unreachable (for tests without Heimdall).
+    allow_on_connection_error: bool,
+    /// When true, always return Ok(false) without calling Heimdall (for security tests).
+    deny_all: bool,
 }
 
 impl PermissionChecker {
     pub fn new(heimdall_url: String) -> Self {
         Self {
             heimdall_url,
-            client: Arc::new(OnceCell::new()),
+            channel: Arc::new(OnceCell::new()),
+            allow_on_connection_error: false,
+            deny_all: false,
         }
     }
 
-    #[allow(dead_code)]
-    async fn get_client(&self) -> Result<tonic::client::Grpc<Channel>, PermissionError> {
-        self.client
+    /// For tests: when Heimdall is unreachable, return Ok(true) instead of Err.
+    pub fn new_allow_on_connection_error(heimdall_url: String) -> Self {
+        Self {
+            heimdall_url,
+            channel: Arc::new(OnceCell::new()),
+            allow_on_connection_error: true,
+            deny_all: false,
+        }
+    }
+
+    /// For tests: always deny permission without calling Heimdall (security tests).
+    pub fn new_deny_all(heimdall_url: String) -> Self {
+        Self {
+            heimdall_url,
+            channel: Arc::new(OnceCell::new()),
+            allow_on_connection_error: false,
+            deny_all: true,
+        }
+    }
+
+    async fn get_channel(&self) -> Result<Channel, PermissionError> {
+        self.channel
             .get_or_try_init(|| async {
-                let channel = Channel::from_shared(self.heimdall_url.clone())
+                Channel::from_shared(self.heimdall_url.clone())
                     .map_err(|e| PermissionError::ConnectionError(format!("Invalid URL: {}", e)))?
                     .connect()
                     .await
-                    .map_err(|e| PermissionError::ConnectionError(format!("Connection failed: {}", e)))?;
-                Ok(tonic::client::Grpc::new(channel))
+                    .map_err(|e| PermissionError::ConnectionError(format!("Connection failed: {}", e)))
             })
             .await
-            .map(|c| c.clone())
+            .clone()
     }
 
     pub async fn check_permission(
         &self,
-        _device_id: &str,
-        _user_id: &str,
-        _resource_type: &str,
-        _action: &str,
+        device_id: &str,
+        user_id: &str,
+        resource_type: &str,
+        action: &str,
     ) -> Result<bool, PermissionError> {
-        // For now, return true (allow all) - Heimdall integration will be added later
-        // This allows the system to function while Heimdall integration is being implemented
-        Ok(true)
+        if self.deny_all {
+            return Ok(false);
+        }
+        let channel = match self.get_channel().await {
+            Ok(c) => c,
+            Err(e) if self.allow_on_connection_error => return Ok(true),
+            Err(e) => return Err(e),
+        };
+        let mut client = AuthorizationServiceClient::new(channel);
+        let request = PermissionCheckRequest {
+            device_id: device_id.to_string(),
+            user_id: user_id.to_string(),
+            resource_type: resource_type.to_string(),
+            action: action.to_string(),
+            resource_id: String::new(),
+            context: std::collections::HashMap::new(),
+        };
+        let response = match client.check_permission(Request::new(request)).await {
+            Ok(r) => r.into_inner(),
+            Err(_) if self.allow_on_connection_error => return Ok(true),
+            Err(e) => return Err(e.into()),
+        };
+        Ok(response.allowed)
     }
 }

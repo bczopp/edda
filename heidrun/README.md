@@ -2,6 +2,8 @@
 
 ## Übersicht
 
+**Tests ausführen:** Von `heidrun/`: `docker compose -f docker-compose.test.yml run --rm heidrun-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `heidrun/**` läuft die Pipeline [.github/workflows/heidrun.yml](../.github/workflows/heidrun.yml) (Test im Container, Lint).
+
 Heidrun ist ein Rust-Microservice für Yggdrasil, der Token-Berechnungen, Pricing, Settlement und Pre-Authorization für den Marketplace durchführt.
 
 **Mythologische Bedeutung**: Heidrun ist die Ziege, die Met produziert (Wert/Flüssigkeit).

@@ -1,0 +1,54 @@
+# Ratatoskr: Business Protocol CI
+# Runs tests in container and lint (clippy, fmt).
+name: Ratatoskr CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['ratatoskr/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['ratatoskr/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd ratatoskr
+          docker compose -f docker-compose.test.yml run --rm ratatoskr-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ratatoskr/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ratatoskr-${{ runner.os }}-cargo-${{ hashFiles('ratatoskr/Cargo.toml') }}
+          restore-keys: ratatoskr-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path ratatoskr/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path ratatoskr/Cargo.toml -- -D warnings

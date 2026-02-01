@@ -1,3 +1,21 @@
+pub mod auto_indexing;
+pub mod batch;
+pub mod change_detector;
 pub mod document;
+pub mod error_handler;
+pub mod full_reindex;
+pub mod incremental_update;
+pub mod manager;
+pub mod metadata;
+pub mod parser;
 
+pub use auto_indexing::*;
+pub use batch::*;
+pub use change_detector::*;
 pub use document::*;
+pub use error_handler::*;
+pub use full_reindex::*;
+pub use incremental_update::*;
+pub use manager::*;
+pub use metadata::*;
+pub use parser::*;

@@ -1,0 +1,54 @@
+# Heidrun: Token & Pricing Service CI
+# Runs tests in container and lint (clippy, fmt).
+name: Heidrun CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['heidrun/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['heidrun/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd heidrun
+          docker compose -f docker-compose.test.yml run --rm heidrun-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            heidrun/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: heidrun-${{ runner.os }}-cargo-${{ hashFiles('heidrun/Cargo.toml') }}
+          restore-keys: heidrun-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path heidrun/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path heidrun/Cargo.toml -- -D warnings

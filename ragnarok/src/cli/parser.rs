@@ -23,6 +23,8 @@ pub enum Commands {
     },
     /// Show status
     Status,
+    /// Show or manage settings
+    Settings,
 }
 
 #[derive(Debug, Error)]

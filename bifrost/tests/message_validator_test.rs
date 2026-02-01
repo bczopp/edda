@@ -73,7 +73,7 @@ fn sanitize_truncates_overlong_ids() {
 fn validate_after_sanitize_passes() {
     let validator = MessageValidator::new(1024, true);
     let mut msg = valid_message();
-    msg.message_id = "id\x00\x01";
+    msg.message_id = "id\x00\x01".to_string();
     let sanitized = validator.sanitize(msg);
     assert!(validator.validate(&sanitized).is_ok());
 }

@@ -8,8 +8,8 @@ description = "Communication Service for Edda - WebSocket-based device-to-device
 [features]
 default = ["native-tls"]
 # TLS backend for WebSocket (wss://). Exactly one should be enabled.
-native-tls = ["tokio-tungstenite/native-tls"]
-rustls-tls = ["tokio-tungstenite/rustls"]
+native-tls = ["tokio-tungstenite/native-tls", "tokio-tungstenite/connect"]
+rustls-tls = ["tokio-tungstenite/rustls", "tokio-tungstenite/connect"]
 
 [dependencies]
 # Async Runtime
@@ -42,8 +42,14 @@ futures-util = "0.3"
 async-trait = "0.1"
 rand = "0.8"
 
-# Crypto (Key Generation Phase 3.3.1)
+# Crypto (Key Generation Phase 3.3.1, Key Storage Phase 3.3.2, Challenge Phase 4.1.1)
 ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+aes-gcm = "0.10"
+sha2 = "0.10"
+base64 = "0.21"
+
+// mDNS/Bonjour (Phase 8.1 - Local Device Discovery)
+# mdns-sd = "0.17"  # Commented out: Container-incompatible, using stub implementation
 
 [dev-dependencies]
 tokio-test = "0.4"

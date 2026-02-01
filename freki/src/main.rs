@@ -1,12 +1,12 @@
 use tracing::info;
 use freki::utils::config::SettingsManager;
+use freki::utils::logging;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .init();
+    logging::init_logging()?;
 
     info!("Freki RAG Service starting...");
 
@@ -31,9 +31,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Start gRPC server
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], settings.grpc_port));
+    let audit_logger = Arc::new(freki::utils::AuditLogger::with_tracing());
     let deps = freki::grpc::GrpcServerDependencies {
         vector_db,
         collection_name,
+        audit_logger,
     };
     let server_handle = tokio::spawn(async move {
         if let Err(e) = freki::grpc::start_grpc_server(addr, deps).await {

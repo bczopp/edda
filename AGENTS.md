@@ -300,6 +300,7 @@ edda/
 - **Isolated test environment**: Tests run in completely isolated container environment
 - **Reproducible**: Test environment must be reproducible across all development machines
 - **CI/CD ready**: Container setup must work in CI/CD pipelines
+- **Services with GitHub Actions CI**: Bifrost (`.github/workflows/bifrost.yml`), Heimdall (`.github/workflows/heimdall.yml`), Thor (`.github/workflows/thor.yml`), Odin (`.github/workflows/odin.yml`), Loki (`.github/workflows/loki.yml`), Freki (`.github/workflows/freki.yml`), Geri (`.github/workflows/geri.yml`), Skuld (`.github/workflows/skuld.yml`), Mimir (`.github/workflows/mimir.yml`), Huginn-Muninn (`.github/workflows/huginn-muninn.yml`), Nornen (`.github/workflows/nornen.yml`), Vedrfolnir (`.github/workflows/vedrfolnir.yml`), Valkyries (`.github/workflows/valkyries.yml`), Nidhöggr (`.github/workflows/nidhoggr.yml`), Frigg (`.github/workflows/frigg.yml`), Ragnarok (`.github/workflows/ragnarok.yml`), Njörðr (`.github/workflows/njordr.yml`), Heidrun (`.github/workflows/heidrun.yml`), Ratatoskr (`.github/workflows/ratatoskr.yml`), Eikthyrnir (`.github/workflows/eikthyrnir.yml`), Læraðr (`.github/workflows/laeradr.yml`), Jotunheim (`.github/workflows/jotunheim.yml`), Asgard (`.github/workflows/asgard.yml`), Forseti (`.github/workflows/forseti.yml`), Midgard (`.github/workflows/midgard.yml`), Hirtir (`.github/workflows/hirtir.yml`), Gladsheim (`.github/workflows/gladsheim.yml`), Alfheim (`.github/workflows/alfheim.yml`), Yggdrasil (`.github/workflows/yggdrasil.yml`); see README "Für Entwickler" and `docs/test-infrastructure-template.md` (CI/CD section)
 
 ### Test-Driven Development (MANDATORY)
 
@@ -568,6 +569,7 @@ edda/
 
 - Service-specific README files provide detailed information about each service
 - Service-specific AGENTS.md files provide service-specific development guidelines
-- Documentation in `docs/` directory provides architecture and planning information
+- **Per-project implementation status**: Each project’s `IMPLEMENTATION_PLAN` (and `IMPLEMENTATION_STATUS` where present) holds current phase/checklist status; see e.g. `bifrost/IMPLEMENTATION_PLAN.md`
+- Documentation in `docs/` directory provides architecture and planning information; `docs/test-infrastructure-template.md` for container-based test setup
 - Das `edda` Verzeichnis ist **KEIN PROJEKT**. Es dient nur als Metadaten-Sammlung für die Grundstruktur und Zusammenhänge der anderen Projekte. Wenn gemeinsame Komponenten benötigt werden, sollten separate Projekte erstellt werden.
 

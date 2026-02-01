@@ -1,4 +1,4 @@
-FROM rust:1.75-slim
+FROM rust:latest
 
 WORKDIR /app
 
@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Cargo files
-COPY Cargo.toml Cargo.lock ./
+# Copy Cargo files (Cargo.lock is optional, will be generated if missing)
+COPY Cargo.toml ./
 COPY build.rs ./
 
 # Copy source code
@@ -19,7 +19,7 @@ COPY proto ./proto
 COPY tests ./tests
 COPY migrations ./migrations
 
-# Build the project
+# Build the project (this will generate Cargo.lock if missing)
 RUN cargo build --release
 
 # Default command for tests

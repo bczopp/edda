@@ -13,15 +13,16 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-appender = "0.2"
 anyhow = "1.0"
 thiserror = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.6", features = ["v4", "serde"] }
-config = "0.14"
+config = { version = "0.13", default-features = false, features = ["json", "toml"] }
 notify = "6.1"
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
 ring = "0.17"
-base64 = { version = "0.21", features = ["alloc"] }
+base64 = "0.21"
 
 [dev-dependencies]
 tokio-test = "0.4"

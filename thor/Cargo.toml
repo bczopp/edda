@@ -46,6 +46,9 @@ portable-pty = "0.5"
 # HTTP client for network operations
 reqwest = { version = "0.11", features = ["json"] }
 
+# Cron expression parsing (Phase 13 Scheduler)
+cron-parser = "0.11"
+
 [dev-dependencies]
 # Testing
 tokio-test = "0.4"

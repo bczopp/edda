@@ -47,11 +47,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         registry.register(Arc::new(thor::jotunheim::JotunheimActionHandler::new(jotunheim_url.clone()))).await;
     }
 
-    // Initialize action dispatcher
-    let dispatcher = Arc::new(thor::actions::ActionDispatcher::new(
-        registry.clone(),
-        permission_checker.clone(),
-    ));
+    // Initialize action dispatcher (with optional audit logging)
+    let dispatcher = if settings.enable_audit_logging {
+        Arc::new(thor::actions::ActionDispatcher::new_with_audit(
+            registry.clone(),
+            permission_checker.clone(),
+            thor::audit::TracingAuditLogger::new(),
+        ))
+    } else {
+        Arc::new(thor::actions::ActionDispatcher::new(
+            registry.clone(),
+            permission_checker.clone(),
+        ))
+    };
 
     // Start gRPC server
     let addr = SocketAddr::from(([0, 0, 0, 0], settings.grpc_port));

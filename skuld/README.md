@@ -10,6 +10,21 @@ Skuld ist der LLM-Selection Service, der auf allen Devices installiert werden mu
 
 **Wichtig**: Skuld ist ein separater Service, der auf allen Devices (Midgard, Alfheim, Asgard, Ragnarok) installiert werden muss. Er ist auch bei Yggdrasil verfügbar für globale LLM-Auswahl.
 
+**Tests ausführen:** Von `skuld/`: `docker compose -f docker-compose.test.yml run --rm skuld-test` oder `./scripts/run-tests.sh` / `.\scripts\run-tests.ps1`. Von Repo-Root: `skuld/scripts/run-tests.sh` bzw. `.\skuld\scripts\run-tests.ps1`. Die Test-Umgebung stellt Postgres und `DATABASE_URL` bereit; Migrationen liegen unter `migrations/` und werden beim Start bzw. in den Integrationstests ausgeführt. **CI:** Bei Push/PR auf `skuld/**` läuft die Pipeline [.github/workflows/skuld.yml](../.github/workflows/skuld.yml) (Test im Container, Lint).
+
+### Implementierungsstand (Für Entwickler)
+
+Aktuell umgesetzt (Details siehe [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)):
+
+- **Model Registry** (`src/registry/`): PostgreSQL-basierte Registrierung und Abfrage von Modellen (`list_models`, `register_model`, `get_model_info`); Schema in `migrations/`.
+- **Multi-Factor-Evaluation** (`src/evaluation/`): `ModelEvaluator` mit Performance-, Reliability- und Efficiency-Scores; gewichteter Gesamtscore.
+- **Model Selection** (`src/selection/selector.rs`): `ModelSelector` wählt das beste Modell anhand der Evaluation; parallele Evaluation aller Modelle (Query-Optimization).
+- **Model-Selection-Cache** (`src/selection/cache.rs`): `ModelSelectionCache` mit `select_best_model_cached(requirements)`; optional TTL, `invalidate_all()`; Key über `ModelRequirements::cache_key()`.
+- **Load-Balancing** (`src/load_balancer/`): Weighted Round-Robin für Modell-Verteilung.
+- **Eikthyrnir-Integration** (`src/eikthyrnir_client/`): gRPC-Client für Quality-Metriken (GetQualityMetrics).
+
+Offen u. a.: Geri gRPC-Client (Model-Registry/Model-Info), gRPC-Server für Odin (Model-Selection-Requests), E2E- und Performance-Tests.
+
 ## Verantwortlichkeiten
 
 ### 1. LLM-Selection

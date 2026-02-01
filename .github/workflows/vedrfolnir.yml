@@ -1,0 +1,54 @@
+# Vedrfolnir: Connection Builder Client CI
+# Runs tests in container and lint (clippy, fmt).
+name: Vedrfolnir CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['vedrfolnir/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['vedrfolnir/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd vedrfolnir
+          docker compose -f docker-compose.test.yml run --rm vedrfolnir-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            vedrfolnir/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: vedrfolnir-${{ runner.os }}-cargo-${{ hashFiles('vedrfolnir/Cargo.toml') }}
+          restore-keys: vedrfolnir-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path vedrfolnir/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path vedrfolnir/Cargo.toml -- -D warnings

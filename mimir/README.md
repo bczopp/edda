@@ -2,11 +2,15 @@
 
 ## Übersicht
 
+**Tests ausführen:** Von `mimir/`: `docker compose -f docker-compose.test.yml run --rm mimir-test` oder `./scripts/run-tests.sh` / `.\scripts\run-tests.ps1`. Von Repo-Root: `mimir/scripts/run-tests.sh` bzw. `.\mimir\scripts\run-tests.ps1`. **CI:** Bei Push/PR auf `mimir/**` läuft die Pipeline [.github/workflows/mimir.yml](../.github/workflows/mimir.yml) (Test im Container, Lint).
+
 Mimir ist der Privacy Database Service bei Yggdrasil. Er verwaltet eine eigene, isolierte Datenbank für personenbezogene Daten mit extra Sicherheitsschicht.
 
 **Mythologische Bedeutung**: Mimir ist der Wächter des Brunnens Mímisbrunnr (Brunnen der Weisheit). Der Brunnen selbst ist die Datenbank, die Mimir verwaltet.
 
 **Programmiersprache**: Rust
+
+**Dokumentation**: [API](docs/API.md) · [GDPR-Compliance-Guide](docs/GDPR-Compliance-Guide.md) · [Security-Best-Practices](docs/Security-Best-Practices.md) · [Deployment-Guide](docs/Deployment-Guide.md)
 
 ## Verantwortlichkeiten
 
@@ -198,6 +202,7 @@ Mimir ist der Privacy Database Service bei Yggdrasil. Er verwaltet eine eigene, 
 - Database-Konfiguration
 - Security-Einstellungen
 - Data-Retention-Einstellungen
+- **Logging** (optional): `logging.log_format` (`"text"` | `"json"`, Standard: text), `logging.log_directory` (optional, Pfad für Datei-Logs mit täglicher Rotation). Log-Level über Umgebungsvariable `RUST_LOG` (z. B. `RUST_LOG=info` oder `RUST_LOG=mimir=debug`).
 
 ## Integration
 

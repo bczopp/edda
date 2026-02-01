@@ -46,7 +46,7 @@ impl GeriService for GeriServiceImpl {
         Ok(Response::new(geri::ProcessPromptResponse {
             text: response.text,
             tokens_used: response.tokens_used,
-            model_name: self.llm_provider.model_name().to_string(),
+            model_used: self.llm_provider.model_name().to_string(),
         }))
     }
 
@@ -55,14 +55,18 @@ impl GeriService for GeriServiceImpl {
         request: Request<geri::ProcessVisionRequest>,
     ) -> Result<Response<geri::ProcessVisionResponse>, Status> {
         let req = request.into_inner();
-        
-        let result = self.vision_processor.process_image(&req.image_data, &req.prompt).await
+        let vision_req = crate::vision::VisionRequest {
+            image_data: req.image_data,
+            prompt: if req.prompt.is_empty() { None } else { Some(req.prompt) },
+        };
+        let result = self.vision_processor.process(vision_req).await
             .map_err(|e| Status::internal(format!("Vision processing failed: {}", e)))?;
-
+        let analysis_data = serde_json::to_vec(&result.analysis)
+            .map_err(|e| Status::internal(format!("Vision analysis serialization failed: {}", e)))?;
         Ok(Response::new(geri::ProcessVisionResponse {
             description: result.description,
-            extracted_text: result.extracted_text,
-            metadata: result.metadata,
+            analysis_data,
+            model_used: self.vision_processor.model_name().to_string(),
         }))
     }
 }

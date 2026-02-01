@@ -1,2 +1,9 @@
 pub mod settings_test;
 pub mod urd_test;
+pub mod urd_mimir_test;
+pub mod verdandi_router_test;
+pub mod coordinator_test;
+pub mod provider_cache_test;
+pub mod audit_logger_test;
+pub mod monitoring_test;
+pub mod access_control_test;

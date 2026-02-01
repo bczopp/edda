@@ -1,0 +1,54 @@
+# Asgard: Homeserver Platform CI
+# Runs tests in container and lint (clippy, fmt).
+name: Asgard CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['asgard/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['asgard/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd asgard
+          docker compose -f docker-compose.test.yml run --rm asgard-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            asgard/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: asgard-${{ runner.os }}-cargo-${{ hashFiles('asgard/Cargo.toml') }}
+          restore-keys: asgard-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path asgard/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path asgard/Cargo.toml -- -D warnings

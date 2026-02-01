@@ -23,7 +23,7 @@ async fn test_validate_request_schema_success() {
 async fn test_validate_request_schema_empty_request_id() {
     let validator = MessageValidator::new();
     
-    let mut request = RatatoskrRequest::new_business_request(
+    let request = RatatoskrRequest::new_business_request(
         "".to_string(),
         "device-456".to_string(),
         "user-789".to_string(),

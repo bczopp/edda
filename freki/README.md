@@ -4,6 +4,27 @@
 
 Freki ist einer von Odins Wölfen und stellt den RAG (Retrieval Augmented Generation) Service bereit. Er wird zuerst verwendet, um Prompts mit relevantem Kontext anzureichern, bevor sie an Geri (LLM) weitergegeben werden.
 
+**Tests ausführen:** Von `freki/`: `docker compose -f docker-compose.test.yml run --rm freki-test` oder `./scripts/run-tests.sh` / `.\scripts\run-tests.ps1`. Von Repo-Root: `freki/scripts/run-tests.sh` bzw. `.\freki\scripts\run-tests.ps1`. **CI:** Bei Push/PR auf `freki/**` läuft die Pipeline [.github/workflows/freki.yml](../.github/workflows/freki.yml) (Test im Container, Lint).
+
+**API-Dokumentation:** Siehe [docs/API.md](docs/API.md) für gRPC-Service-Dokumentation, Request/Response-Schemas, Error-Codes und Code-Beispiele.
+
+### Implementierungsstand (Für Entwickler)
+
+Aktuell umgesetzt (Details siehe [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)):
+
+- **Vector-DB & gRPC**: Qdrant-Client, Collection-Management, gRPC-Server (IndexDocument, RetrieveContext), Request-Validierung.
+- **Embedding & Chunking**: EmbeddingModel-Trait, Model-Registry, SemanticChunker, Sentence-Boundary.
+- **Indexing**: DocumentIndexer, IndexingManager, BatchIndexingManager, Document-Parser (Text), Metadata-Extractor, DocumentChangeDetector (7.1.1), IncrementalUpdateManager (7.2.1), FullReIndexingManager (7.3.1), AutoIndexingManager (8.1.2).
+- **Retrieval**: QueryEmbedding, SimilaritySearch, DocumentRanker, ContextExtractor/Formatter, ContextRetriever.
+- **Resilience & Security**: Indexing/Retrieval-Error-Handler, ConnectionRetry, RequestValidator, DataDeletion/DataExport (GDPR).
+- **Monitoring**: Structured Logging, AuditLogger, MetricsCollector, PerformanceAlertManager.
+- **Watch-Folder** (Phase 8.1): WatchFolderManager (notify), WatchEvent (Created/Modified/Removed), Event-Kanal; AutoIndexingManager (8.1.2) verbindet Watch-Events mit Indexing (Created → index, Modified → reindex, Removed → delete).
+- **Tests**: Container-Setup (Dockerfile.test, docker-compose.test.yml), E2E RAG, Load-Tests (Concurrent-Queries, Batch-Indexing), Search-Performance, Security/GDPR-Test-Suites, Performance-Benchmarks (README), Watch-Folder-Tests, Auto-Indexing-Tests.
+
+Offen u. a.: Phase 10–12 (Caching, Hybrid-Search, Re-Ranking optional), Phase 16.2–16.3 (Document-Encryption, Access-Control optional), Phase 18.2.2 (Architecture-Diagramme).
+
+**Rustdoc:** Wichtige Public-APIs sind mit Rustdoc-Kommentaren und Code-Beispielen dokumentiert. Generiere Dokumentation mit `cargo doc --open`.
+
 ## Verantwortlichkeiten
 
 ### 1. Vector Database Management
@@ -395,6 +416,20 @@ message ResponseMetadata {
 - Schnelle Vector-Search (< 100ms für Standard-Queries)
 - Effizientes Indexing (< 1s pro Dokument)
 - Hoher Durchsatz für parallele Queries
+
+### Performance-Benchmarks (Tests)
+
+Definierte Ziele und zugehörige Tests (siehe `IMPLEMENTATION_PLAN.md` Phase 19.2.1):
+
+| Ziel | Schwellwert (CI) | Test |
+|------|------------------|------|
+| Vector-Search-Latenz | ≤ 150 ms | `tests/search_performance_test.rs` |
+| Indexing pro Dokument | Ziel < 1 s | Unit/Load-Tests (Batch-Indexing) |
+| Concurrent Queries (20) | ≤ 5 s gesamt | `tests/load_test.rs` (load_concurrent_retrieve_requests) |
+| Batch-Indexing (10 Docs) | ≤ 15 s | `tests/load_test.rs` (load_batch_indexing_performance) |
+| Parallel-Indexing | schneller als sequenziell | `tests/unit/parallel_indexing_perf_test.rs` |
+
+Produktionsziele: Vector-Search < 100 ms, Indexing < 1 s/Dokument; CI-Schwellwerte sind bewusst großzügiger.
 
 ### Performance-Monitoring
 

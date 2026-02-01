@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package heimdall.authorization;
+
+// Authorization Service (Heimdall) - client used by Thor for permission checks
+service AuthorizationService {
+    rpc CheckPermission(PermissionCheckRequest) returns (PermissionCheckResponse);
+    rpc CheckRole(RoleCheckRequest) returns (RoleCheckResponse);
+}
+
+message PermissionCheckRequest {
+    string device_id = 1;
+    string user_id = 2;
+    string resource_type = 3;
+    string action = 4;
+    string resource_id = 5;
+    map<string, string> context = 6;
+}
+
+message PermissionCheckResponse {
+    bool allowed = 1;
+    string reason = 2;
+    repeated string granted_permissions = 3;
+}
+
+message RoleCheckRequest {
+    string device_id = 1;
+    string user_id = 2;
+    string role_name = 3;
+}
+
+message RoleCheckResponse {
+    bool has_role = 1;
+    repeated string roles = 2;
+}

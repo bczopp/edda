@@ -6,6 +6,8 @@ Alfheim ist eine **Platform** für Smartphone- und Tablet-Geräte, ähnlich wie 
 
 **Services sind unabhängig von Platformen**: Alle Services (Odin, Thor, Freki, Geri, Loki, etc.) sind in Rust implementiert und unabhängig von Platformen. Platformen kommunizieren mit Services via gRPC.
 
+**Tests ausführen:** Von `alfheim/`: `docker compose -f docker-compose.test.yml run --rm alfheim-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `alfheim/**` läuft [.github/workflows/alfheim.yml](../.github/workflows/alfheim.yml) (Test im Container).
+
 ## Zielplattformen
 
 - iOS (iPhone, iPad)

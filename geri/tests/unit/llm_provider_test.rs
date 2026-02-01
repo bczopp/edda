@@ -1,33 +1,38 @@
 #[cfg(test)]
 mod tests {
-    use freki::llm::{LLMProvider, LocalLLMProvider};
-    use std::time::Duration;
+    use geri::llm::{LocalLLMProvider, LLMProvider, PromptRequest};
 
     #[tokio::test]
     async fn test_local_llm_provider_creation() {
-        // Test local LLM provider creation
         let provider = LocalLLMProvider::new("llama3-8b".to_string());
-        assert_eq!(provider.get_model_name(), "llama3-8b");
+        assert_eq!(provider.model_name(), "llama3-8b");
     }
 
     #[tokio::test]
-    async fn test_generate_text() {
-        // Test text generation
+    async fn test_process_prompt_returns_response() {
         let provider = LocalLLMProvider::new("llama3-8b".to_string());
-        
-        // Note: This will fail if llama.cpp not available
-        // That's expected in test environment
-        let result = provider.generate("test prompt", None, None).await;
-        assert!(result.is_ok() || result.is_err());
+        let req = PromptRequest {
+            prompt: "test prompt".to_string(),
+            context: None,
+            max_tokens: None,
+        };
+        let result = provider.process_prompt(req).await;
+        assert!(result.is_ok());
+        let res = result.unwrap();
+        assert!(!res.text.is_empty());
     }
 
     #[tokio::test]
-    async fn test_generate_with_context() {
-        // Test generation with RAG context
+    async fn test_process_prompt_with_context() {
         let provider = LocalLLMProvider::new("llama3-8b".to_string());
-        
-        let context = "Context: This is test context.".to_string();
-        let result = provider.generate("test prompt", Some(&context), None).await;
-        assert!(result.is_ok() || result.is_err());
+        let req = PromptRequest {
+            prompt: "test prompt".to_string(),
+            context: Some("Context: This is test context.".to_string()),
+            max_tokens: None,
+        };
+        let result = provider.process_prompt(req).await;
+        assert!(result.is_ok());
+        let res = result.unwrap();
+        assert!(!res.text.is_empty());
     }
 }

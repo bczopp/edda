@@ -261,11 +261,13 @@ Edda besteht aus mehreren eigenständigen Projekten, die selektiv von Platformen
 **Development Guidelines**: Siehe [AGENTS.md](AGENTS.md)
 **Technology Decisions**: Siehe [docs/TECHNOLOGY_DECISIONS.md](docs/TECHNOLOGY_DECISIONS.md)
 **Rust Services Overview**: Siehe [docs/rust-services-overview.md](docs/rust-services-overview.md)
+**CI**: Bei Push/PR laufen GitHub Actions für betroffene Services: [Bifrost](.github/workflows/bifrost.yml) (`bifrost/**`), [Heimdall](.github/workflows/heimdall.yml) (`heimdall/**`), [Thor](.github/workflows/thor.yml) (`thor/**`), [Odin](.github/workflows/odin.yml) (`odin/**`), [Loki](.github/workflows/loki.yml) (`loki/**`), [Freki](.github/workflows/freki.yml) (`freki/**`), [Geri](.github/workflows/geri.yml) (`geri/**`), [Skuld](.github/workflows/skuld.yml) (`skuld/**`), [Mimir](.github/workflows/mimir.yml) (`mimir/**`), [Huginn-Muninn](.github/workflows/huginn-muninn.yml) (`huginn-muninn/**`), [Nornen](.github/workflows/nornen.yml) (`nornen/**`), [Vedrfolnir](.github/workflows/vedrfolnir.yml) (`vedrfolnir/**`), [Valkyries](.github/workflows/valkyries.yml) (`valkyries/**`), [Nidhöggr](.github/workflows/nidhoggr.yml) (`nidhoggr/**`), [Frigg](.github/workflows/frigg.yml) (`frigg/**`), [Ragnarok](.github/workflows/ragnarok.yml) (`ragnarok/**`), [Njörðr](.github/workflows/njordr.yml) (`njordr/**`), [Heidrun](.github/workflows/heidrun.yml) (`heidrun/**`), [Ratatoskr](.github/workflows/ratatoskr.yml) (`ratatoskr/**`), [Eikthyrnir](.github/workflows/eikthyrnir.yml) (`eikthyrnir/**`), [Læraðr](.github/workflows/laeradr.yml) (`laeradr/**`), [Jotunheim](.github/workflows/jotunheim.yml) (`jotunheim/**`), [Asgard](.github/workflows/asgard.yml) (`asgard/**`), [Forseti](.github/workflows/forseti.yml) (`forseti/**`), [Midgard](.github/workflows/midgard.yml) (`midgard/**`), [Hirtir](.github/workflows/hirtir.yml) (`hirtir/**`), [Gladsheim](.github/workflows/gladsheim.yml) (`gladsheim/**`), [Alfheim](.github/workflows/alfheim.yml) (`alfheim/**`), [Yggdrasil](.github/workflows/yggdrasil.yml) (`yggdrasil/**`). Tests im Container, Lint (fmt, clippy) für Rust-Services; Alfheim/Yggdrasil nur Test im Container. Bifrost zusätzlich Coverage, Rustdoc, cargo-audit.
 
 ## Dokumentation
 
 - [AGENTS.md](AGENTS.md) - Development Guidelines für alle Projekte
 - [docs/rust-services-overview.md](docs/rust-services-overview.md) - Übersicht über alle Rust Services
+- [docs/test-infrastructure-template.md](docs/test-infrastructure-template.md) - Container-Tests, Run-Test-Skripte, CI/CD
 - [docs/TECHNOLOGY_DECISIONS.md](docs/TECHNOLOGY_DECISIONS.md) - Technologie-Entscheidungen
 - [docs/business-plan.md](docs/business-plan.md) - Business Plan (intern)
 

@@ -1,0 +1,54 @@
+# Odin: Main Orchestrator CI
+# Runs tests in container and lint (clippy, fmt).
+name: Odin CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['odin/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['odin/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd odin
+          docker compose -f docker-compose.test.yml run --rm odin-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            odin/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: odin-${{ runner.os }}-cargo-${{ hashFiles('odin/Cargo.toml') }}
+          restore-keys: odin-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path odin/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path odin/Cargo.toml -- -D warnings

@@ -69,3 +69,27 @@ impl ModelEvaluator {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_evaluate_returns_scores_in_range() {
+        let evaluator = ModelEvaluator;
+        let e = evaluator.evaluate("llama3-8b").await.unwrap();
+        assert!(e.total_score >= 0.0 && e.total_score <= 1.0);
+        assert!(e.performance_score >= 0.0 && e.performance_score <= 1.0);
+        assert!(e.reliability_score >= 0.0 && e.reliability_score <= 1.0);
+        assert!(e.efficiency_score >= 0.0 && e.efficiency_score <= 1.0);
+        assert_eq!(e.model_name, "llama3-8b");
+    }
+
+    #[tokio::test]
+    async fn test_evaluate_gpt4_scores_higher_than_default() {
+        let evaluator = ModelEvaluator;
+        let e_gpt = evaluator.evaluate("gpt-4").await.unwrap();
+        let e_unknown = evaluator.evaluate("unknown-model").await.unwrap();
+        assert!(e_gpt.total_score > e_unknown.total_score);
+    }
+}

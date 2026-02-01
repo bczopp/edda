@@ -51,3 +51,34 @@ impl ModelRegistry {
         models.keys().cloned().collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_register_and_get_model() {
+        let registry = ModelRegistry::new("all-MiniLM-L6-v2".to_string());
+        let model = Arc::new(SentenceTransformersModel::new("all-MiniLM-L6-v2").await.unwrap());
+        registry.register(model).await;
+        let got = registry.get_model(Some("all-MiniLM-L6-v2")).await.unwrap();
+        assert_eq!(got.get_model_name(), "all-MiniLM-L6-v2");
+    }
+
+    #[tokio::test]
+    async fn test_list_models() {
+        let registry = ModelRegistry::new("all-MiniLM-L6-v2".to_string());
+        let model = Arc::new(SentenceTransformersModel::new("all-MiniLM-L6-v2").await.unwrap());
+        registry.register(model).await;
+        let list = registry.list_models().await;
+        assert!(list.contains(&"all-MiniLM-L6-v2".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_is_model_available() {
+        let registry = ModelRegistry::new("all-MiniLM-L6-v2".to_string());
+        assert!(!registry.is_model_available("all-MiniLM-L6-v2").await);
+        registry.initialize_default().await.unwrap();
+        assert!(registry.is_model_available("all-MiniLM-L6-v2").await);
+    }
+}

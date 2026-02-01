@@ -4,6 +4,8 @@
 
 Odin ist der zentrale Orchestrator auf Midgard (Desktop), Alfheim (Mobile), Asgard (Homeserver) und Ragnarok (Terminal). Er koordiniert alle anderen Services und ist der Hauptprozess des Edda-Systems. Odin läuft NICHT auf Jotunheim (IoT-Devices), da diese zu klein sind und stattdessen Loki für Toolcalling-Funktionalität nutzen.
 
+**Tests ausführen:** Von `odin/`: `docker compose -f docker-compose.test.yml run --rm odin-test` oder `./scripts/run-tests.sh` / `.\scripts\run-tests.ps1`. Von Repo-Root: `odin/scripts/run-tests.sh` bzw. `.\odin\scripts\run-tests.ps1`. **CI:** Bei Push/PR auf `odin/**` läuft die Pipeline [.github/workflows/odin.yml](../.github/workflows/odin.yml) (Test im Container, Lint).
+
 ## Verantwortlichkeiten
 
 ### 1. User-Command Processing

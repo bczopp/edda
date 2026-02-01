@@ -16,6 +16,23 @@ services:
       timeout: 5s
       retries: 5
 
+  # Mock Mimir Service
+  mock-mimir:
+    build:
+      context: .
+      dockerfile: tests/mocks/Dockerfile.mock-service
+    environment:
+      SERVICE_NAME: mimir
+      SERVICE_PORT: 50051
+      RUST_LOG: debug
+    ports:
+      - "50051:50051"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50051 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   nornen-test:
     build:
       context: .
@@ -23,9 +40,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      mock-mimir:
+        condition: service_healthy
     environment:
       RUST_LOG: debug
       DATABASE_URL: postgres://nornen_test:test_password@postgres:5432/nornen_test
+      MIMIR_URL: http://mock-mimir:50051
     volumes:
       - ./target:/app/target
       - ./tests:/app/tests

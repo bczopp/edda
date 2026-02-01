@@ -2,6 +2,8 @@
 
 ## Übersicht
 
+**Tests ausführen:** Von `frigg/`: `docker compose -f docker-compose.test.yml run --rm frigg-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `frigg/**` läuft die Pipeline [.github/workflows/frigg.yml](../.github/workflows/frigg.yml) (Test im Container, Lint).
+
 Frigg ist ein Plugin für Gesundheitsfragen, das von Odin orchestriert wird. **Frigg ist ausschließlich für persönliche und Gesundheitsfragen (mentale und körperliche) zuständig.** Wenn Gesundheitsfragen erkannt werden, delegiert Odin die Aufgabe an Frigg (wenn verfügbar). Das Healthcare Plugin bietet zertifizierte Kurse, die von Krankenkassen genehmigt und bezahlt werden können. **Frigg** (Göttin der Fürsorge und Mutterschaft) führt das Healthcare Plugin an und koordiniert die Healthcare-Services. **Fulla** (Göttin der Fürsorge und Unterstützung) kann als Service für Daten und Behandlungspläne fungieren, falls benötigt.
 
 **Wichtig**: Frigg ist **nicht** für allgemeine Antworten zuständig. Verschiedene Persönlichkeiten können vergeben werden. Ein Therapeut sollte nicht jeden Tag die Nachrichten vorlesen oder Emails beantworten.

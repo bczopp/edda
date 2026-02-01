@@ -1,5 +1,4 @@
 use tonic::transport::Channel;
-use std::sync::Arc;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -28,7 +27,7 @@ impl OdinClient {
 
     pub async fn process_request(&mut self, request: odin::ProcessRequest) -> Result<odin::ProcessResponse, OdinClientError> {
         let response = self.client
-            .process_request(tonic::Request::new(request))
+            .process(tonic::Request::new(request))
             .await?;
         Ok(response.into_inner())
     }

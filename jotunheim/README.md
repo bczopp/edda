@@ -6,6 +6,8 @@ Jotunheim ist eine **Platform** für IoT-Devices (inkl. ESP32/Microcontroller), 
 
 **Services sind unabhängig von Platformen**: Alle Services (Odin, Loki, Thor, Freki, Geri, etc.) sind in Rust implementiert und unabhängig von Platformen. Platformen kommunizieren mit Services via gRPC.
 
+**Tests ausführen:** Von `jotunheim/`: `docker compose -f docker-compose.test.yml run --rm jotunheim-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `jotunheim/**` läuft die Pipeline [.github/workflows/jotunheim.yml](../.github/workflows/jotunheim.yml) (Test im Container, Lint).
+
 ## Zielplattformen
 
 - ESP32 (esp-rs, Rust)

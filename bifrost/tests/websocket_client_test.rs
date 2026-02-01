@@ -4,7 +4,7 @@ use bifrost::websocket::{WebSocketClient, WebSocketServer};
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tokio_tungstenite::tungstenite::Message;
-use futures_util::{SinkExt, StreamExt};
+use futures_util::SinkExt;
 
 #[test]
 fn client_new_creates() {
@@ -26,7 +26,8 @@ async fn client_connects_to_server() {
     let client = WebSocketClient::new();
     let url = format!("ws://127.0.0.1:{}", port);
     let (mut ws_stream, response) = client.connect(&url).await.expect("connect");
-    assert!(response.status().is_success());
+    // WebSocket upgrade returns 101 Switching Protocols, not 2xx
+    assert!(response.status().is_success() || response.status().as_u16() == 101);
     ws_stream.close(None).await.expect("close");
 }
 

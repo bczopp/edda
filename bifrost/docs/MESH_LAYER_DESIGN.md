@@ -77,7 +77,9 @@ Bifrost erweitert sich um einen **Mesh-Layer** (Meshtastic-inspiriert). Device-C
 
 ## Guest Mesh (ohne VPN)
 
-- **Kein VPN (Valhalla)**; Connectivity über Mesh-Membership. Fremde Devices (Gäste) erhalten einen **isolierten Mesh-Segment** (Guest Mesh): eigene Mesh-ID, kein Flood in den Haupt-User-Mesh, explizite Erlaubnis für Datentransfer. Siehe Phase 12 (Guest Mesh) im IMPLEMENTATION_PLAN.
+- **Eigene Devices** eines Users nutzen das **Main Mesh** – kein Guest Mesh nötig.
+- **Guest Mesh** nur für **fremde Devices** (Gäste/Besucher), die an derselben Bifrost-Instanz teilnehmen, ohne dort einen User-Account zu haben (z. B. Besucher-Phone). Isoliertes Segment: eigene Mesh-ID, kein Flood in den Haupt-User-Mesh, explizite Erlaubnis für Datentransfer (Heimdall-User-Bestätigung).
+- Kein VPN (Valhalla); Connectivity über Mesh-Membership. Siehe Phase 12 (Guest Mesh) im IMPLEMENTATION_PLAN.
 
 ## Offene Punkte (kurzfristig)
 

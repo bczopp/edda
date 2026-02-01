@@ -9,7 +9,7 @@ mod tests {
     async fn test_action_execution_flow() {
         // Setup
         let registry = Arc::new(thor::actions::ActionRegistry::new());
-        let permission_checker = Arc::new(PermissionChecker::new("http://localhost:50051".to_string()));
+        let permission_checker = Arc::new(PermissionChecker::new_allow_on_connection_error("http://localhost:50051".to_string()));
         let dispatcher = Arc::new(thor::actions::ActionDispatcher::new(
             registry.clone(),
             permission_checker.clone(),
@@ -30,17 +30,13 @@ mod tests {
             "interactive": false
         });
 
-        // Note: This will fail permission check if Heimdall is not available
-        // That's expected in test environment
         let result = dispatcher.dispatch(
             "TERMINAL_OPERATION",
             &context,
             &serde_json::to_vec(&action_data).unwrap(),
         ).await;
 
-        // Result may be Ok or Err depending on Heimdall availability
-        // We just verify the dispatcher processes the request
-        assert!(result.is_ok() || result.is_err());
+        assert!(result.is_ok(), "Dispatch should succeed with allow_on_connection_error when Heimdall is not running");
     }
 
     #[tokio::test]
@@ -57,6 +53,7 @@ mod tests {
         assert!(types.contains(&"TERMINAL_OPERATION".to_string()));
         assert!(types.contains(&"UI_AUTOMATION".to_string()));
         assert!(types.contains(&"SCHEDULER_OPERATION".to_string()));
+        // JOTUNHEIM_OPERATION registered when handler added (e.g. in main with jotunheim_url)
 
         // Get handler
         let handler = registry.get("TERMINAL_OPERATION").await;

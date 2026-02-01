@@ -1,0 +1,54 @@
+# Frigg: Healthcare Plugin CI
+# Runs tests in container and lint (clippy, fmt).
+name: Frigg CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['frigg/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['frigg/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd frigg
+          docker compose -f docker-compose.test.yml run --rm frigg-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            frigg/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: frigg-${{ runner.os }}-cargo-${{ hashFiles('frigg/Cargo.toml') }}
+          restore-keys: frigg-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path frigg/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path frigg/Cargo.toml -- -D warnings

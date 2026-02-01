@@ -17,6 +17,7 @@ pub struct DatabaseConfig {
 pub struct SecuritySettings {
     pub encryption_algorithm: String,
     pub key_rotation_days: u32,
+    pub enable_access_control: bool,
     pub enable_audit_logging: bool,
 }
 
@@ -27,6 +28,34 @@ pub struct DataRetentionSettings {
     pub anonymize_on_deletion: bool,
 }
 
+/// Log output format: "text" (human-readable) or "json" (for production/aggregation).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum LogFormat {
+    #[default]
+    Text,
+    Json,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LoggingSettings {
+    /// Output format: "text" or "json". JSON is recommended for production.
+    #[serde(default)]
+    pub log_format: LogFormat,
+    /// If set, logs are written to this directory with daily rotation (filename prefix: mimir).
+    /// Rotation is handled by tracing-appender (daily rollover). Leave unset for stderr only.
+    pub log_directory: Option<String>,
+}
+
+impl Default for LoggingSettings {
+    fn default() -> Self {
+        Self {
+            log_format: LogFormat::Text,
+            log_directory: None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MimirSettings {
     pub grpc_port: u16,
@@ -34,6 +63,9 @@ pub struct MimirSettings {
     pub security: SecuritySettings,
     pub data_retention: DataRetentionSettings,
     pub encryption_key_path: String,
+    /// Logging: format and optional file output with rotation.
+    #[serde(default)]
+    pub logging: LoggingSettings,
 }
 
 impl Default for MimirSettings {
@@ -48,6 +80,7 @@ impl Default for MimirSettings {
             security: SecuritySettings {
                 encryption_algorithm: "AES-256-GCM".to_string(),
                 key_rotation_days: 90,
+                enable_access_control: true,
                 enable_audit_logging: true,
             },
             data_retention: DataRetentionSettings {
@@ -56,6 +89,7 @@ impl Default for MimirSettings {
                 anonymize_on_deletion: true,
             },
             encryption_key_path: "keys/mimir.key".to_string(),
+            logging: LoggingSettings::default(),
         }
     }
 }

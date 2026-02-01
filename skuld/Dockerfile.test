@@ -12,10 +12,11 @@ RUN apt-get update && apt-get install -y \
 COPY Cargo.toml Cargo.lock ./
 COPY build.rs ./
 
-# Copy source code
+# Copy source code and migrations
 COPY src ./src
 COPY proto ./proto
 COPY tests ./tests
+COPY migrations ./migrations
 
 # Build the project
 RUN cargo build --release

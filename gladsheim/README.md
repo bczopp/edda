@@ -9,6 +9,8 @@ Gladsheim ist der **Service-Manager und Runtime-Manager** auf allen Plattformen 
 - Ort, wo der Rat der Götter zusammenkommt
 - Repräsentiert den RAM - welche Götter sind aktuell geladen und aktiv
 
+**Tests ausführen:** Von `gladsheim/`: `docker compose -f docker-compose.test.yml run --rm gladsheim-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `gladsheim/**` läuft [.github/workflows/gladsheim.yml](../.github/workflows/gladsheim.yml) (Test im Container, Lint).
+
 ## Architektur
 
 ### Gladsheim als Plattform-Komponente

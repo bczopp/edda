@@ -97,7 +97,7 @@ Dieser Plan beschreibt die kleinstmöglichen Schritte zur Implementierung von He
 
 #### 1.2.3 CI/CD-Pipeline
 - [x] GitHub Actions / GitLab CI Workflow erstellen (.github/workflows/heimdall.yml)
-- [x] Automatische Test-Ausführung bei Commits konfigurieren (push/PR auf heimdall/** → Test in Container)
+- [x] Automatische Test-Ausführung bei Commits konfigurieren (push/PR auf heimdall/** → Test in Container, Timeout 15 min)
 - [ ] Code-Coverage-Reporting einrichten (cargo-tarpaulin, optional)
 - [ ] Security-Scanning integrieren (cargo audit, optional)
 - [x] Linting und Formatting (cargo clippy, cargo fmt --check im Lint-Job)
@@ -730,25 +730,25 @@ Heimdall validiert Mesh-Membership: „Darf dieses Device in diesem User-Mesh mi
 
 **Abhängigkeiten**: 3.1 (Key-Generation)
 
-#### 14.1.1 TLS-Config-Manager
-- [ ] Tests für TLS-Config schreiben
-- [ ] `TLSConfigManager` implementieren (TDD)
-  - TLS 1.3 konfigurieren
-  - Cipher Suites (TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256)
-  - Certificate Validation
-- [ ] Tests ausführen und bestehen
+#### 14.1.1 TLS-Config-Manager ✅
+- [x] Tests für TLS-Config schreiben
+- [x] `TLSConfigManager` implementieren (TDD)
+  - [x] TLS 1.3 konfigurieren
+  - [x] Cipher Suites (TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256)
+  - [x] Certificate Validation
+- [x] Tests ausführen und bestehen
 
 ### 14.2 End-to-End Encryption (optional)
 
 **Abhängigkeiten**: 3.1 (Key-Generation)
 
-#### 14.2.1 E2E-Encryption-Manager
-- [ ] Tests für E2E-Encryption schreiben
-- [ ] `E2EEncryptionManager` implementieren (TDD)
-  - Session-Keys generieren (Perfect Forward Secrecy)
-  - Key-Austausch (ECDH)
-  - Message-Encryption (AES-256-GCM)
-- [ ] Tests ausführen und bestehen
+#### 14.2.1 E2E-Encryption-Manager ✅
+- [x] Tests für E2E-Encryption schreiben
+- [x] `E2EEncryptionManager` implementieren (TDD)
+  - [x] Session-Keys generieren (Perfect Forward Secrecy)
+  - [x] Key-Austausch (ECDH)
+  - [x] Message-Encryption (AES-256-GCM)
+- [x] Tests ausführen und bestehen
 
 ---
 
@@ -759,19 +759,19 @@ Heimdall validiert Mesh-Membership: „Darf dieses Device in diesem User-Mesh mi
 **Abhängigkeiten**: 2.2 (gRPC Server Implementation)
 
 #### 15.1.1 Parallel-Processor
-- [ ] Tests für Parallel-Processing schreiben
-- [ ] Parallele Verarbeitung von Security-Checks implementieren
-- [ ] Tests ausführen und bestehen
+- [x] Tests für Parallel-Processing schreiben (tests/unit/parallel_processing_test.rs)
+- [x] Parallele Verarbeitung von Security-Checks implementieren (src/utils/performance.rs: ParallelProcessor)
+- [x] Tests ausführen und bestehen
 
 ### 15.2 Performance-Benchmarks
 
 **Abhängigkeiten**: 6.2 (Token-Validation), 7.1 (Permission System)
 
 #### 15.2.1 Performance-Benchmarking
-- [ ] Performance-Benchmarks schreiben
+- [x] Performance-Benchmarks schreiben (src/utils/performance.rs: PerformanceBenchmark; tests/performance/token_validation_bench_test.rs)
   - Token-Validation (< 10ms)
   - Permission-Check (< 5ms)
-- [ ] Benchmarks ausführen und Ziele erreichen
+- [x] Benchmarks ausführen und Ziele erreichen (run_all_benchmarks mit Mock-Validatoren)
 
 ---
 
@@ -817,9 +817,9 @@ Heimdall validiert Mesh-Membership: „Darf dieses Device in diesem User-Mesh mi
 **Abhängigkeiten**: Alle Security-Phasen
 
 #### 17.2.1 Security-Guide
-- [ ] Security-Best-Practices dokumentieren
-- [ ] Threat-Models dokumentieren
-- [ ] Security-Workflows dokumentieren
+- [x] Security-Best-Practices dokumentieren (docs/security-guide.md)
+- [x] Threat-Models dokumentieren (docs/security-guide.md)
+- [x] Security-Workflows dokumentieren (docs/security-guide.md)
 
 ---
 

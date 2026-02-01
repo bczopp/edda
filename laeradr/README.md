@@ -8,6 +8,8 @@ Læraðr ist ein Rust-Microservice für Yggdrasil, der Data Management (Indexing
 
 **Programmiersprache**: Rust
 
+**Tests ausführen:** Von `laeradr/`: `docker compose -f docker-compose.test.yml run --rm laeradr-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `laeradr/**` läuft die Pipeline [.github/workflows/laeradr.yml](../.github/workflows/laeradr.yml) (Test im Container, Lint).
+
 ## Verantwortlichkeiten
 
 ### 1. Dáinn - Data Indexing

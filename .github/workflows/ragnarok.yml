@@ -1,0 +1,54 @@
+# Ragnarok: Terminal Platform CI
+# Runs tests in container and lint (clippy, fmt).
+name: Ragnarok CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['ragnarok/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['ragnarok/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd ragnarok
+          docker compose -f docker-compose.test.yml run --rm ragnarok-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ragnarok/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ragnarok-${{ runner.os }}-cargo-${{ hashFiles('ragnarok/Cargo.toml') }}
+          restore-keys: ragnarok-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path ragnarok/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path ragnarok/Cargo.toml -- -D warnings

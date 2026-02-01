@@ -4,6 +4,8 @@
 
 Nidhöggr ist der Server-Side Connection Endpoint bei Yggdrasil. Er empfängt Verbindungen von Vedrfolnir-Clients (User-Devices) über das Ratatoskr-Protocol und leitet Nachrichten direkt an entsprechende Services weiter.
 
+**Tests ausführen:** Von `nidhoggr/`: `docker compose -f docker-compose.test.yml run --rm nidhoggr-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `nidhoggr/**` läuft die Pipeline [.github/workflows/nidhoggr.yml](../.github/workflows/nidhoggr.yml) (Test im Container, Lint).
+
 **Mythologische Bedeutung**: Nidhöggr ist der Drache, der an den Wurzeln des Weltenbaums nagt. Repräsentiert User Requests (Root/Wurzeln), die von den User-Devices kommen.
 
 **Programmiersprache**: Rust

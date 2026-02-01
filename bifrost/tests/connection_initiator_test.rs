@@ -5,7 +5,7 @@ use bifrost::websocket::ConnectionInitiator;
 
 #[test]
 fn build_connection_request_returns_request_message() {
-    let initiator = ConnectionInitiator::new();
+    let _initiator = ConnectionInitiator::new();
     let msg = ConnectionInitiator::build_connection_request("dev-1", "user-1", "target-1");
     assert_eq!(msg.message_type, MessageType::ConnectionRequest);
     assert_eq!(msg.source_device_id, "dev-1");

@@ -2,6 +2,8 @@
 
 ## Übersicht
 
+**Tests ausführen:** Von `ragnarok/`: `docker compose -f docker-compose.test.yml run --rm ragnarok-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `ragnarok/**` läuft die Pipeline [.github/workflows/ragnarok.yml](../.github/workflows/ragnarok.yml) (Test im Container, Lint).
+
 Ragnarok ist eine **Platform** für Terminal-basierte Geräte, ähnlich wie Midgard (Desktop), Alfheim (Mobile), Asgard (Homeserver) und Jotunheim (IoT). Als Platform ist Ragnarok komplett platformspezifisch optimiert und kümmert sich um Connections (Terminal, TUI, etc.), konvertiert diese zu Anfragen an Services (Odin) und ruft Services via gRPC auf.
 
 **Services sind unabhängig von Platformen**: Alle Services (Odin, Thor, Freki, Geri, Loki, etc.) sind in Rust implementiert und unabhängig von Platformen. Platformen kommunizieren mit Services via gRPC.
@@ -14,44 +16,69 @@ Ragnarok bietet die gleichen Features wie Midgard/Alfheim/Asgard, nutzt aber ein
 - macOS
 - Linux (Ubuntu, Debian, Fedora, etc.)
 
-## Projektstruktur
+## Usage (CLI)
+
+Ragnarok wird über Subcommands gesteuert. Odin muss unter der in der Konfiguration angegebenen Adresse laufen (Standard: `127.0.0.1:50051`).
+
+**Konfiguration:** `config/ragnarok.json` (wird bei erstem Start mit Defaults angelegt). Beispiel:
+
+```json
+{
+  "odin": {
+    "address": "127.0.0.1",
+    "port": 50051
+  }
+}
+```
+
+**Beispiele:**
+
+```bash
+# Chat-Nachricht an Odin senden
+cargo run -- chat "Hallo, was ist die Hauptstadt von Frankreich?"
+
+# Action ausführen (Placeholder)
+cargo run -- action "run_script"
+
+# Status anzeigen
+cargo run -- status
+
+# Einstellungen anzeigen (Config-Pfad, Odin-Adresse)
+cargo run -- settings
+```
+
+Ohne Subcommand: `cargo run --` zeigt die Hilfemeldung.
+
+## Projektstruktur (aktuell)
 
 ```
 ragnarok/
 ├── Cargo.toml
+├── proto/
+│   └── odin.proto       # Odin gRPC (ProcessRequest/ProcessResponse)
 ├── src/
-│   ├── main.rs          # Main Application
+│   ├── main.rs         # Einstieg, CLI-Dispatch, Odin-Integration
 │   ├── lib.rs
-│   ├── odin/            # Odin Service Integration
-│   ├── tui/             # Terminal User Interface (TUI)
-│   │   ├── components/
-│   │   │   ├── chat.rs  # Chat-Interface
-│   │   │   ├── status.rs # Status-Anzeige
-│   │   │   ├── history.rs # History-View
-│   │   │   └── config.rs # Config-View
-│   │   ├── input.rs     # Input-Handling
-│   │   └── renderer.rs  # TUI Renderer
-│   ├── services/        # Service Integrations
-│   │   ├── huginn.rs    # STT Service (optional)
-│   │   ├── muninn.rs    # TTS Service (optional)
-│   │   ├── freki.rs     # RAG Service
-│   │   ├── geri.rs      # LLM Service
-│   │   ├── thor.rs      # Action Executor
-│   │   └── network.rs   # Optional: Heimnetz-Verbindung
-│   ├── actions/         # Action Handlers
-│   │   ├── device.rs
-│   │   ├── file.rs
-│   │   ├── network.rs
-│   │   ├── application.rs
-│   │   └── system.rs
-│   ├── model/           # Model Management
-│   │   ├── llama_cpp.rs # llama.cpp Integration (FFI)
-│   │   └── config.rs
+│   ├── cli/             # CLI (clap)
+│   │   ├── mod.rs
+│   │   └── parser.rs    # Cli, Commands (Chat, Action, Status, Settings)
+│   ├── grpc_client/     # gRPC-Clients
+│   │   ├── mod.rs
+│   │   └── odin_client.rs
+│   ├── services/        # Service-Integration
+│   │   ├── mod.rs
+│   │   └── odin_integration.rs  # OdinServiceIntegration (send_chat)
 │   └── utils/
-├── config/
-├── models/              # Mitgeliefertes Model
+│       ├── config.rs    # SettingsManager, RagnarokSettings
+│       └── mod.rs
+├── config/              # config/ragnarok.json (optional)
 └── tests/
+    ├── cli_parser_test.rs
+    ├── odin_client_test.rs
+    └── service_integration_test.rs
 ```
+
+Geplante Erweiterungen: TUI (ratatui), weitere Service-Clients (Thor, Freki, Geri), Service-Discovery.
 
 ## Features
 

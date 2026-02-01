@@ -2,6 +2,7 @@
 
 use bifrost::websocket::ConnectionAcceptor;
 use std::net::SocketAddr;
+use tokio::io::AsyncWriteExt;
 use tokio::net::TcpListener;
 use tokio_tungstenite::connect_async;
 

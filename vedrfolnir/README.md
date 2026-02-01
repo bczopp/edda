@@ -2,6 +2,8 @@
 
 ## Übersicht
 
+**Tests ausführen:** Von `vedrfolnir/`: `docker compose -f docker-compose.test.yml run --rm vedrfolnir-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `vedrfolnir/**` läuft die Pipeline [.github/workflows/vedrfolnir.yml](../.github/workflows/vedrfolnir.yml) (Test im Container, Lint).
+
 Vedrfolnir ist der Client-Service auf User-Device-Seite, der Verbindungen zu Yggdrasil aufbaut. Odin nutzt Vedrfolnir für die Kommunikation mit Yggdrasil.
 
 **Mythologische Bedeutung**: Vedrfolnir ist der Habicht, der zwischen den Augen des Adlers sitzt. Er vermittelt zwischen User-Device und Yggdrasil (wie der Habicht zwischen den Welten vermittelt).

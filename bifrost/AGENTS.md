@@ -14,6 +14,7 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 - **Red-Green-Refactor cycle**: Red (failing test) → Green (passing test) → Refactor
 - **Test coverage**: Aim for high test coverage (minimum 80% for critical paths)
 - **Test types**: Unit tests for message routing, integration tests for connection management, end-to-end tests for device-to-device communication
+- **Phase 20 suites**: When adding E2E, performance, security or GDPR-related features, extend the dedicated suites: `e2e_communication_workflow_test.rs`, `error_recovery_test.rs`, `performance_benchmark_test.rs`, `security_test_suite.rs`, `gdpr_compliance_test.rs` (see README Phase 20 Test Suites)
 - **Strict adherence**: TDD is not optional - it is the foundation of all development work
 - **No implementation without tests**: Never write implementation code without corresponding tests first
 

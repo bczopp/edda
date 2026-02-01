@@ -10,6 +10,8 @@ Forseti ist der Core Service für Machine Learning, Deep Learning und Reinforcem
 
 **Rolle im Ecosystem**: Core Service (Gott) - immer verfügbar, nicht optional
 
+**Tests ausführen:** Von `forseti/`: `docker compose -f docker-compose.test.yml run --rm forseti-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `forseti/**` läuft die Pipeline [.github/workflows/forseti.yml](../.github/workflows/forseti.yml) (Test im Container, Lint).
+
 ## Verantwortlichkeiten
 
 ### 1. Model Training

@@ -1,0 +1,54 @@
+# Hirtir: Data Management Service CI
+# Runs tests in container and lint (clippy, fmt).
+name: Hirtir CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['hirtir/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['hirtir/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd hirtir
+          docker compose -f docker-compose.test.yml run --rm hirtir-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            hirtir/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: hirtir-${{ runner.os }}-cargo-${{ hashFiles('hirtir/Cargo.toml') }}
+          restore-keys: hirtir-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path hirtir/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path hirtir/Cargo.toml -- -D warnings

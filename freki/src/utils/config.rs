@@ -4,12 +4,38 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use notify::{Watcher, RecommendedWatcher, RecursiveMode, Event, EventKind};
 use tracing::{info, error};
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum SettingsError {
+    #[error("grpc_port must be non-zero")]
+    InvalidPort,
+    #[error("qdrant_url must be non-empty")]
+    EmptyQdrantUrl,
+    #[error("embedding_model must be non-empty")]
+    EmptyEmbeddingModel,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FrekiSettings {
     pub grpc_port: u16,
     pub qdrant_url: String,
     pub embedding_model: String,
+}
+
+impl FrekiSettings {
+    pub fn validate(&self) -> Result<(), SettingsError> {
+        if self.grpc_port == 0 {
+            return Err(SettingsError::InvalidPort);
+        }
+        if self.qdrant_url.trim().is_empty() {
+            return Err(SettingsError::EmptyQdrantUrl);
+        }
+        if self.embedding_model.trim().is_empty() {
+            return Err(SettingsError::EmptyEmbeddingModel);
+        }
+        Ok(())
+    }
 }
 
 impl Default for FrekiSettings {
@@ -39,6 +65,7 @@ impl SettingsManager {
         if self.config_path.exists() {
             let content = tokio::fs::read_to_string(&self.config_path).await?;
             let settings: FrekiSettings = serde_json::from_str(&content)?;
+            settings.validate()?;
             *self.settings.write().await = settings;
             info!("Configuration loaded from {}", self.config_path.display());
         } else {
@@ -69,6 +96,7 @@ impl SettingsManager {
                             if let Err(e) = rt.block_on(async {
                                 let content = tokio::fs::read_to_string(&config_path).await?;
                                 let new_settings: FrekiSettings = serde_json::from_str(&content)?;
+                                new_settings.validate()?;
                                 *settings.write().await = new_settings;
                                 Ok::<(), Box<dyn std::error::Error>>(())
                             }) {
@@ -87,5 +115,37 @@ impl SettingsManager {
         info!("Hot-reload watcher started for configuration");
         
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_validate_default_ok() {
+        let s = FrekiSettings::default();
+        assert!(s.validate().is_ok());
+    }
+
+    #[test]
+    fn test_validate_invalid_port() {
+        let mut s = FrekiSettings::default();
+        s.grpc_port = 0;
+        assert!(matches!(s.validate(), Err(SettingsError::InvalidPort)));
+    }
+
+    #[test]
+    fn test_validate_empty_qdrant_url() {
+        let mut s = FrekiSettings::default();
+        s.qdrant_url = String::new();
+        assert!(matches!(s.validate(), Err(SettingsError::EmptyQdrantUrl)));
+    }
+
+    #[test]
+    fn test_validate_empty_embedding_model() {
+        let mut s = FrekiSettings::default();
+        s.embedding_model = "   ".to_string();
+        assert!(matches!(s.validate(), Err(SettingsError::EmptyEmbeddingModel)));
     }
 }

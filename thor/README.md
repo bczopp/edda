@@ -4,6 +4,8 @@
 
 Thor ist ein Plugin für Action-Execution, das von Odin orchestriert wird. Wenn Funktionen ausgeführt werden müssen, delegiert Odin die Aufgabe an Thor (wenn verfügbar). Thor führt Actions aus, die von Odin geplant wurden. Er nutzt Mjölnir (Hammer), Tanngrisnir & Tanngnjóstr (Goats) und den Chariot (Streitwagen).
 
+**Tests ausführen:** Von `thor/`: `docker compose -f docker-compose.test.yml run --rm thor-test` oder `./scripts/run-tests.sh` / `.\scripts\run-tests.ps1`. Von Repo-Root: `thor/scripts/run-tests.sh` bzw. `.\thor\scripts\run-tests.ps1`. **CI:** Bei Push/PR auf `thor/**` läuft die Pipeline [.github/workflows/thor.yml](../.github/workflows/thor.yml) (Test im Container, Lint).
+
 **Plugin-Architektur**: Thor ist ein optionales Plugin, das modular zur Odin-Installation hinzugefügt werden kann. Odin entscheidet selbst, ob eine Aufgabe an Thor delegiert werden muss (wenn Funktionen ausgeführt werden müssen) oder ob Odin selbst antworten kann (bei einfachen Fragen).
 
 **Plugin-Interface**: Thor implementiert das `OdinPlugin`-Interface mit:

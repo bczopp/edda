@@ -6,6 +6,8 @@ Midgard ist eine **Platform** für Desktop/Laptop-Geräte, ähnlich wie Alfheim 
 
 **Services sind unabhängig von Platformen**: Alle Services (Odin, Thor, Freki, Geri, Loki, etc.) sind in Rust implementiert und unabhängig von Platformen. Platformen kommunizieren mit Services via gRPC.
 
+**Tests ausführen:** Von `midgard/`: `docker compose -f docker-compose.test.yml run --rm midgard-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `midgard/**` läuft [.github/workflows/midgard.yml](../.github/workflows/midgard.yml) (Test im Container, Lint).
+
 ## Zielplattformen
 
 - Windows (10/11)

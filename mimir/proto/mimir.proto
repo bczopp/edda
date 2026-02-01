@@ -8,6 +8,7 @@ service MimirService {
     rpc DeleteData(DeleteDataRequest) returns (DeleteDataResponse);
     rpc ExportUserData(ExportUserDataRequest) returns (ExportUserDataResponse);
     rpc DeleteUserData(DeleteUserDataRequest) returns (DeleteUserDataResponse);
+    rpc RectifyUserData(RectifyUserDataRequest) returns (RectifyUserDataResponse);
 }
 
 message StoreDataRequest {
@@ -51,4 +52,15 @@ message DeleteUserDataRequest {
 
 message DeleteUserDataResponse {
     bool success = 1;
+}
+
+message RectifyUserDataRequest {
+    string user_id = 1;
+    string data_id = 2;
+    bytes new_data = 3;
+}
+
+message RectifyUserDataResponse {
+    bool success = 1;
+    string data_id = 2; // May be different if data was recreated
 }

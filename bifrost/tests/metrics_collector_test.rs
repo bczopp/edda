@@ -1,6 +1,6 @@
 //! Tests for Phase 14.2.1: MetricsCollector (response time, throughput, quality, resource).
 
-use bifrost::utils::metrics::{MetricsCollector, MetricsSnapshot};
+use bifrost::utils::metrics::MetricsCollector;
 use std::sync::Arc;
 use std::time::Duration;
 

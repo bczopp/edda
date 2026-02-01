@@ -20,6 +20,8 @@ uuid = { version = "1.6", features = ["v4", "serde"] }
 config = "0.14"
 notify = "6.1"
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
+base64 = "0.22"
+async-trait = "0.1"
 
 [dev-dependencies]
 tokio-test = "0.4"

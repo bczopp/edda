@@ -1,6 +1,7 @@
 // Security monitoring module
 pub mod audit;
 pub mod tls;
+pub mod e2e;
 
 pub use audit::{
     AuditLogger,
@@ -15,4 +16,9 @@ pub use tls::{
     TLSConfig,
     TLSConfigError,
     ProtocolVersion,
+};
+pub use e2e::{
+    E2EEncryptionManager,
+    E2EEncryptionError,
+    KeyPair,
 };

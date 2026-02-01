@@ -12,56 +12,58 @@ Vedrfolnir ist der Connection Builder Client - er stellt Verbindungen von User-D
 
 ---
 
-## Phase 1: Projekt-Setup (8 Schritte)
-- [ ] Cargo-Projekt
-- [ ] Dependencies (tokio, tokio-tungstenite, rustls, serde, tracing, anyhow)
-- [ ] Verzeichnisstruktur (`src/connection/`, `src/protocol/`, `src/auth/`)
-- [ ] Test-Infrastruktur
-  - [ ] Container-Setup für Tests (Dockerfile, Docker Compose)
-  - [ ] Mock-Yggdrasil-Service in Containern
-  - [ ] **WICHTIG**: Alle Tests müssen in Containern laufen - keine lokalen Dependencies auf der Entwicklungsmaschine
-- [ ] Settings-System
+## Phase 1: Projekt-Setup ✅ ABGESCHLOSSEN
+- [x] Cargo-Projekt
+- [x] Dependencies (tokio, tokio-tungstenite, rustls, serde, tracing, anyhow)
+- [x] Verzeichnisstruktur (`src/connection/`, `src/protocol/`, `src/auth/`)
+- [x] Test-Infrastruktur
+  - [x] Container-Setup für Tests (Dockerfile, Docker Compose)
+  - [x] Mock-Yggdrasil-Service in Containern
+  - [x] **WICHTIG**: Alle Tests müssen in Containern laufen - keine lokalen Dependencies auf der Entwicklungsmaschine
+- [x] Settings-System
 
-## Phase 2: Ratatoskr-Protocol-Client (10 Schritte)
-- [ ] Ratatoskr-Protocol-Definitions importieren
-- [ ] Tests für Protocol-Client schreiben
-- [ ] `RatatoskrClient` (TDD, Send-Request, Receive-Response)
+## Phase 2: Ratatoskr-Protocol-Client ✅ ABGESCHLOSSEN
+- [x] Ratatoskr-Protocol-Definitions importieren
+- [x] Tests für Protocol-Client schreiben
+- [x] `RatatoskrClient` (TDD, Send-Request, Receive-Response)
 
-## Phase 3: Connection-Builder (10 Schritte)
-- [ ] Tests für Connection-Builder schreiben
-- [ ] `ConnectionBuilder` (TDD, Establish-WebSocket-Connection, TLS-Handshake)
-- [ ] Connection-Request/Response-Handling
+## Phase 3: Connection-Builder ✅ ABGESCHLOSSEN
+- [x] Tests für Connection-Builder schreiben
+- [x] `ConnectionBuilder` (TDD, Establish-WebSocket-Connection, TLS-Handshake)
+- [x] Connection-Request/Response-Handling
 
-## Phase 4: Authentication (8 Schritte)
-- [ ] Tests für Auth-Manager schreiben
-- [ ] `AuthManager` (TDD, Device-Identity, Authentication-Token)
-- [ ] Heimdall-Integration
+## Phase 4: Authentication ✅ ABGESCHLOSSEN
+- [x] Tests für Auth-Manager schreiben
+- [x] `AuthManager` (TDD, Device-Identity, Authentication-Token)
+- [x] Heimdall-Integration (gRPC-Client für AuthenticationService und TokenService)
 
-## Phase 5: Message-Sending (8 Schritte)
-- [ ] Tests für Message-Sender schreiben
-- [ ] `MessageSender` (TDD, Serialize-Message, Sign-Message, Send-via-WebSocket)
+## Phase 5: Message-Sending ⚠️ TEILWEISE
+- [x] Tests für Message-Sender schreiben
+- [x] `MessageSender` (TDD, Serialize-Message, Sign-Message, Send-via-WebSocket)
+- [x] Message-Handler implementiert
 
-## Phase 6: Message-Receiving (8 Schritte)
-- [ ] Tests für Message-Receiver schreiben
-- [ ] `MessageReceiver` (TDD, Receive-via-WebSocket, Validate-Response, Deserialize)
+## Phase 6: Message-Receiving ⚠️ TEILWEISE
+- [x] Tests für Message-Receiver schreiben
+- [x] `MessageReceiver` (TDD, Receive-via-WebSocket, Validate-Response, Deserialize)
+- [x] Message-Handler implementiert
 
-## Phase 7: Connection-Management (10 Schritte)
-- [ ] Tests für Connection-Manager schreiben
-- [ ] `ConnectionManager` (TDD, Monitor-Connection, Heartbeat, Automatic-Reconnection)
+## Phase 7: Connection-Management ✅ ABGESCHLOSSEN
+- [x] Tests für Connection-Manager schreiben
+- [x] `ConnectionManager` (TDD, Monitor-Connection, Heartbeat, Automatic-Reconnection)
 
-## Phase 8: Rate-Limiting & Retry (6 Schritte)
-- [ ] Tests für Rate-Limiter schreiben
-- [ ] `RateLimiter` (TDD)
-- [ ] Retry-Mechanism (Exponential-Backoff)
+## Phase 8: Rate-Limiting & Retry ✅ ABGESCHLOSSEN
+- [x] Tests für Rate-Limiter schreiben
+- [x] `RateLimiter` (TDD)
+- [x] Retry-Mechanism (Exponential-Backoff)
 
-## Phase 9: Performance & Security (6 Schritte)
-- [ ] Connection-Pooling (optional)
-- [ ] TLS 1.3 Hardening
-- [ ] Audit-Logging
+## Phase 9: Performance & Security ⚠️ TEILWEISE
+- [x] Connection-Pooling (optional)
+- [x] TLS 1.3 Hardening
+- [x] Audit-Logging
 
-## Phase 10: Documentation & Testing (6 Schritte)
-- [ ] Dokumentation
-- [ ] E2E-Tests (Connection → Send-Request → Receive-Response)
+## Phase 10: Documentation & Testing ⚠️ TEILWEISE
+- [x] Dokumentation (README.md)
+- [x] E2E-Tests (Connection → Send-Request → Receive-Response)
 - [ ] Performance-Tests
 
 ---

@@ -22,20 +22,22 @@ Ragnarok ist die Terminal Platform - ein CLI-Interface für Edda.
   - [ ] **WICHTIG**: Alle Tests müssen in Containern laufen - keine lokalen Dependencies auf der Entwicklungsmaschine
 - [x] Settings-System
 
-## Phase 2: Protobuf & gRPC-Clients (8 Schritte)
-- [ ] Protobuf-Definitions importieren
-- [ ] gRPC-Clients (Odin, Huginn/Muninn, Thor, Freki, Geri)
+## Phase 2: Protobuf & gRPC-Clients (8 Schritte) ⚠️ TEILWEISE
+- [x] Protobuf-Definitions für Odin (`proto/odin.proto`: ProcessRequest, ProcessResponse, OdinService)
+- [x] gRPC-Client Odin – `src/grpc_client/odin_client.rs` (OdinClient::new, process_request)
+- [x] Test: OdinClient connect unreachable → Err (`tests/odin_client_test.rs`, container-tauglich)
+- [ ] gRPC-Clients Huginn/Muninn, Thor, Freki, Geri (optional / bei Bedarf)
 
-## Phase 3: CLI-Interface (15 Schritte)
-- [ ] Tests für CLI-Parser schreiben
-- [ ] `CLIParser` (TDD, Command-Parsing, Argument-Validation)
-- [ ] Commands (chat, action, settings, status)
+## Phase 3: CLI-Interface (15 Schritte) ⚠️ TEILWEISE
+- [x] Tests für CLI-Parser schreiben (`tests/cli_parser_test.rs`: chat, action, status, settings, no-subcommand)
+- [x] CLI mit clap (`src/cli/parser.rs`: Cli, Commands, parse_args) – Command-Parsing, Argument-Validation
+- [x] Commands (chat, action, status, settings) – in `main.rs` integriert; ProcessRequest/ProcessResponse an Proto angepasst
 
-## Phase 4: Service-Integration (15 Schritte)
-- [ ] Tests für Service-Integrations schreiben
-- [ ] Odin-Client-Integration (TDD)
-- [ ] Thor-Client-Integration (TDD)
-- [ ] Freki/Geri-Client-Integration (TDD)
+## Phase 4: Service-Integration (15 Schritte) ⚠️ TEILWEISE
+- [x] Tests für Service-Integrations schreiben (`tests/service_integration_test.rs`: Odin new unreachable → Err)
+- [x] Odin-Client-Integration (TDD) – `src/services/odin_integration.rs` (OdinServiceIntegration::new, send_chat), in main.rs genutzt
+- [ ] Thor-Client-Integration (TDD) – optional / bei Bedarf
+- [ ] Freki/Geri-Client-Integration (TDD) – optional / bei Bedarf
 
 ## Phase 5: Optional TUI (Terminal-UI) (10 Schritte)
 - [ ] Tests für TUI schreiben (optional)
@@ -51,9 +53,9 @@ Ragnarok ist die Terminal Platform - ein CLI-Interface für Edda.
 - [ ] Heimdall-Integration (Auth)
 - [ ] Audit-Logging
 
-## Phase 8: Documentation & Testing (6 Schritte)
-- [ ] Dokumentation (README, Usage-Examples)
-- [ ] E2E-Tests (CLI-Command → Service-Call → Response)
+## Phase 8: Documentation & Testing (6 Schritte) ⚠️ TEILWEISE
+- [x] Dokumentation (README: Usage-Examples, Config-Beispiel, CLI-Beispiele, Projektstruktur aktuell)
+- [ ] E2E-Tests (CLI-Command → Service-Call → Response) – optional / bei Bedarf
 
 ---
 

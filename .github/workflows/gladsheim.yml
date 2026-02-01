@@ -1,0 +1,54 @@
+# Gladsheim: Service Management CI
+# Runs tests in container and lint (clippy, fmt).
+name: Gladsheim CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['gladsheim/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['gladsheim/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd gladsheim
+          docker compose -f docker-compose.test.yml run --rm gladsheim-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            gladsheim/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: gladsheim-${{ runner.os }}-cargo-${{ hashFiles('gladsheim/Cargo.toml') }}
+          restore-keys: gladsheim-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path gladsheim/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path gladsheim/Cargo.toml -- -D warnings

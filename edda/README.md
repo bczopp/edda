@@ -401,6 +401,12 @@ service LokiService {
 - **Certificate Validation**: Certificate Validation für WAN-Verbindungen
 - **Connection-Security**: gRPC-Streams können verschlüsselt (TLS) oder in abgesichertem Netzwerk verwendet werden
 
+## Implementierungs-Status
+
+**Projekt-Status** liegt in den jeweiligen Projekten: Jedes Projekt hat einen `IMPLEMENTATION_PLAN` (bzw. `IMPLEMENTATION_STATUS`) und ein `README` mit aktueller Funktionalität und Tests.
+
+**Aktueller Gesamtfortschritt und kritischer Pfad:** [IMPLEMENTATION_PLAN.md](../IMPLEMENTATION_PLAN.md) (Master-Plan im Repo-Root). Stand: Odin, Ratatoskr, Nornen ✅; Bifrost ~85%, Heimdall ~90%, Nidhoggr ~85%; Mimir ~90%; Thor ~55%; Ragnarok ~35%; Geri ~20%; Skuld ~18%; Freki ~8% (Phase 1.1 Struktur ✅); in Arbeit.
+
 ## Implementierungs-Notizen
 
 **WICHTIG**: Dieser Ordner ist **KEIN PROJEKT**. Er dient nur als Metadaten-Sammlung für die Grundstruktur und Zusammenhänge der anderen Projekte.

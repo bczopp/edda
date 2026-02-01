@@ -1,4 +1,6 @@
-//! Guest Mesh (Phase 12.1). Gast-Mesh-Isolation: isolierter Mesh-Segment für fremde Devices (ohne VPN).
+//! Guest Mesh (Phase 12.1). Gast-Mesh-Isolation: isolierter Mesh-Segment **nur für fremde Devices** (Gäste/Besucher).
+//! Eigene Devices eines Users nutzen das Main Mesh; Guest Mesh wird nur erstellt, wenn ein fremdes Device
+//! (ohne User-Account auf dieser Instanz) verbindet – z. B. Besucher-Phone. Kein VPN.
 
 pub mod cleanup;
 pub mod data_transfer;

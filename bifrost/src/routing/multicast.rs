@@ -13,6 +13,7 @@ pub struct GroupNotFoundError(pub String);
 
 /// Multicasts message to a device group; manages group membership.
 pub struct MulticastManager {
+    #[allow(dead_code)] // reserved for future per-connection routing
     connection_manager: Arc<ConnectionManager>,
     router: MessageRouter,
     groups: RwLock<HashMap<String, HashSet<String>>>,

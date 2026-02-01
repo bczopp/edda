@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS encrypted_data (
 
 CREATE INDEX idx_encrypted_data_user_id ON encrypted_data(user_id);
 CREATE INDEX idx_encrypted_data_created_at ON encrypted_data(created_at);
+-- Composite index for common query pattern: user_id + created_at (for user data queries with ordering)
+CREATE INDEX idx_encrypted_data_user_created ON encrypted_data(user_id, created_at);
 
 -- Audit log table for GDPR compliance
 CREATE TABLE IF NOT EXISTS audit_logs (

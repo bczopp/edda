@@ -1,0 +1,54 @@
+# Jotunheim: IoT Platform CI
+# Runs tests in container and lint (clippy, fmt).
+name: Jotunheim CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['jotunheim/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['jotunheim/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd jotunheim
+          docker compose -f docker-compose.test.yml run --rm jotunheim-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            jotunheim/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: jotunheim-${{ runner.os }}-cargo-${{ hashFiles('jotunheim/Cargo.toml') }}
+          restore-keys: jotunheim-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path jotunheim/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path jotunheim/Cargo.toml -- -D warnings

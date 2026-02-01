@@ -4,6 +4,8 @@ pub mod common;
 
 #[cfg(test)]
 mod unit {
+    pub mod audit_logger_test;
+    pub mod permission_checker_test;
     pub mod terminal_test;
     pub mod cross_device_test;
     pub mod ui_automation_test;

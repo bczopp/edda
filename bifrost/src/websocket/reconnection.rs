@@ -1,5 +1,6 @@
 //! Reconnection Manager (Phase 7.2.1): immediate first attempt, exponential backoff, max 60s, jitter, continuous attempts.
 
+use rand::Rng;
 use std::time::Duration;
 
 /// Configuration for reconnection backoff.

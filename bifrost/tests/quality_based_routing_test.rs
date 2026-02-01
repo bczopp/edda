@@ -3,8 +3,8 @@
 use bifrost::connection::ConnectionManager;
 use bifrost::message::{BifrostMessage, MessageType};
 use bifrost::routing::{
-    ConnectionQualityMonitor, MessageRouter, QualityBasedRouter, QualityDegradedError,
-    StubConnectionListProvider,
+    ConnectionListProvider, ConnectionQualityMonitor, MessageRouter, QualityBasedRouter,
+    QualityDegradedError, StubConnectionListProvider,
 };
 use std::sync::Arc;
 use std::time::Duration;
@@ -26,7 +26,8 @@ async fn routes_via_direct_when_no_connections_tries_router() {
     let conn_mgr = Arc::new(ConnectionManager::new());
     let monitor = Arc::new(ConnectionQualityMonitor::new(10, Duration::from_secs(1), 50));
     let router = MessageRouter::new(Arc::clone(&conn_mgr));
-    let qbr = QualityBasedRouter::new(Arc::clone(&conn_mgr), router, Arc::clone(&monitor));
+    let provider: Arc<dyn ConnectionListProvider> = Arc::clone(&conn_mgr) as Arc<dyn ConnectionListProvider>;
+    let qbr = QualityBasedRouter::new(provider, router, Arc::clone(&monitor));
     let msg = sample_message("device-1");
     let res = qbr.route_message(msg).await;
     assert!(res.is_err());

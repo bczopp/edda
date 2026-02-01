@@ -1,6 +1,6 @@
 //! Tests for Phase 15.2.2: IntrusionDetector (patterns, alerts, block).
 
-use bifrost::security::{IntrusionDetector, IntrusionEvent, SecurityAlert};
+use bifrost::security::{IntrusionDetector, IntrusionEvent};
 use std::sync::Arc;
 
 #[test]

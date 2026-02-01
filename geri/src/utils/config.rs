@@ -4,12 +4,38 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use notify::{Watcher, RecommendedWatcher, RecursiveMode, Event, EventKind};
 use tracing::{info, error};
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum SettingsError {
+    #[error("grpc_port must be non-zero")]
+    InvalidPort,
+    #[error("default_local_llm must be non-empty")]
+    EmptyDefaultLocalLlm,
+    #[error("vision_model must be non-empty")]
+    EmptyVisionModel,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeriSettings {
     pub grpc_port: u16,
     pub default_local_llm: String,
     pub vision_model: String,
+}
+
+impl GeriSettings {
+    pub fn validate(&self) -> Result<(), SettingsError> {
+        if self.grpc_port == 0 {
+            return Err(SettingsError::InvalidPort);
+        }
+        if self.default_local_llm.trim().is_empty() {
+            return Err(SettingsError::EmptyDefaultLocalLlm);
+        }
+        if self.vision_model.trim().is_empty() {
+            return Err(SettingsError::EmptyVisionModel);
+        }
+        Ok(())
+    }
 }
 
 impl Default for GeriSettings {
@@ -39,6 +65,7 @@ impl SettingsManager {
         if self.config_path.exists() {
             let content = tokio::fs::read_to_string(&self.config_path).await?;
             let settings: GeriSettings = serde_json::from_str(&content)?;
+            settings.validate()?;
             *self.settings.write().await = settings;
             info!("Configuration loaded from {}", self.config_path.display());
         } else {
@@ -69,6 +96,7 @@ impl SettingsManager {
                             if let Err(e) = rt.block_on(async {
                                 let content = tokio::fs::read_to_string(&config_path).await?;
                                 let new_settings: GeriSettings = serde_json::from_str(&content)?;
+                                new_settings.validate()?;
                                 *settings.write().await = new_settings;
                                 Ok::<(), Box<dyn std::error::Error>>(())
                             }) {
@@ -87,5 +115,40 @@ impl SettingsManager {
         info!("Hot-reload watcher started for configuration");
         
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_validate_default_ok() {
+        let s = GeriSettings::default();
+        assert!(s.validate().is_ok());
+    }
+
+    #[test]
+    fn test_validate_invalid_port() {
+        let mut s = GeriSettings::default();
+        s.grpc_port = 0;
+        assert!(s.validate().is_err());
+        assert!(matches!(s.validate(), Err(SettingsError::InvalidPort)));
+    }
+
+    #[test]
+    fn test_validate_empty_default_local_llm() {
+        let mut s = GeriSettings::default();
+        s.default_local_llm = String::new();
+        assert!(s.validate().is_err());
+        assert!(matches!(s.validate(), Err(SettingsError::EmptyDefaultLocalLlm)));
+    }
+
+    #[test]
+    fn test_validate_empty_vision_model() {
+        let mut s = GeriSettings::default();
+        s.vision_model = "   ".to_string();
+        assert!(s.validate().is_err());
+        assert!(matches!(s.validate(), Err(SettingsError::EmptyVisionModel)));
     }
 }

@@ -7,5 +7,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &["proto"],
         )?;
 
+    // Heimdall Authorization client (for permission checks)
+    tonic_build::configure()
+        .build_server(false)
+        .build_client(true)
+        .compile(&["proto/heimdall_authorization.proto"], &["proto"])?;
+
     Ok(())
 }

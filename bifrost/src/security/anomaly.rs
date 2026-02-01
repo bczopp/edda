@@ -66,6 +66,8 @@ impl AnomalyDetector {
     }
 
     /// Returns anomaly score 0-100 (higher = more anomalous). Based on connect rate in window.
+    /// Rate = events per second over the actual time span (first to last event) so that many
+    /// connects in short real time yield a high score.
     pub fn get_anomaly_score(&self) -> u8 {
         let now = Instant::now();
         let mut q = self.connect_timestamps.write().unwrap();
@@ -73,10 +75,13 @@ impl AnomalyDetector {
             q.pop_front();
         }
         let count = q.len();
-        if count == 0 {
+        if count <= 1 {
             return 0;
         }
-        let rate = count as f64 / self.window_duration.as_secs_f64();
+        let first = *q.front().unwrap();
+        let last = *q.back().unwrap();
+        let span_secs = last.duration_since(first).as_secs_f64().max(0.001);
+        let rate = count as f64 / span_secs;
         let max_reasonable = 10.0;
         let score = (rate / max_reasonable).min(1.0) * 100.0;
         score as u8

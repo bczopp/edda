@@ -6,6 +6,8 @@ Asgard ist eine **Platform** für Heimserver, ähnlich wie Midgard (Desktop), Al
 
 **Services sind unabhängig von Platformen**: Alle Services (Odin, Thor, Freki, Geri, Loki, etc.) sind in Rust implementiert und unabhängig von Platformen. Platformen kommunizieren mit Services via gRPC.
 
+**Tests ausführen:** Von `asgard/`: `docker compose -f docker-compose.test.yml run --rm asgard-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `asgard/**` läuft die Pipeline [.github/workflows/asgard.yml](../.github/workflows/asgard.yml) (Test im Container, Lint).
+
 ## Projektstruktur
 
 ```

@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package mimir;
+
+service MimirService {
+    rpc StoreData(StoreDataRequest) returns (StoreDataResponse);
+    rpc RetrieveData(RetrieveDataRequest) returns (RetrieveDataResponse);
+    rpc DeleteData(DeleteDataRequest) returns (DeleteDataResponse);
+    rpc ExportUserData(ExportUserDataRequest) returns (ExportUserDataResponse);
+    rpc DeleteUserData(DeleteUserDataRequest) returns (DeleteUserDataResponse);
+    rpc RectifyUserData(RectifyUserDataRequest) returns (RectifyUserDataResponse);
+}
+
+message StoreDataRequest {
+    string user_id = 1;
+    bytes data = 2;
+}
+
+message StoreDataResponse {
+    string data_id = 1;
+}
+
+message RetrieveDataRequest {
+    string data_id = 1;
+    string user_id = 2;
+}
+
+message RetrieveDataResponse {
+    bytes data = 1;
+}
+
+message DeleteDataRequest {
+    string data_id = 1;
+    string user_id = 2;
+}
+
+message DeleteDataResponse {
+    bool success = 1;
+}
+
+message ExportUserDataRequest {
+    string user_id = 1;
+}
+
+message ExportUserDataResponse {
+    bytes data = 1;
+}
+
+message DeleteUserDataRequest {
+    string user_id = 1;
+}
+
+message DeleteUserDataResponse {
+    bool success = 1;
+}
+
+message RectifyUserDataRequest {
+    string data_id = 1;
+    string user_id = 2;
+    bytes new_data = 3;
+}
+
+message RectifyUserDataResponse {
+    bool success = 1;
+    string data_id = 2; // May be different if data was recreated
+}

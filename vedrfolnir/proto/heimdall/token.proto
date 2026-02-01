@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package heimdall.token;
+
+// Token Service
+service TokenService {
+    // Validate token
+    rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+    
+    // Renew token
+    rpc RenewToken(RenewTokenRequest) returns (RenewTokenResponse);
+    
+    // Revoke token
+    rpc RevokeToken(RevokeTokenRequest) returns (RevokeTokenResponse);
+}
+
+// Validate Token Request
+message ValidateTokenRequest {
+    string token = 1;
+    string device_id = 2; // Optional: for device binding check
+}
+
+// Validate Token Response
+message ValidateTokenResponse {
+    bool valid = 1;
+    string token_id = 2;
+    string device_id = 3;
+    string user_id = 4;
+    int64 expires_at = 5;
+    bool is_revoked = 6;
+    repeated string permissions = 7;
+    string reason = 8; // Reason if invalid
+}
+
+// Renew Token Request
+message RenewTokenRequest {
+    string refresh_token = 1;
+    string device_id = 2;
+}
+
+// Renew Token Response
+message RenewTokenResponse {
+    string token = 1;
+    string token_id = 2;
+    int64 expires_at = 3;
+    string refresh_token = 4;
+    int64 refresh_expires_at = 5;
+}
+
+// Revoke Token Request
+message RevokeTokenRequest {
+    string token_id = 1;
+    string device_id = 2; // Optional: for verification
+    string reason = 3; // Optional: reason for revocation
+}
+
+// Revoke Token Response
+message RevokeTokenResponse {
+    bool revoked = 1;
+    string message = 2;
+}

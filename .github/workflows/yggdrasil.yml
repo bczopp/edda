@@ -1,0 +1,25 @@
+# Yggdrasil: Cloud Server CI (Elixir)
+# Runs tests in container (mix test). Optional: mix format --check.
+name: Yggdrasil CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['yggdrasil/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['yggdrasil/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd yggdrasil
+          docker compose -f docker-compose.test.yml run --rm yggdrasil-test

@@ -4,6 +4,8 @@
 
 Heimdall ist der Security Service, der den Transport über Bifrost-Verbindungen überwacht und blockiert, falls nicht erlaubt. Er ist verantwortlich für Authentication, Authorization und Security-Monitoring.
 
+**Tests ausführen:** Von `heimdall/`: `docker compose -f docker-compose.test.yml run --rm heimdall-test` oder `./scripts/run-tests.sh` / `.\scripts\run-tests.ps1`. Von Repo-Root: `heimdall/scripts/run-tests.sh` bzw. `.\heimdall\scripts\run-tests.ps1`. **CI:** Bei Push/PR auf `heimdall/**` läuft die Pipeline [.github/workflows/heimdall.yml](../.github/workflows/heimdall.yml) (Test im Container, Lint).
+
 ## Verantwortlichkeiten
 
 ### 1. Authentication

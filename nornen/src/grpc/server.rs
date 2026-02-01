@@ -3,6 +3,7 @@ use tracing::info;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::collections::HashMap;
+use crate::security::access_control::{AccessControl, Permission};
 
 pub mod nornen {
     tonic::include_proto!("nornen");
@@ -17,11 +18,12 @@ use nornen::{
 // Nornen Service Implementation
 pub struct NornenServiceImpl {
     coordinator: Arc<crate::coordinator::NornenCoordinator>,
+    access_control: Arc<AccessControl>,
 }
 
 impl NornenServiceImpl {
-    pub fn new(coordinator: Arc<crate::coordinator::NornenCoordinator>) -> Self {
-        Self { coordinator }
+    pub fn new(coordinator: Arc<crate::coordinator::NornenCoordinator>, access_control: Arc<AccessControl>) -> Self {
+        Self { coordinator, access_control }
     }
 }
 
@@ -31,6 +33,10 @@ impl NornenService for NornenServiceImpl {
         &self,
         request: Request<nornen::CoordinateRequest>,
     ) -> Result<Response<nornen::CoordinateResponse>, Status> {
+        // Check access control
+        let _user_id = self.access_control.check_access(&request, &Permission::CoordinateRequest)
+            .map_err(|e| Status::permission_denied(e.to_string()))?;
+        
         let req = request.into_inner();
         
         let context: HashMap<String, String> = req.context.into_iter().collect();
@@ -66,6 +72,10 @@ impl UrdService for UrdServiceImpl {
         &self,
         request: Request<nornen::RegisterProviderRequest>,
     ) -> Result<Response<nornen::RegisterProviderResponse>, Status> {
+        // Check access control
+        let _user_id = self.access_control.check_access(&request, &Permission::RegisterProvider)
+            .map_err(|e| Status::permission_denied(e.to_string()))?;
+        
         let req = request.into_inner();
         
         let capabilities: Vec<String> = req.capabilities.into_iter().collect();
@@ -92,6 +102,10 @@ impl UrdService for UrdServiceImpl {
         &self,
         request: Request<nornen::UpdateProviderRequest>,
     ) -> Result<Response<nornen::UpdateProviderResponse>, Status> {
+        // Check access control
+        let _user_id = self.access_control.check_access(&request, &Permission::UpdateProvider)
+            .map_err(|e| Status::permission_denied(e.to_string()))?;
+        
         let req = request.into_inner();
         
         let capabilities: Option<Vec<String>> = if req.capabilities.is_empty() {
@@ -134,6 +148,10 @@ impl UrdService for UrdServiceImpl {
         &self,
         request: Request<nornen::QueryProvidersRequest>,
     ) -> Result<Response<nornen::QueryProvidersResponse>, Status> {
+        // Check access control
+        let _user_id = self.access_control.check_access(&request, &Permission::QueryProviders)
+            .map_err(|e| Status::permission_denied(e.to_string()))?;
+        
         let req = request.into_inner();
         
         let capabilities: Vec<String> = req.capabilities.into_iter().collect();
@@ -181,6 +199,10 @@ impl UrdService for UrdServiceImpl {
         &self,
         request: Request<nornen::ListProvidersRequest>,
     ) -> Result<Response<nornen::ListProvidersResponse>, Status> {
+        // Check access control
+        let _user_id = self.access_control.check_access(&request, &Permission::ListProviders)
+            .map_err(|e| Status::permission_denied(e.to_string()))?;
+        
         let req = request.into_inner();
         
         let limit = if req.limit > 0 { req.limit } else { 100 };
@@ -226,11 +248,12 @@ impl UrdService for UrdServiceImpl {
 // Verdandi Service Implementation
 pub struct VerdandiServiceImpl {
     router: Arc<crate::verdandi::router::RequestRouter>,
+    access_control: Arc<AccessControl>,
 }
 
 impl VerdandiServiceImpl {
-    pub fn new(router: Arc<crate::verdandi::router::RequestRouter>) -> Self {
-        Self { router }
+    pub fn new(router: Arc<crate::verdandi::router::RequestRouter>, access_control: Arc<AccessControl>) -> Self {
+        Self { router, access_control }
     }
 }
 
@@ -245,15 +268,19 @@ impl VerdandiService for VerdandiServiceImpl {
         let capabilities: Vec<String> = req.required_capabilities.into_iter().collect();
         let preferences: HashMap<String, String> = req.context.into_iter().collect();
         
-        let provider = self.router
-            .route_request(&capabilities, &preferences)
+        // Use select_provider to get provider with score for confidence calculation
+        let (provider_id, endpoint, score) = self.router
+            .select_provider(&capabilities, &preferences)
             .await
             .map_err(|e| Status::internal(format!("Failed to route request: {}", e)))?;
 
+        // Calculate confidence from score (score is already normalized to 0.0-1.0)
+        let confidence = score.min(1.0).max(0.0);
+        
         Ok(Response::new(nornen::RouteRequestResponse {
-            provider_id: provider.provider_id,
-            endpoint: provider.endpoint,
-            confidence: 0.8, // TODO: Calculate actual confidence
+            provider_id,
+            endpoint,
+            confidence,
         }))
     }
 
@@ -283,6 +310,7 @@ pub struct GrpcServerDependencies {
     pub coordinator: Arc<crate::coordinator::NornenCoordinator>,
     pub registry: Arc<crate::urd::registry::ProviderRegistry>,
     pub router: Arc<crate::verdandi::router::RequestRouter>,
+    pub access_control: Arc<AccessControl>,
 }
 
 pub async fn start_grpc_server(
@@ -291,9 +319,9 @@ pub async fn start_grpc_server(
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("Starting Nornen gRPC server on {}", addr);
 
-    let nornen_service = NornenServiceImpl::new(deps.coordinator.clone());
-    let urd_service = UrdServiceImpl::new(deps.registry.clone());
-    let verdandi_service = VerdandiServiceImpl::new(deps.router.clone());
+    let nornen_service = NornenServiceImpl::new(deps.coordinator.clone(), deps.access_control.clone());
+    let urd_service = UrdServiceImpl::new(deps.registry.clone(), deps.access_control.clone());
+    let verdandi_service = VerdandiServiceImpl::new(deps.router.clone(), deps.access_control.clone());
 
     Server::builder()
         .add_service(NornenServiceServer::new(nornen_service))

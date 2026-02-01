@@ -2,6 +2,8 @@
 
 ## Übersicht
 
+**Tests ausführen:** Von `njordr/`: `docker compose -f docker-compose.test.yml run --rm njordr-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `njordr/**` läuft die Pipeline [.github/workflows/njordr.yml](../.github/workflows/njordr.yml) (Test im Container, Lint).
+
 Njörðr ist ein Rust-Microservice für Yggdrasil, der den Distributed Computing Marketplace verwaltet. Er koordiniert Provider-Management, Request-Routing, Transaction-Management und Marketplace-Operationen.
 
 **Mythologische Bedeutung**: Njörðr ist der Gott des Handels, der Seefahrt und des Wohlstands (Vanir). Er ist der Vater von Freyr und Freyja und ursprünglich aus Vanaheim.

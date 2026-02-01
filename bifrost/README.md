@@ -4,6 +4,8 @@
 
 Bifrost ist der Secure WebSocket Service für Inter-Device Communication. Er ermöglicht sichere, verschlüsselte Kommunikation zwischen Devices im Edda-Netzwerk.
 
+**Tests ausführen:** Von `bifrost/`: `docker compose -f docker-compose.test.yml run --rm bifrost-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). Siehe [Phase 20 Test Suites](#phase-20-test-suites-implementation_plan) für die Test-Dateien. **CI:** Bei Push/PR auf `bifrost/**` läuft die Pipeline [.github/workflows/bifrost.yml](../.github/workflows/bifrost.yml) (Test im Container, Lint, Coverage, Rustdoc, cargo-audit).
+
 **Mesh-Layer-Design**: Siehe [docs/MESH_LAYER_DESIGN.md](docs/MESH_LAYER_DESIGN.md) für Paketformat (MeshPacket/Data), Managed Flood, Hop-Limit, Discovery und IP-Transport-Entscheid.
 
 ## Features
@@ -753,6 +755,19 @@ wait_time = base_delay * (2 ^ retry_count) + jitter
 - Retry Mechanism Tests
 - Fallback Routing Tests
 - Error Message Validation
+
+### Phase 20 Test Suites (IMPLEMENTATION_PLAN)
+Dedizierte Test-Dateien für Integration, Performance, Security und GDPR:
+
+| Suite | Datei | Inhalt |
+|-------|--------|--------|
+| E2E Communication Workflows | `tests/e2e_communication_workflow_test.rs` | Discovery→Connection→Message-Exchange, Direct/Relay-Routing, gRPC over Bifrost |
+| Error Recovery | `tests/error_recovery_test.rs` | Retry, Reconnection, Fallback-Routing |
+| Performance Benchmarks | `tests/performance_benchmark_test.rs` | Routing-Latency, Throughput, Connection-Establishment |
+| Security Test Suite | `tests/security_test_suite.rs` | WebSocket-Security, Unauthorized-Access-Prevention, Authentication, Message-Validation |
+| GDPR Compliance | `tests/gdpr_compliance_test.rs` | Data-Minimization, Access-Control, Audit-Logging, Right-to-Erasure |
+
+**Ausführen:** Alle Tests im Container: `docker compose -f docker-compose.test.yml run --rm bifrost-test` (führt `cargo test --release` aus). Einzeltest: `docker compose -f docker-compose.test.yml run --rm bifrost-test cargo test <test_name>`. Von `bifrost/` oder mit Pfad. Siehe auch `scripts/run-tests.sh` / `scripts/run-tests.ps1`. Beim ersten Lauf kann der Docker-Build länger dauern. **Verifikation:** Nach erfolgreicher Ausführung die Phase-20-Checkboxen „… ausführen und bestehen“ in [IMPLEMENTATION_PLAN](IMPLEMENTATION_PLAN.md) abhaken.
 
 ## NAT Traversal
 

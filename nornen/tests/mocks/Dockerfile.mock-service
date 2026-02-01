@@ -1,0 +1,29 @@
+FROM rust:1.83-slim
+
+WORKDIR /app
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy proto files (needed for build.rs)
+COPY proto ./proto
+
+# Copy mock service code
+COPY tests/mocks/Cargo.toml ./tests/mocks/
+COPY tests/mocks/build.rs ./tests/mocks/
+COPY tests/mocks/src ./tests/mocks/src
+
+WORKDIR /app/tests/mocks
+
+# Build mock service
+RUN cargo build --release
+
+# Expose service port
+EXPOSE 50051
+
+# Run mock service
+CMD ["cargo", "run", "--release", "--bin", "mock_mimir"]

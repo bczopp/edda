@@ -31,8 +31,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Configuration loaded: Ratatoskr URL={}, gRPC URL={}", 
           settings.yggdrasil_ratatoskr_url, settings.yggdrasil_grpc_url);
 
-    // Initialize auth manager
-    let auth_manager = Arc::new(AuthManager::new());
+    // Initialize auth manager with Heimdall if configured
+    let auth_manager = if let Some(ref heimdall_url) = settings.heimdall_url {
+        Arc::new(AuthManager::with_heimdall(heimdall_url.clone()))
+    } else {
+        Arc::new(AuthManager::new())
+    };
     
     // Initialize connection builder
     let connection_builder = Arc::new(ConnectionBuilder::new(

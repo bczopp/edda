@@ -275,8 +275,11 @@ Alle Tests laufen in Containern:
 
 ```bash
 # Tests ausführen
-docker-compose -f docker-compose.test.yml run --rm ratatoskr-test cargo test
+docker compose -f docker-compose.test.yml run --rm ratatoskr-test
+# Alternativ: ./scripts/run-tests.sh (bzw. .\scripts\run-tests.ps1 unter Windows)
 ```
+
+**CI:** Bei Push/PR auf `ratatoskr/**` läuft die Pipeline [.github/workflows/ratatoskr.yml](../.github/workflows/ratatoskr.yml) (Test im Container, Lint).
 
 ## Implementierungs-Notizen
 

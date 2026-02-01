@@ -1,6 +1,6 @@
 //! Tests for Phase 3.3.1: KeyGenerator (Ed25519 key-pair generation).
 
-use bifrost::security::key_generator::{Ed25519KeyPair, KeyGenerator};
+use bifrost::security::key_generator::KeyGenerator;
 
 #[test]
 fn generate_ed25519_returns_keypair() {

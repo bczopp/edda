@@ -1,0 +1,54 @@
+# Thor: Action Executor CI
+# Runs tests in container and lint (clippy, fmt).
+name: Thor CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['thor/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['thor/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd thor
+          docker compose -f docker-compose.test.yml run --rm thor-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            thor/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: thor-${{ runner.os }}-cargo-${{ hashFiles('thor/Cargo.toml') }}
+          restore-keys: thor-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path thor/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path thor/Cargo.toml -- -D warnings

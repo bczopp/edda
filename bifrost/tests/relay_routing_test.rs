@@ -1,7 +1,7 @@
 //! Tests for Phase 9.2: Relay Manager, AsgardRelayClient, YggdrasilRelayClient.
 
 use bifrost::message::{BifrostMessage, MessageType};
-use bifrost::routing::{AsgardRelayClient, RelayManager, YggdrasilRelayClient};
+use bifrost::routing::{AsgardRelayClient, RelayClient, RelayManager, YggdrasilRelayClient};
 use std::sync::Arc;
 
 fn sample_message() -> BifrostMessage {
@@ -24,7 +24,8 @@ async fn relay_manager_tries_relays_in_order_and_falls_back() {
     let msg = sample_message();
     let res = mgr.route_message(&msg).await;
     assert!(res.is_err());
-    assert!(res.unwrap_err().to_string().contains("Asgard") || res.unwrap_err().to_string().contains("relay"));
+    let err_str = res.unwrap_err().to_string();
+    assert!(err_str.contains("Asgard") || err_str.contains("relay"));
 }
 
 #[tokio::test]

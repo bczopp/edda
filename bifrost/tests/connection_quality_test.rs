@@ -1,6 +1,6 @@
 //! Tests for Phase 9.4.1: ConnectionQualityMonitor (latency, packet-loss, score, degradation).
 
-use bifrost::routing::{ConnectionQualityMonitor, QualitySnapshot};
+use bifrost::routing::ConnectionQualityMonitor;
 use std::sync::Arc;
 use std::time::Duration;
 

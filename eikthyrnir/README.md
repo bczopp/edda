@@ -8,6 +8,8 @@ Eikthyrnir ist ein Rust-Microservice für Yggdrasil, der Quality Assessment, Qua
 
 **Programmiersprache**: Rust
 
+**Tests ausführen:** Von `eikthyrnir/`: `docker compose -f docker-compose.test.yml run --rm eikthyrnir-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `eikthyrnir/**` läuft die Pipeline [.github/workflows/eikthyrnir.yml](../.github/workflows/eikthyrnir.yml) (Test im Container, Lint).
+
 ## Verantwortlichkeiten
 
 ### 1. Quality Assessment

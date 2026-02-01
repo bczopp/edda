@@ -2,6 +2,8 @@
 
 ## Übersicht
 
+**Tests ausführen:** Von `nornen/`: `docker compose -f docker-compose.test.yml run --rm nornen-test` oder `./scripts/run-tests.sh` / `.\scripts\run-tests.ps1`. Von Repo-Root: `nornen/scripts/run-tests.sh` bzw. `.\nornen\scripts\run-tests.ps1`. **CI:** Bei Push/PR auf `nornen/**` läuft die Pipeline [.github/workflows/nornen.yml](../.github/workflows/nornen.yml) (Test im Container, Lint).
+
 Nornen ist der Decision Service bei Yggdrasil, der Entscheidungen über eingehende/ausgehende Requests trifft, Provider-Registrierungen verwaltet und die Admin API bereitstellt.
 
 **Mythologische Bedeutung**: Die Nornen sind die Schicksalsgöttinnen. Urd (Vergangenheit), Verdandi (Gegenwart). **Hinweis**: Skuld (Zukunft) ist ein separater Service, der auf allen Devices installiert werden muss.
@@ -198,10 +200,45 @@ Nornen ist der Decision Service bei Yggdrasil, der Entscheidungen über eingehen
 
 ### Nornen-spezifische Settings
 
-**Settings-Inhalt (wird während Implementierung definiert)**
-- Request-Entscheidungs-Einstellungen
-- Provider-Registrierungs-Einstellungen
-- User-Konfiguration-Einstellungen
+**Settings-Datei**: `config/nornen.json` (Beispiel: `config/nornen.json.example`)
+
+**Settings-Struktur**:
+```json
+{
+  "database": {
+    "url": "postgresql://user:password@localhost:5432/nornen"
+  },
+  "mimir": {
+    "url": "http://localhost:50051"
+  },
+  "grpc_port": 50052,
+  "cache": {
+    "enabled": true,
+    "ttl_seconds": 300,
+    "max_size": 1000
+  },
+  "audit": {
+    "enabled": true,
+    "backend": "postgres" // oder "mimir" oder "composite"
+  },
+  "monitoring": {
+    "enabled": true
+  }
+}
+```
+
+**Settings-Felder**:
+- `database.url`: PostgreSQL-Verbindungsstring (optional, wenn Mimir verwendet wird)
+- `mimir.url`: Mimir gRPC-Service-URL (optional, wenn PostgreSQL verwendet wird)
+- `grpc_port`: Port für den gRPC-Server (Standard: 50052)
+- `cache.enabled`: Aktiviert Provider-Cache (Standard: true)
+- `cache.ttl_seconds`: Time-to-Live für Cache-Einträge in Sekunden (Standard: 300)
+- `cache.max_size`: Maximale Anzahl von Cache-Einträgen (Standard: 1000)
+- `audit.enabled`: Aktiviert Audit-Logging (Standard: true)
+- `audit.backend`: Audit-Backend ("postgres", "mimir", oder "composite")
+- `monitoring.enabled`: Aktiviert Monitoring-Metriken (Standard: true)
+
+**Hot-Reload**: Ja - Settings können zur Laufzeit neu geladen werden (via `notify` + `Arc<RwLock<Settings>>`)
 
 ## Integration
 
@@ -224,13 +261,231 @@ Nornen ist der Decision Service bei Yggdrasil, der Entscheidungen über eingehen
 - Effiziente Analytics-Abfragen (< 200ms für Standard-Analytics)
 - Hoher Durchsatz (100+ Requests/Sekunde pro Instanz)
 
+## Architektur
+
+### Komponenten
+
+#### Urd (Provider Registry)
+- **Zweck**: Verwaltung von Provider-Registrierungen
+- **Backend**: Mimir (primär) oder PostgreSQL (Legacy)
+- **Features**:
+  - Provider-Registrierung und -Updates
+  - Capability-basierte Provider-Suche
+  - Provider-Status-Verwaltung
+  - Automatische Cache-Invalidierung bei Änderungen
+  - Audit-Logging für alle Provider-Operationen
+
+#### Verdandi (Request Router)
+- **Zweck**: Intelligentes Routing von Requests zu Providern
+- **Features**:
+  - Capability-basierte Provider-Auswahl
+  - Preference-basiertes Scoring
+  - Round-Robin Load-Balancing
+  - Fallback-Routing bei Fehlern
+  - Cache-Integration für Performance
+
+#### Nornen Coordinator
+- **Zweck**: Orchestrierung von Urd und Verdandi
+- **Features**:
+  - Koordination von Request-Entscheidungen
+  - Metriken-Sammlung
+  - Health-Checks
+
+### Datenbank-Backend
+
+#### Mimir (Primär)
+- **Verwendung**: Speicherung von Provider-Daten und Audit-Logs
+- **Vorteile**: Privacy-fokussiert, GDPR-konform, zentrale Verwaltung
+- **gRPC-Protokoll**: Kommunikation über Mimir gRPC-Service
+
+#### PostgreSQL (Legacy)
+- **Verwendung**: Fallback für Legacy-Systeme
+- **Schema**: Siehe `migrations/001_initial_schema.sql`
+
+### Caching
+
+**ProviderCache**: In-Memory-Cache für Provider-Abfragen
+- **TTL-basiert**: Einträge laufen nach konfigurierbarer Zeit ab
+- **LRU-Eviction**: Älteste Einträge werden bei Max-Größe entfernt
+- **Automatische Invalidierung**: Cache wird bei Provider-Änderungen automatisch invalidiert
+- **Statistiken**: Cache-Hits/Misses werden getrackt
+
+### Security & Access Control
+
+**Role-Based Access Control (RBAC)**:
+- **Rollen**:
+  - `User`: Kann Provider abfragen und Requests koordinieren
+  - `Provider`: Kann eigene Provider registrieren und aktualisieren
+  - `Admin`: Vollzugriff auf alle Operationen
+- **Berechtigungen**: Granulare Berechtigungen pro Operation
+- **Authentifizierung**: User-ID wird aus gRPC-Metadaten extrahiert (`user_id` Header oder `authorization` Header)
+
+### Audit-Logging
+
+**Strukturiertes Audit-System**:
+- **Backends**: PostgreSQL, Mimir, oder Composite (beide)
+- **Events**: Provider-Registrierung, Updates, Status-Änderungen
+- **Daten**: Event-Typ, Entity-ID, User-ID, Timestamp, Details (JSON)
+
+### Monitoring
+
+**MetricsCollector**:
+- **Request-Metriken**: Gesamt/Success/Failed Requests, Durchschnittliche Response-Zeit, Requests/Sekunde
+- **Provider-Metriken**: Per-Provider Statistiken (Requests, Erfolgsrate, Response-Zeit, Last Used)
+- **System-Metriken**: Cache-Statistiken (Hits, Misses, Size, Hit-Rate)
+- **Exposition**: Metriken über Coordinator verfügbar
+
+## API-Dokumentation
+
+### gRPC Services
+
+#### NornenService
+- **coordinate_request**: Koordiniert Request-Entscheidungen
+  - **Berechtigung**: `CoordinateRequest`
+  - **Input**: `CoordinateRequest` (request_id, request_type, context)
+  - **Output**: `CoordinateResponse` (decision, provider_id, confidence, reasoning)
+
+#### UrdService
+- **register_provider**: Registriert einen neuen Provider
+  - **Berechtigung**: `RegisterProvider`
+  - **Input**: `RegisterProviderRequest` (provider_id, name, capabilities, endpoint, metadata)
+  - **Output**: `RegisterProviderResponse` (success, message)
+
+- **update_provider**: Aktualisiert einen bestehenden Provider
+  - **Berechtigung**: `UpdateProvider`
+  - **Input**: `UpdateProviderRequest` (provider_id, capabilities, status, metadata)
+  - **Output**: `UpdateProviderResponse` (success)
+
+- **query_providers**: Sucht Provider nach Capabilities
+  - **Berechtigung**: `QueryProviders`
+  - **Input**: `QueryProvidersRequest` (capabilities, status)
+  - **Output**: `QueryProvidersResponse` (providers)
+
+- **list_providers**: Listet alle Provider auf
+  - **Berechtigung**: `ListProviders` (nur Admin)
+  - **Input**: `ListProvidersRequest` (limit, offset)
+  - **Output**: `ListProvidersResponse` (providers, total)
+
+#### VerdandiService
+- **route_request**: Routet einen Request zu einem Provider
+  - **Berechtigung**: `CoordinateRequest`
+  - **Input**: `RouteRequestRequest` (required_capabilities, context)
+  - **Output**: `RouteRequestResponse` (provider_id, endpoint, confidence)
+
+### Authentifizierung
+
+**gRPC-Metadaten**:
+- **Option 1**: `user_id` Header mit User-ID als Wert
+- **Option 2**: `authorization` Header mit Format `Bearer <user_id>` (für zukünftige JWT-Integration)
+
+**Beispiel** (mit `grpcurl`):
+```bash
+grpcurl -plaintext \
+  -H "user_id: admin" \
+  -d '{"provider_id": "test", "name": "Test Provider", "capabilities": ["llm"], "endpoint": "http://localhost:8080"}' \
+  localhost:50052 nornen.UrdService/RegisterProvider
+```
+
+## Entwickler-Guide
+
+### Projekt-Struktur
+
+```
+nornen/
+├── src/
+│   ├── main.rs              # Entry-Point
+│   ├── lib.rs               # Library-Root
+│   ├── urd/                 # Provider Registry (Urd)
+│   │   └── registry.rs
+│   ├── verdandi/            # Request Router (Verdandi)
+│   │   └── router.rs
+│   ├── coordinator/         # Nornen Coordinator
+│   │   └── mod.rs
+│   ├── grpc/                # gRPC Server
+│   │   └── server.rs
+│   ├── mimir_client/        # Mimir gRPC Client
+│   │   └── client.rs
+│   ├── cache/               # Provider Cache
+│   │   └── provider_cache.rs
+│   ├── audit/               # Audit Logging
+│   │   └── logger.rs
+│   ├── monitoring/          # Monitoring & Metrics
+│   │   ├── metrics.rs
+│   │   └── collector.rs
+│   ├── security/            # Access Control
+│   │   └── access_control.rs
+│   └── utils/               # Utilities
+│       └── config.rs
+├── proto/                   # Protobuf Definitions
+│   ├── nornen.proto
+│   └── mimir/
+│       └── mimir.proto
+├── tests/                   # Tests
+│   ├── unit/                # Unit Tests
+│   ├── integration/         # Integration Tests
+│   ├── mocks/               # Mock Services
+│   └── utils/               # Test Utilities
+├── migrations/              # Database Migrations
+│   └── 001_initial_schema.sql
+├── docker-compose.test.yml  # Test-Container-Setup
+└── Cargo.toml
+```
+
+### Tests ausführen
+
+**Alle Tests**:
+```bash
+# Von nornen/ Verzeichnis
+docker compose -f docker-compose.test.yml run --rm nornen-test
+
+# Oder mit Scripts
+./scripts/run-tests.sh      # Linux/Mac
+.\scripts\run-tests.ps1     # Windows
+```
+
+**Spezifische Tests**:
+```bash
+# Unit Tests
+cargo test --lib
+
+# Integration Tests
+cargo test --test '*'
+
+# Spezifischer Test
+cargo test --lib access_control_test
+```
+
+### Entwicklung
+
+**TDD-Workflow**:
+1. Tests schreiben (Red)
+2. Minimaler Code für grüne Tests (Green)
+3. Refactoring (Refactor)
+
+**Container-basierte Tests**:
+- Alle Tests laufen in Containern
+- Keine lokalen Dependencies erforderlich
+- Mock-Services für externe Abhängigkeiten (z.B. Mock-Mimir)
+
+### Code-Standards
+
+- **TDD**: Test-Driven Development ist verpflichtend
+- **Container-Tests**: Alle Tests müssen in Containern laufen
+- **Error-Handling**: `thiserror` für strukturierte Fehler
+- **Async**: `tokio` für asynchrone Operationen
+- **Logging**: `tracing` für strukturiertes Logging
+
 ## Implementierungs-Notizen
 
 - **Programmiersprache**: Rust
 - **Nur bei Yggdrasil**: Nornen ist nur bei Yggdrasil verfügbar
 - **Skuld ist separater Service**: Skuld ist nicht Teil von Nornen
-- **Mimir-Integration**: Nutzt Mimir für Datenbank-Zugriff
+- **Mimir-Integration**: Nutzt Mimir für Datenbank-Zugriff (primär)
+- **PostgreSQL-Fallback**: Unterstützt PostgreSQL für Legacy-Systeme
 - **gRPC-Kommunikation**: Kommuniziert mit anderen Services über gRPC
-- **Admin API**: RESTful API für Admin-Zugriff
+- **Caching**: ProviderCache für Performance-Optimierung
+- **Security**: RBAC-basiertes Access-Control-System
+- **Audit-Logging**: Strukturiertes Logging zu PostgreSQL/Mimir
+- **Monitoring**: Metriken-Sammlung für Request- und Provider-Statistiken
 - **Performance**: Optimiert für schnelle Entscheidungen und Analytics
 

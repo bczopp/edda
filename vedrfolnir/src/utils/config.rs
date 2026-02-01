@@ -10,6 +10,7 @@ use tracing::{info, error};
 pub struct VedrfolnirSettings {
     pub yggdrasil_ratatoskr_url: String,
     pub yggdrasil_grpc_url: String,
+    pub heimdall_url: Option<String>,
     pub connection_timeout_secs: u64,
     pub retry_attempts: u32,
 }
@@ -30,6 +31,7 @@ impl VedrfolnirSettings {
         let mut builder = Config::builder()
             .set_default("yggdrasil_ratatoskr_url", "wss://yggdrasil.example.com/ratatoskr")?
             .set_default("yggdrasil_grpc_url", "http://yggdrasil.example.com:50000")?
+            .set_default("heimdall_url", "http://heimdall.example.com:50050")?
             .set_default("connection_timeout_secs", 30)?
             .set_default("retry_attempts", 3)?;
 

@@ -2,6 +2,8 @@
 
 ## Übersicht
 
+**Tests ausführen:** Von `huginn-muninn/`: `docker compose -f docker-compose.test.yml run --rm huginn-muninn-test` oder `./scripts/run-tests.sh` / `.\scripts\run-tests.ps1`. Von Repo-Root: `huginn-muninn/scripts/run-tests.sh` bzw. `.\huginn-muninn\scripts\run-tests.ps1`. **CI:** Bei Push/PR auf `huginn-muninn/**` läuft die Pipeline [.github/workflows/huginn-muninn.yml](../.github/workflows/huginn-muninn.yml) (Test im Container, Lint).
+
 Huginn und Muninn sind die Raben Odins und stellen die Verbindung zwischen User und System dar. Sie handhaben Speech-to-Text (STT), Text-to-Speech (TTS) und alle eingehenden Medien (Text, Bild, Video, Video-Stream). **Wichtig**: Huginn/Muninn geben nur Daten weiter, interpretieren nichts. Odin entscheidet, was mit den Daten passiert.
 
 **Mythologie-Integration**: "Odin sieht mit den Augen des Raben in die Ferne" - Huginn/Muninn als Daten-Interface für alle eingehenden Medien, Odin interpretiert.

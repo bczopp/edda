@@ -1,0 +1,25 @@
+# Alfheim: Mobile Platform CI
+# Runs tests in container (Bun). No Rust lint.
+name: Alfheim CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['alfheim/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['alfheim/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd alfheim
+          docker compose -f docker-compose.test.yml run --rm alfheim-test

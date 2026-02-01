@@ -1,0 +1,54 @@
+# Geri: LLM Service CI
+# Runs tests in container and lint (clippy, fmt).
+name: Geri CI
+
+on:
+  push:
+    branches: [master, main]
+    paths: ['geri/**']
+  pull_request:
+    branches: [master, main]
+    paths: ['geri/**']
+
+jobs:
+  test:
+    name: Test (container)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run tests in container
+        run: |
+          cd geri
+          docker compose -f docker-compose.test.yml run --rm geri-test
+
+  lint:
+    name: Lint (fmt, clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.75
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            geri/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: geri-${{ runner.os }}-cargo-${{ hashFiles('geri/Cargo.toml') }}
+          restore-keys: geri-${{ runner.os }}-cargo-
+
+      - name: cargo fmt --check
+        run: cargo fmt --check --manifest-path geri/Cargo.toml
+
+      - name: cargo clippy
+        run: cargo clippy --manifest-path geri/Cargo.toml -- -D warnings

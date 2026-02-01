@@ -1,5 +1,7 @@
 // Thor Action Executor Service
 pub mod actions;
+pub mod audit;
+pub mod heimdall_authz;
 pub mod file;
 pub mod app;
 pub mod system;
