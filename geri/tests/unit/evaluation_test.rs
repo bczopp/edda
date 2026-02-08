@@ -36,9 +36,9 @@ mod tests {
         
         let evaluation = evaluator.evaluate("llama3-8b-1bit");
         
-        // 1-bit models should score high on size, hardware, and cost
-        assert!(evaluation.factors.size_score > 0.7);
-        assert!(evaluation.factors.hardware_score > 0.7);
-        assert!(evaluation.factors.cost_score > 0.7);
+        // 1-bit models should score high on size, hardware, and cost (recognize "1bit" or "1-bit")
+        assert!(evaluation.factors.size_score > 0.7, "size_score={}", evaluation.factors.size_score);
+        assert!(evaluation.factors.hardware_score > 0.7, "hardware_score={}", evaluation.factors.hardware_score);
+        assert!(evaluation.factors.cost_score > 0.7, "cost_score={}", evaluation.factors.cost_score);
     }
 }

@@ -1,0 +1,24 @@
+[package]
+name = "shared"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Shared audio utilities for Huginn & Muninn"
+
+[dependencies]
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-appender = "0.2"
+cpal.workspace = true
+rodio.workspace = true
+hound.workspace = true
+notify.workspace = true
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.8"

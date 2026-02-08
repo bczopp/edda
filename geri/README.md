@@ -6,6 +6,8 @@ Geri ist einer von Odins Wölfen und stellt den LLM (Large Language Model) Servi
 
 **Tests ausführen:** Von `geri/`: `docker compose -f docker-compose.test.yml run --rm geri-test` oder `./scripts/run-tests.sh` / `.\scripts\run-tests.ps1`. Von Repo-Root: `geri/scripts/run-tests.sh` bzw. `.\geri\scripts\run-tests.ps1`. **CI:** Bei Push/PR auf `geri/**` läuft die Pipeline [.github/workflows/geri.yml](../.github/workflows/geri.yml) (Test im Container, Lint).
 
+**Implementierungsstand (Für Entwickler):** Siehe [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). **~85% COMPLETE** (**PRODUKTIONSBEREIT** für Cloud LLMs). Phase 1–3 ✅ (Setup, Protobuf, LLM-Provider-Trait), Phase 5 ✅ (OpenAI, Anthropic, Google), Phase 6 ✅ (Model-Registry, Health), Phase 7 ✅ (Efficiency, Selection, Load-Balance), Phase 8 ✅ (Prompt Processing), Phase 9 ✅ (Cost Management), Phase 10 ✅ (Fallback System), Phase 11 ✅ (Cache), Phase 12 ✅ (Streaming), Phase 13 ✅ (Request-Queue), Phase 14 ✅ (Secure Keys), Phase 15 ✅ (Metrics), Phase 16 ✅ (Error-Handling), Phase 18 ✅ (Logging), Phase 19 ✅ (Documentation), Phase 20 ✅ (E2E/Performance/Load-Tests). Remaining: Phase 4 (llama.cpp + BitNet.cpp FFI - komplex). Phase 6.1.1+6.1.2 (ModelInfo, ModelRegistry In-Memory) ✅, Phase 6.2.1 (ModelHealthChecker, Availability, Uptime) ✅, Phase 7.1.1 (Efficiency-Score-Calculator) ✅, Phase 7.2.1 (ModelSelector, SelectionOptions) ✅, Phase 7.3.1 (LoadBalancer) ✅, Phase 8 (Prompt/Context/Token/Context-Window) ✅, Phase 9 (Cost) ✅, Phase 10.1.1 (FallbackManager, CloudLimitDetector) ✅, Phase 10.2.1 (FallbackNotificationGenerator, NotificationSender) ✅, Phase 10.3.1 (BudgetResetListener, BudgetResetHandler) ✅, Phase 11.1.1 (CacheManager, TTL) ✅, Phase 11.2.1 (CacheInvalidator, InvalidationEvent) ✅, Phase 12.1.1 (StreamingManager, StreamingError) ✅, Phase 12.2.1 (VideoStreamProcessor, FrameAnalyzer) ✅, Phase 13.1.1 (RequestQueueManager, QueueFullError) ✅, Phase 13.2.1 (PriorityQueueManager) ✅, Phase 14.1.1 (SecureKeyStorage, SecureKeyBackend) ✅, Phase 14.2.1 (KeyRotationManager) ✅, Phase 15.1.1 (MetricsCollector, MetricsSnapshot) ✅, Phase 15.2.1 (ModelPerformanceTracker) ✅, Phase 16.1.1 (ProviderErrorHandler, GrpcStatusCode) ✅, Phase 16.2.1 (RetryManager, Exponential-Backoff) ✅, Phase 18.1.1 (Logging-Setup, init_logging) ✅, Phase 18.2.1 (ContextLogger, Trace-ID) ✅, Phase 19.1.1 (gRPC-Service-Dokumentation) ✅, Phase 19.2.1 (Provider-Integration-Guide) ✅, Phase 20.1.1 (E2E LLM-Workflow-Tests) ✅, Phase 20.2.1 (Performance Test Suite) ✅, Phase 20.3.1 (Load Test Suite) ✅, Phase 1.1.3 (Cargo-Features) ✅, Phase 3.1.2 (VisionProvider-Trait) ✅.
+
 ## Verantwortlichkeiten
 
 ### 1. Model Management
@@ -548,6 +550,8 @@ local_llm_score = (model_size_score * 0.40) +
 
 **gRPC Service Communication:**
 - **Odin ↔ Geri**: gRPC für LLM-Services und Vision-Model-Interpretation
+- **API-Dokumentation**: [docs/GRPC_SERVICES.md](docs/GRPC_SERVICES.md) – Wolf (ProcessPrompt) und Vision (ProcessVision)
+- **Provider-Integration**: [docs/PROVIDER_INTEGRATION.md](docs/PROVIDER_INTEGRATION.md) – API-Key-Setup, Local-LLM-Setup
 - **Type-Safe**: Protobuf garantiert korrekte Service-Interfaces
 - **Streaming**: Built-in Streaming für große Responses
 

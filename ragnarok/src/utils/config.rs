@@ -8,21 +8,75 @@ use thiserror::Error;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OdinConfig {
-    pub address: String,
+    pub port: u16,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThorConfig {
+    pub port: u16,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeriConfig {
+    pub port: u16,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FrekiConfig {
+    pub port: u16,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HuginnConfig {
+    pub port: u16,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MuninnConfig {
+    pub port: u16,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SkuldConfig {
+    pub port: u16,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GladsheimConfig {
     pub port: u16,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RagnarokSettings {
     pub odin: OdinConfig,
+    #[serde(default)]
+    pub thor: Option<ThorConfig>,
+    #[serde(default)]
+    pub geri: Option<GeriConfig>,
+    #[serde(default)]
+    pub freki: Option<FrekiConfig>,
+    #[serde(default)]
+    pub huginn: Option<HuginnConfig>,
+    #[serde(default)]
+    pub muninn: Option<MuninnConfig>,
+    #[serde(default)]
+    pub skuld: Option<SkuldConfig>,
+    pub gladsheim: GladsheimConfig,
 }
 
 impl Default for RagnarokSettings {
     fn default() -> Self {
         Self {
             odin: OdinConfig {
-                address: "127.0.0.1".to_string(),
                 port: 50051,
+            },
+            thor: None,
+            geri: None,
+            freki: None,
+            huginn: None,
+            muninn: None,
+            gladsheim: GladsheimConfig {
+                port: 50050,
             },
         }
     }
@@ -84,6 +138,39 @@ impl SettingsManager {
     pub fn validate(&self, settings: &RagnarokSettings) -> Result<(), SettingsError> {
         if settings.odin.port == 0 {
             return Err(SettingsError::ValidationError("odin.port cannot be 0".to_string()));
+        }
+        if settings.gladsheim.port == 0 {
+            return Err(SettingsError::ValidationError("gladsheim.port cannot be 0".to_string()));
+        }
+        if let Some(ref thor) = settings.thor {
+            if thor.port == 0 {
+                return Err(SettingsError::ValidationError("thor.port cannot be 0".to_string()));
+            }
+        }
+        if let Some(ref geri) = settings.geri {
+            if geri.port == 0 {
+                return Err(SettingsError::ValidationError("geri.port cannot be 0".to_string()));
+            }
+        }
+        if let Some(ref freki) = settings.freki {
+            if freki.port == 0 {
+                return Err(SettingsError::ValidationError("freki.port cannot be 0".to_string()));
+            }
+        }
+        if let Some(ref huginn) = settings.huginn {
+            if huginn.port == 0 {
+                return Err(SettingsError::ValidationError("huginn.port cannot be 0".to_string()));
+            }
+        }
+        if let Some(ref muninn) = settings.muninn {
+            if muninn.port == 0 {
+                return Err(SettingsError::ValidationError("muninn.port cannot be 0".to_string()));
+            }
+        }
+        if let Some(ref skuld) = settings.skuld {
+            if skuld.port == 0 {
+                return Err(SettingsError::ValidationError("skuld.port cannot be 0".to_string()));
+            }
         }
         Ok(())
     }

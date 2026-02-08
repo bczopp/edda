@@ -1,4 +1,9 @@
 pub mod stt;
 pub mod forwarding;
+pub mod text_input;
+pub mod image_input;
+pub mod video_input;
+pub mod video_stream;
+pub mod error_handler;
 pub mod grpc;
 pub mod utils;

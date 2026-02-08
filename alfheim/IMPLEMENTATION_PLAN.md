@@ -66,9 +66,10 @@ Dieser Plan beschreibt die kleinstmöglichen Schritte zur Implementierung von Al
 - [ ] **WICHTIG**: Alle Tests müssen in Containern laufen - keine lokalen Dependencies, Tools oder Services auf der Entwicklungsmaschine installieren
 
 #### 1.2.2 Test-Framework konfigurieren
-- [ ] Jest (React Native) oder entsprechendes Test-Framework einrichten
-- [ ] Test-Utilities und Helpers erstellen
-- [ ] Mock-Setup für Services (Odin, Freki, Geri, Thor, etc.)
+- [x] Test-Runner: Bun Test Runner (`bun test`, `bun:test`) – kein Jest (Jest kollidiert mit Bun-Runtime)
+- [x] Test-Utilities und Helpers erstellen (`tests/utils/test_helpers.ts`)
+- [x] Erste Unit-Tests (TDD): `config.test.ts`, `test_helpers.test.ts`, `platformService.test.ts`
+- [ ] Mock-Setup für Services (Odin, Freki, Geri, Thor, etc.) – bei Bedarf
 
 #### 1.2.3 CI/CD-Pipeline
 - [ ] GitHub Actions / GitLab CI Workflow erstellen

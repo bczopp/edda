@@ -50,28 +50,32 @@ impl FrekiService for FrekiServiceImpl {
         request: Request<freki::IndexDocumentRequest>,
     ) -> Result<Response<freki::IndexDocumentResponse>, Status> {
         let request_id = Uuid::new_v4().to_string();
-        let _guard = info_span!("index_document", request_id = %request_id).entered();
-        let req = request.into_inner();
-
-        // Parse embedding from bytes
-        let embedding: Vec<f32> = bincode::deserialize(&req.embedding)
-            .map_err(|e| Status::invalid_argument(format!("Invalid embedding format: {}", e)))?;
-
-        // Create document
-        let document = crate::indexing::Document {
-            id: req.document_id.clone(),
-            content: req.content,
-            metadata: serde_json::to_value(req.metadata).unwrap_or(serde_json::Value::Object(serde_json::Map::new())),
+        let (document, embedding, document_id, document_indexer, audit_logger) = {
+            let _guard = info_span!("index_document", request_id = %request_id).entered();
+            let req = request.into_inner();
+            let embedding: Vec<f32> = bincode::deserialize(&req.embedding)
+                .map_err(|e| Status::invalid_argument(format!("Invalid embedding format: {}", e)))?;
+            let document = crate::indexing::Document {
+                id: req.document_id.clone(),
+                content: req.content,
+                metadata: serde_json::to_value(req.metadata).unwrap_or(serde_json::Value::Object(serde_json::Map::new())),
+            };
+            let document_id = document.id.clone();
+            (
+                document,
+                embedding,
+                document_id,
+                self.document_indexer.clone(),
+                self.audit_logger.clone(),
+            )
         };
-
-        // Index document
-        self.document_indexer.index_document(document, embedding).await
+        document_indexer.index_document(document, embedding).await
             .map_err(|e| Status::internal(format!("Failed to index document: {}", e)))?;
-        self.audit_logger.log_document_indexed(&req.document_id);
+        audit_logger.log_document_indexed(&document_id);
 
         Ok(Response::new(freki::IndexDocumentResponse {
             success: true,
-            message: format!("Document {} indexed successfully", req.document_id),
+            message: format!("Document {} indexed successfully", document_id),
         }))
     }
 
@@ -80,28 +84,24 @@ impl FrekiService for FrekiServiceImpl {
         request: Request<freki::RetrieveContextRequest>,
     ) -> Result<Response<freki::RetrieveContextResponse>, Status> {
         let request_id = Uuid::new_v4().to_string();
-        let _guard = info_span!("retrieve_context", request_id = %request_id).entered();
-        let req = request.into_inner();
-        self.audit_logger.log_query(&request_id, req.limit as u32);
-
-        // Parse query embedding from bytes
-        let query_embedding: Vec<f32> = bincode::deserialize(&req.query_embedding)
-            .map_err(|e| Status::invalid_argument(format!("Invalid query embedding format: {}", e)))?;
-
-        // Use collection from request or default
-        let collection = if req.collection_name.is_empty() {
-            &self.collection_name
-        } else {
-            &req.collection_name
+        let (query_embedding, limit, context_retriever, audit_logger) = {
+            let _guard = info_span!("retrieve_context", request_id = %request_id).entered();
+            let req = request.into_inner();
+            self.audit_logger.log_query(&request_id, req.limit as u32);
+            let query_embedding: Vec<f32> = bincode::deserialize(&req.query_embedding)
+                .map_err(|e| Status::invalid_argument(format!("Invalid query embedding format: {}", e)))?;
+            (
+                query_embedding,
+                req.limit,
+                self.context_retriever.clone(),
+                self.audit_logger.clone(),
+            )
         };
-
-        // Retrieve context
-        let context = self.context_retriever.retrieve(query_embedding, req.limit).await
+        let context = context_retriever.retrieve(query_embedding, limit).await
             .map_err(|e| Status::internal(format!("Failed to retrieve context: {}", e)))?;
 
-        // Convert to protobuf response and audit document access
         let documents: Vec<freki::RetrievedDocument> = context.documents.into_iter().map(|doc| {
-            self.audit_logger.log_document_accessed(&doc.id);
+            audit_logger.log_document_accessed(&doc.id);
             freki::RetrievedDocument {
                 id: doc.id,
                 content: doc.content,

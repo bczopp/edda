@@ -30,7 +30,17 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 
 - **Performance principles**: Follow performance principles as outlined in README.md
 
-### 4. DRY (Don't Repeat Yourself)
+### 4. Concurrency & Parallelism
+
+**Critical for LLM Service**: Geri implements concurrency/parallelism as required by root AGENTS.md principle 4.
+
+- **Concurrent request handling**: `max_concurrent_requests`, `RequestQueueManager`, async tokio runtime
+- **Load balancing**: `LoadBalancer` distributes requests across models/providers
+- **Parallel model selection**: Skuld evaluates models in parallel; Geri handles multiple LLM calls concurrently
+- **Streaming**: Async streaming for long LLM responses
+- **Testing**: Load tests with ≥10 concurrent requests (see `tests/load_test.rs`)
+
+### 5. DRY (Don't Repeat Yourself)
 
 **Reuse Before Creating**: Always check for existing functionality.
 
@@ -39,7 +49,7 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 - **Shared utilities**: Wenn gemeinsame Utils benötigt werden, sollte ein separates Projekt erstellt werden
 - **Avoid duplication**: Don't duplicate provider integration logic
 
-### 5. KISS (Keep It Simple, Stupid)
+### 6. KISS (Keep It Simple, Stupid)
 
 **Simplicity Over Complexity**: Prefer simple provider integration.
 
@@ -48,7 +58,7 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 - **Readable code**: Code should be self-documenting
 - **Avoid over-engineering**: Don't add unnecessary complexity
 
-### 6. CQRS (Command Query Responsibility Segregation)
+### 7. CQRS (Command Query Responsibility Segregation)
 
 **Software-Level Separation**: Separate read and write operations.
 
@@ -57,7 +67,7 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 - **Status queries**: Separate handlers for request status queries
 - **Optimization**: Optimize calls and queries independently
 
-### 7. Single Responsibility Principle
+### 8. Single Responsibility Principle
 
 **One Responsibility Per Component**: Each component should have a single responsibility.
 
@@ -66,7 +76,7 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 - **Provider integration**: Provider-specific integration only
 - **Cost tracking**: Cost calculation only
 
-### 8. Dependency Injection
+### 9. Dependency Injection
 
 **Inject, Don't Create**: Dependencies should be injected.
 

@@ -1,19 +1,16 @@
-FROM node:20-alpine
+FROM oven/bun:latest
 
 WORKDIR /app
-
-# Install bun
-RUN npm install -g bun
 
 # Copy package files
 COPY package.json bun.lockb* ./
 
-# Install dependencies
+# Install dependencies (bun only – kein npm)
 RUN bun install
 
 # Copy source code
 COPY src ./src
 COPY tests ./tests
 
-# Default command for tests
+# Default command for tests (Bun Test Runner – TDD)
 CMD ["bun", "test"]

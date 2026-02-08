@@ -1,7 +1,8 @@
 /**
- * Wait for a service to be ready
+ * Prüft, ob ein HTTP-Endpunkt erreichbar ist (z. B. Web-UI, REST-API).
+ * Nur für HTTP-Services – nicht für gRPC (Odin, Thor, etc.). gRPC nutzt address+port, siehe config.
  */
-export async function waitForService(url: string, maxRetries: number): Promise<boolean> {
+export async function waitForHttpService(url: string, maxRetries: number): Promise<boolean> {
     for (let i = 0; i < maxRetries; i++) {
         try {
             const response = await fetch(url);
@@ -17,9 +18,10 @@ export async function waitForService(url: string, maxRetries: number): Promise<b
 }
 
 /**
- * Get service URL from environment or use default
+ * Liefert die HTTP-URL eines Services aus Env oder Default.
+ * Nur für HTTP-Services – nicht für gRPC. Odin/Thor etc. werden über address+port (config) angesprochen.
  */
-export function getServiceUrl(serviceName: string, defaultPort: number): string {
+export function getHttpServiceUrl(serviceName: string, defaultPort: number): string {
     const envVar = `${serviceName.toUpperCase()}_URL`;
     return process.env[envVar] || `http://localhost:${defaultPort}`;
 }

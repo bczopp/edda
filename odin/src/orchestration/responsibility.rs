@@ -296,6 +296,7 @@ impl ResponsibilityManager {
                     context,
                     model_name,
                     max_tokens: 1000,
+                    system_prompt: String::new(), // Can be extended if Odin has specific system instructions
                 };
                 
                 match self.client_manager.process_geri_prompt(geri_request).await {

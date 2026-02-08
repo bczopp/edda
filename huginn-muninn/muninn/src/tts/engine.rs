@@ -1,33 +1,87 @@
-use thiserror::Error;
+//! TTS Engine implementation
 
-#[derive(Debug, Error)]
-pub enum TTSError {
-    #[error("TTS processing failed: {0}")]
-    ProcessingFailed(String),
+use shared::{AudioBuffer, AudioError, AudioFormat, Result};
+use serde::{Deserialize, Serialize};
+use tracing::{info, warn};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum TtsVoice {
+    Male,
+    Female,
+    Neutral,
 }
 
-pub struct TTSEngine;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TtsConfig {
+    pub language: String,
+    pub voice: TtsVoice,
+    pub model_path: Option<String>,
+}
 
-impl TTSEngine {
-    pub fn new() -> Self {
-        Self
+impl Default for TtsConfig {
+    fn default() -> Self {
+        Self {
+            language: "en-US".to_string(),
+            voice: TtsVoice::Female,
+            model_path: None,
+        }
     }
+}
 
-    pub async fn synthesize(&self, text: &str) -> Result<Vec<u8>, TTSError> {
-        // Integrate Coqui TTS
-        // In a real implementation, this would:
-        // 1. Load Coqui TTS model if not already loaded
-        // 2. Process text (normalize, tokenize)
-        // 3. Generate audio through TTS model
-        // 4. Return audio data (WAV, MP3, etc.)
-        
+pub struct TtsEngine {
+    config: TtsConfig,
+}
+
+impl TtsEngine {
+    pub fn new(config: TtsConfig) -> Self {
+        info!(
+            "Creating TTS engine with language: {}, voice: {:?}",
+            config.language, config.voice
+        );
+        Self { config }
+    }
+    
+    pub fn language(&self) -> &str {
+        &self.config.language
+    }
+    
+    pub async fn synthesize(&self, text: &str) -> Result<AudioBuffer> {
         if text.is_empty() {
-            return Err(TTSError::ProcessingFailed("Empty text".to_string()));
+            return Err(AudioError::InvalidData("Text is empty".to_string()));
         }
         
-        // For now, return placeholder audio data
-        // In production, would use actual Coqui TTS synthesis
-        // This would generate real audio bytes
-        Ok(format!("[TTS audio for: {}]", text).into_bytes())
+        info!("Synthesizing text: {} characters", text.len());
+        
+        // TODO: Integrate actual TTS engine (Coqui TTS)
+        // For now, return mock audio buffer (1 second of silence)
+        let sample_rate = 16000;
+        let samples = vec![0i16; sample_rate as usize]; // 1 second of silence
+        
+        Ok(AudioBuffer::new(samples, AudioFormat::Pcm16kHz16BitMono))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_tts_engine_new() {
+        let config = TtsConfig {
+            language: "de-DE".to_string(),
+            voice: TtsVoice::Male,
+            model_path: Some("/path/to/model".to_string()),
+        };
+        
+        let engine = TtsEngine::new(config.clone());
+        assert_eq!(engine.language(), "de-DE");
+    }
+    
+    #[tokio::test]
+    async fn test_synthesize_empty_text() {
+        let engine = TtsEngine::new(TtsConfig::default());
+        
+        let result = engine.synthesize("").await;
+        assert!(result.is_err());
     }
 }

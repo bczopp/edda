@@ -1,24 +1,26 @@
-FROM rust:1.75-slim
+FROM rust:latest
 
 WORKDIR /app
 
-# Install dependencies for building
+# Install dependencies for building and testing
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl-dev \
+    build-essential \
+    protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Cargo files
-COPY Cargo.toml Cargo.lock ./
-COPY build.rs ./
-
-# Copy source code
+# Copy Cargo files and source (Cargo needs src/ for manifest targets)
+COPY Cargo.toml build.rs ./
 COPY src ./src
 COPY proto ./proto
+RUN cargo generate-lockfile
+
+# Copy tests
 COPY tests ./tests
 
 # Build the project
-RUN cargo build --release
+RUN cargo build --release --tests
 
 # Default command for tests
-CMD ["cargo", "test", "--release"]
+CMD ["cargo", "test", "--release", "--", "--test-threads=1"]

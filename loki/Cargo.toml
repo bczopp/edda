@@ -1,39 +1,46 @@
 [workspace]
-members = ["loki", "fenrir", "jormungandr", "hel", "shared"]
+members = [
+    "loki",
+    "fenrir",
+    "jormungandr",
+    "hel",
+    "shared",
+]
+resolver = "2"
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 authors = ["Edda Team"]
+license = "MIT OR Apache-2.0"
 
-[package]
-name = "loki"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-description = "Script Execution Service for Edda - Coordinates Fenrir, Jörmungandr, and Hel"
-
-[dependencies]
-tokio = { version = "1.35", features = ["full"] }
+[workspace.dependencies]
+tokio = { version = "1.35", features = ["rt-multi-thread", "macros", "sync", "time"] }
 tonic = "0.11"
 prost = "0.12"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+toml = "0.8"
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 anyhow = "1.0"
 thiserror = "1.0"
-chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# Script engine
+mlua = { version = "0.9", features = ["lua54", "async", "serialize"] }
+
+# Configuration & Hot-Reload
 config = "0.14"
 notify = "6.1"
-mlua = "0.9"
-toml = "0.8"
+chrono = { version = "0.4", features = ["serde"] }
 
-[dev-dependencies]
-tokio-test = "0.4"
-mockall = "0.12"
-tempfile = "3.8"
+# Streaming support
+tokio-stream = "0.1"
+futures = "0.3"
 
-[build-dependencies]
-tonic-build = "0.11"
+[profile.release]
+opt-level = "z"     # Optimize for size
+lto = true          # Enable Link-Time Optimization
+codegen-units = 1   # Reduce binary size
+strip = true        # Strip symbols

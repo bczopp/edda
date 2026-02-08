@@ -19,7 +19,7 @@ Thor ist der Action Executor - er führt Actions aus (File-Operations, Applicati
 - [x] Test-Infrastruktur
   - [x] Container-Setup für Tests (Dockerfile.test, docker-compose.test.yml)
   - [x] Mock-Services in Containern (Heimdall, Jotunheim)
-  - [ ] **WICHTIG**: Alle Tests müssen in Containern laufen - keine lokalen Dependencies auf der Entwicklungsmaschine
+  - [x] **WICHTIG**: Alle Tests in Containern – CI (thor.yml) und docker-compose führen Tests im Container aus; keine lokalen Dependencies nötig
 - [x] Settings-System
 
 ## Phase 2: Protobuf & gRPC (8 Schritte) ✅
@@ -59,7 +59,7 @@ Thor ist der Action Executor - er führt Actions aus (File-Operations, Applicati
 - [x] `CrossDeviceActionHandler` (TDD, Receive-Actions-via-gRPC, Execute, Send-Results) – `src/cross_device/handler.rs`
 
 ## Phase 10: Performance & Security (6 Schritte) ⚠️ TEILWEISE
-- [ ] Async-Processing (bereits async/await in Dispatcher und Executors)
+- [x] Async-Processing – bereits durchgängig async/await: `ActionDispatcher` und alle Executors (File, App, System, Network, Terminal, UI, Scheduler, Jotunheim) nutzen tokio; gRPC-Server ist async (tonic). Kein zusätzlicher Code nötig.
 - [x] Audit-Logging – `src/audit.rs` (Trait `AuditLogger`, `TracingAuditLogger`), integriert in `ActionDispatcher::new_with_audit`, konfigurierbar via `enable_audit_logging` in Settings
 - [x] Error-Handling (bereits `ActionError`, `PermissionError`, Fehlerbehandlung in Dispatcher und gRPC-Server)
 
@@ -95,33 +95,43 @@ Thor ist der Action Executor - er führt Actions aus (File-Operations, Applicati
 - [x] `UIAutomationHandler` nutzt Platform für Routing
 - [x] In ActionRegistry registriert
 
-### 12.2 Windows UI-Automation ⚠️
+### 12.2 Windows UI-Automation ✅
 - [x] Struktur: `src/ui_automation/platform/windows.rs`, Handler-Routing nach OS
-- [ ] **TODO**: Echte Windows-UI-Automation (Click, Type, Move-Cursor) – aktuell Stub "not yet fully implemented"
+- [x] Echte Windows-UI-Automation (Click, Type, Move-Cursor) – `windows` crate (SetCursorPos, SendInput)
+  - [x] `move_cursor(x, y)` – SetCursorPos
+  - [x] `click_element(element)` – by_position: SetCursorPos + SendInput (MOUSEEVENTF_LEFTDOWN/UP); by_name/by_id noch nicht implementiert
+  - [x] `type_text(element, text)` – SendInput mit KEYEVENTF_UNICODE (BMP; Surrogate übersprungen)
 
 ### 12.3 macOS Accessibility-API
-- [ ] Tests für macOS Accessibility schreiben
-- [ ] `MacOSAccessibility` implementieren (TDD)
+- [x] Tests für Stub-Verhalten: Linux-CI prüft „not yet fully implemented“; `test_ui_automation_linux_returns_not_implemented` (container-tauglich)
+- [ ] `MacOSAccessibility` implementieren (TDD, nur auf macOS buildbar)
   - `cocoa` crate Integration
   - Accessibility API Calls
-- [ ] Tests ausführen und bestehen
+- [ ] Tests auf macOS ausführen und bestehen
 
 ### 12.4 Linux AT-SPI
-- [ ] Tests für Linux AT-SPI schreiben
-- [ ] `LinuxATSPI` implementieren (TDD)
-  - `atspi` crate Integration
-  - AT-SPI API Calls
-- [ ] Tests ausführen und bestehen
+- [x] Tests für Stub-Verhalten: Linux-CI prüft „not yet fully implemented“ (siehe 12.3)
+- [x] `atspi` crate Integration – `Cargo.toml` (target linux), `AccessibilityConnection::new()` in `linux_impl`, klare Fehlermeldung wenn kein AT-SPI-Bus
+- [x] AT-SPI API Calls für click by_position – `ComponentProxy` (root → get_accessible_at_point), `ActionProxy` (object_as_accessible → do_action(0)); type_text/move_cursor weiterhin Stub
+- [x] Tests ausführen und bestehen (CI/Container)
 
-### 12.5 UI-Action-Handler
-- [ ] Tests für UI_AUTOMATION schreiben
-- [ ] `UIAutomationHandler` implementieren (TDD)
-  - Platform-Dispatch (Windows/macOS/Linux)
-  - Action-Type-Handling (Click, Type, Move, etc.)
-  - Heimdall-Permission-Checks
-  - User-Confirmation für kritische Actions
-- [ ] In ActionRegistry registrieren
-- [ ] Tests ausführen und bestehen
+### 12.5 UI-Action-Handler ✅ (Grundstruktur)
+- [x] Tests für UI_AUTOMATION schreiben (`tests/unit/ui_automation_test.rs`)
+  - Operating-System-Detection-Test ✅
+  - Handler-Creation-Test ✅
+  - Click-Action-Test ✅ (inkl. Bestätigungspflicht)
+  - Type-Action-Test ✅
+  - Invalid-Action-Test ✅
+- [x] `UIAutomationHandler` implementieren (TDD) (`src/ui_automation/handler.rs`)
+  - Platform-Dispatch (Windows/macOS/Linux) ✅ - OS-spezifische Routing-Logik
+  - Action-Type-Handling (Click, Type, Move, etc.) ✅ - Parameter-Parsing, Action-Dispatch
+  - Action-Parsing ✅ - JSON-Parameter-Parsing mit Validierung
+  - Error-Handling ✅ - Fehlerbehandlung für fehlende Parameter, ungültige Actions
+  - Heimdall-Permission-Checks erfolgen zentral im `ActionDispatcher` (resource_type `"action"`, action_type `"UI_AUTOMATION"`).
+  - User-Confirmation für kritische Click-Actions via `confirmed: true` Flag im UI_AUTOMATION-JSON (siehe `tests/unit/ui_automation_test.rs`).
+- [x] In ActionRegistry registrieren (`main.rs`) ✅
+- [x] Tests ausführen und bestehen ✅
+- **Hinweis**: Windows: vollständig (SetCursorPos, SendInput). Linux: AT-SPI integriert, echte click by_position (ComponentProxy/ActionProxy); type_text/move_cursor Stub. macOS: Stub ("not yet fully implemented").
 
 ---
 
@@ -140,27 +150,24 @@ Thor ist der Action Executor - er führt Actions aus (File-Operations, Applicati
   - create_job/delete_job/list_jobs/update_job mit optionalem Store
 - [x] Tests ausführen und bestehen
 
-### 13.2 Windows Task-Scheduler
-- [ ] Tests für Task-Scheduler schreiben
-- [ ] `WindowsTaskScheduler` implementieren (TDD)
-  - `windows-service` crate Integration
-  - Task-Scheduler-API-Calls
-- [ ] Tests ausführen und bestehen
+### 13.2 Windows Task-Scheduler ✅
+- [x] Tests für Task-Scheduler schreiben (`tests/unit/scheduler_test.rs`: `test_scheduler_windows_create_list_delete`, nur auf Windows)
+- [x] Windows Task Scheduler implementiert (TDD) – `handler.rs` `windows_impl`
+  - Nutzung von `schtasks.exe` (kein COM/Crate): Create, Delete, Query
+  - Cron-Schedule → täglicher Trigger: `cron_to_daily_time(schedule)` (min, hour aus ersten beiden Feldern) → `/SC DAILY /ST HH:MM`
+  - create_task(name, schedule, command), delete_task(name), list_tasks()
+- [ ] Tests auf Windows ausführen und bestehen (CI läuft unter Linux; manuell auf Windows oder in Windows-Container)
 
 ### 13.3 macOS launchd
-- [ ] Tests für launchd schreiben
-- [ ] `LaunchdScheduler` implementieren (TDD)
-  - launchctl-Integration
-  - plist-File-Generation
-- [ ] Tests ausführen und bestehen
+- [x] Scheduler-OS-Dispatch-Test: `test_scheduler_windows_unavailable_on_unix` (auf Nicht-Windows: „not available on this operating system“)
+- [x] Scheduler-OS-Dispatch: `operating_system: "launchd"` im Handler (create/delete/list/update); auf Nicht-macOS: „launchd not available on this operating system“
+- [x] Test: `test_scheduler_launchd_unavailable_on_non_macos` (CI/Container auf Linux: launchd-Anfrage → Fehler)
+- [ ] Tests für launchd auf macOS schreiben (echte launchctl/plist)
+- [ ] `LaunchdScheduler` implementieren (TDD): launchctl-Integration, plist-File-Generation
+- [ ] Tests auf macOS ausführen und bestehen
 
-### 13.4 Google-Calendar (optional)
-- [ ] Tests für Google-Calendar schreiben
-- [ ] `GoogleCalendarScheduler` implementieren (TDD)
-  - `google-calendar3` crate Integration
-  - OAuth-Flow
-  - Event-Creation/Deletion
-- [ ] Tests ausführen und bestehen
+### 13.4 Kalender (nicht in Thor)
+- **Entscheidung:** Thor hat keinen Kalender-Scheduler. Kalender-/Termin-Logik (falls gewünscht) gehört in **Odin**; genaue Ausgestaltung wird dort noch überlegt.
 
 ### 13.5 Scheduler-Action-Handler ✅
 - [x] Tests für SCHEDULER_OPERATION schreiben (`tests/unit/scheduler_test.rs`)
@@ -170,7 +177,7 @@ Thor ist der Action Executor - er führt Actions aus (File-Operations, Applicati
   - Parameter-Parsing (operation, job_name, schedule, command, operating_system)
 - [x] In ActionRegistry registrieren (`main.rs`)
 - [x] Tests ausführen und bestehen
-- **Hinweis**: Echte Crontab-Persistenz (z. B. `crontab -l`/`crontab -`) kann über eine spätere `CrontabStore`-Implementierung ergänzt werden; Tests laufen mit `InMemoryCrontabStore` ohne lokale crontab.
+- **Hinweis**: Echte Crontab-Persistenz (z. B. `crontab -l`/`crontab -`) kann über eine spätere `CrontabStore`-Implementierung ergänzt werden; Tests laufen mit `InMemoryCrontabStore` ohne lokale crontab. Windows: Task Scheduler über `schtasks.exe` (Phase 13.2) ✅.
 
 ---
 
@@ -213,6 +220,20 @@ Thor ist der Action Executor - er führt Actions aus (File-Operations, Applicati
 - [x] Security-Test: Permission-Deny (PermissionChecker::new_deny_all, dispatch → Err mit "permission")
 - [ ] Performance-Tests (Latency, Throughput) – optional
 - [ ] Integration-Tests (Odin → Thor → Services) – optional
+
+---
+
+## Verbleibende Punkte (Übersicht)
+
+**Plattformspezifisch / optional:**
+- [ ] Phase 8: Sandboxing (optional, TDD)
+- [x] Phase 10: Async-Processing dokumentiert (Dispatcher/Executors/gRPC async)
+- [ ] Phase 12: UI-Automation – Windows ✅; macOS/Linux Stub-Tests in CI; echte Implementierung 12.3/12.4 ausstehend
+- [ ] Phase 13: Scheduler – WindowsTaskScheduler ✅, Cron ✅, OS-Dispatch-Test ✅; Launchd-Dispatch ✅; echte launchd-Implementierung (macOS) ausstehend. Kalender: nicht in Thor (evtl. Odin, Konzept offen).
+- [ ] Phase 14: Device-Registry (List Devices, Capabilities, Status; Heimdall-Client)
+- [ ] Phase 15: Performance-Tests, Integration-Tests Odin→Thor (optional)
+
+*(Constraint: Alle Tests in Containern.)*
 
 ---
 

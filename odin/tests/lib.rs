@@ -12,3 +12,9 @@ pub mod orchestration;
 
 #[path = "services/mod.rs"]
 pub mod services;
+
+#[path = "scheduler/mod.rs"]
+pub mod scheduler;
+
+#[path = "plugins/mod.rs"]
+pub mod plugins;

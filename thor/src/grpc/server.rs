@@ -12,11 +12,13 @@ use thor::thor_service_server::{ThorService, ThorServiceServer};
 
 pub struct ThorServiceImpl {
     dispatcher: Arc<crate::actions::ActionDispatcher>,
+    xml_dispatcher: crate::actions::XmlDispatcher,
 }
 
 impl ThorServiceImpl {
     pub fn new(dispatcher: Arc<crate::actions::ActionDispatcher>) -> Self {
-        Self { dispatcher }
+        let xml_dispatcher = crate::actions::XmlDispatcher::new(dispatcher.clone());
+        Self { dispatcher, xml_dispatcher }
     }
 }
 
@@ -34,11 +36,15 @@ impl ThorService for ThorServiceImpl {
             action_id: action.action_id.clone(),
         };
 
-        // Dispatch action
-        let result = self.dispatcher
-            .dispatch(&action.action_type, &context, &action.action_data)
-            .await
-            .map_err(|e| Status::internal(format!("Action execution failed: {}", e)))?;
+        // Dispatch action (check for structural XML protocol)
+        let result = if action.action_type == "XML_CALL" || action.action_type == "XML_TASK" {
+            let xml_str = String::from_utf8_lossy(&action.action_data);
+            self.xml_dispatcher.execute_xml(&context, &xml_str).await
+        } else {
+            self.dispatcher
+                .dispatch(&action.action_type, &context, &action.action_data)
+                .await
+        }.map_err(|e| Status::internal(format!("Action execution failed: {}", e)))?;
 
         let response = thor::ThorResult {
             action_id: action.action_id,

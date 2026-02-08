@@ -134,6 +134,23 @@ impl Default for StateSyncConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SchedulerConfig {
+    /// Aktiviert den Device-Scheduler/Loop explizit.
+    pub enabled: bool,
+    /// Steuert, ob der Scheduler Capabilities (Einherjar) periodisch refresht.
+    pub capability_refresh_enabled: bool,
+}
+
+impl Default for SchedulerConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            capability_refresh_enabled: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatFlags {
     pub frigg_direct: bool,
     pub valkyries_direct: bool,
@@ -160,6 +177,8 @@ pub struct OdinSettings {
     pub network: NetworkConfig,
     #[serde(default)]
     pub state_sync: StateSyncConfig,
+    #[serde(default)]
+    pub scheduler: SchedulerConfig,
     #[serde(default)]
     pub chat_flags: ChatFlags,
     pub grpc_port: u16,
@@ -221,6 +240,7 @@ impl Default for OdinSettings {
             plugins: PluginsConfig::default(),
             network: NetworkConfig::default(),
             state_sync: StateSyncConfig::default(),
+            scheduler: SchedulerConfig::default(),
             chat_flags: ChatFlags::default(),
             grpc_port: 50050,
             service_urls: ServiceUrls::default(),
@@ -351,7 +371,7 @@ impl SettingsManager {
             return Err("parallel_agents must be > 0".into());
         }
         
-        // Validate sync_interval_ms
+        // Validate sync_interval_ms (Scheduler nutzt dieses Intervall bei enabled)
         if let Some(interval) = settings.state_sync.sync_interval_ms {
             if interval == 0 {
                 return Err("sync_interval_ms must be > 0".into());

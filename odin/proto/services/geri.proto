@@ -12,6 +12,7 @@ message ProcessPromptRequest {
     string context = 2; // Optional RAG context
     string model_name = 3; // Optional: specific model
     uint32 max_tokens = 4;
+    string system_prompt = 5; // Optional custom system prompt
 }
 
 message ProcessPromptResponse {

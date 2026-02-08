@@ -1,5 +1,5 @@
 # Build context must be edda root (parent of nidhoggr) for path deps: context: .., dockerfile: nidhoggr/Dockerfile.test
-FROM rust:1.75-slim
+FROM rust:latest
 
 WORKDIR /app
 

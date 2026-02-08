@@ -1,0 +1,34 @@
+# Ignore all other projects to speed up Ragnarok build
+alfheim/
+asgard/
+bifrost/
+eikthyrnir/
+forseti/
+freki/
+frigg/
+geri/
+heidrun/
+heimdall/
+hirtir/
+huginn-muninn/
+jotunheim/
+laeradr/
+loki/
+midgard/
+mimir/
+nidhoggr/
+njordr/
+nornen/
+odin/
+ratatoskr/
+skuld/
+thor/
+valkyries/
+vedrfolnir/
+yggdrasil/
+
+# Ignore build artifacts
+**/target/
+**/.git/
+**/.cursor/
+**/.snapshots/

@@ -1,0 +1,24 @@
+[package]
+name = "jormungandr"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Loki sub-service: Network/Communication (HTTP, WebSocket, MQTT)"
+
+[dependencies]
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+reqwest = { version = "0.11", features = ["json"] }
+tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
+futures-util = "0.3"
+rumqttc = { version = "0.24", features = ["tokio-runtime"] }
+mlua.workspace = true
+shared = { path = "../shared" }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.8"
+mockito = "1"

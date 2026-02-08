@@ -11,6 +11,8 @@ async fn test_settings_default() {
     assert!(settings.provider_selection.auto_select);
     assert!(settings.plugins.valkyries.enabled);
     assert!(!settings.plugins.frigg.enabled);
+    assert!(!settings.scheduler.enabled);
+    assert!(settings.scheduler.capability_refresh_enabled);
 }
 
 #[tokio::test]

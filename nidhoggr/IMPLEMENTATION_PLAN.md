@@ -76,5 +76,12 @@ Nidhöggr ist der Server-Side Connection Endpoint bei Yggdrasil. Er empfängt Ve
 
 ---
 
+## Verbleibende Punkte (Übersicht)
+
+- [ ] **Phase 8** Benchmarks (Connection-Latenz < 100ms, Message-Routing < 10ms, 1000+ Messages/s)
+- [ ] **Phase 10** Performance-Tests ausführen und bestehen
+
+---
+
 **Schritte gesamt**: ~100
 **Phasen**: 10

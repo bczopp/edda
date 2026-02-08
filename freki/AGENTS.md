@@ -30,7 +30,16 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 
 - **Performance principles**: Follow performance principles as outlined in README.md
 
-### 4. DRY (Don't Repeat Yourself)
+### 4. Concurrency & Parallelism
+
+**Critical for RAG Service**: Freki implements concurrency/parallelism as required by root AGENTS.md principle 4.
+
+- **Parallel indexing**: `BatchIndexingManager` indexes multiple documents in parallel (tokio::spawn per chunk)
+- **Concurrent queries**: Handles multiple retrieval requests concurrently (async runtime)
+- **Load tests**: ≥20 concurrent queries, ≤5s total (see `tests/load_test.rs`)
+- **Performance optimization**: Parallel indexing is faster than sequential (verified in tests)
+
+### 5. DRY (Don't Repeat Yourself)
 
 **Reuse Before Creating**: Always check for existing functionality.
 
@@ -39,7 +48,7 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 - **Shared vector operations**: Reuse common vector operations
 - **Avoid duplication**: Don't duplicate document processing logic
 
-### 5. KISS (Keep It Simple, Stupid)
+### 6. KISS (Keep It Simple, Stupid)
 
 **Simplicity Over Complexity**: Prefer simple retrieval logic.
 
@@ -48,7 +57,7 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 - **Readable code**: Code should be self-documenting
 - **Avoid over-engineering**: Don't add unnecessary complexity
 
-### 6. CQRS (Command Query Responsibility Segregation)
+### 7. CQRS (Command Query Responsibility Segregation)
 
 **Software-Level Separation**: Separate read and write operations.
 
@@ -66,7 +75,7 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 - **Document indexing**: Document indexing only
 - **Context retrieval**: Context retrieval only
 
-### 8. Dependency Injection
+### 9. Dependency Injection
 
 **Inject, Don't Create**: Dependencies should be injected.
 

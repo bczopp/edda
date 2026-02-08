@@ -20,8 +20,8 @@ services:
 
   ragnarok-test:
     build:
-      context: .
-      dockerfile: Dockerfile.test
+      context: ..
+      dockerfile: ragnarok/Dockerfile.test
     depends_on:
       mock-odin:
         condition: service_healthy

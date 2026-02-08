@@ -5,21 +5,37 @@ edition.workspace = true
 authors.workspace = true
 description = "TTS Service for Edda"
 
+[build]
+build = "build.rs"
+
+[features]
+default = []
+# Optional TTS backends (FFI, not yet implemented)
+coqui-tts = []
+piper = []
+
 [dependencies]
-tokio = { version = "1.35", features = ["full"] }
-tonic = "0.11"
-prost = "0.12"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-anyhow = "1.0"
-thiserror = "1.0"
-chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1.6", features = ["v4", "serde"] }
-config = "0.14"
-notify = "6.1"
-cpal = "0.15"
+tokio.workspace = true
+tonic.workspace = true
+prost.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+config.workspace = true
+notify.workspace = true
+futures = "0.3"
+async-trait = "0.1"
+cpal.workspace = true
+rodio.workspace = true
+hound.workspace = true
+
+# Shared audio utilities
+shared = { path = "../shared" }
 
 [dev-dependencies]
 tokio-test = "0.4"

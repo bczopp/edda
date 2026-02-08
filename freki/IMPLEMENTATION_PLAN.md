@@ -458,13 +458,12 @@ Dieser Plan beschreibt die kleinstmöglichen Schritte zur Implementierung von Fr
 ❓ **HINWEIS**: Diese Phase wird nur ausgeführt, wenn Caching gewählt wurde.
 
 #### 10.1.1 Embedding-Cache
-- [ ] Tests für Embedding-Cache schreiben
-- [ ] `EmbeddingCache` implementieren (TDD)
-  - Embeddings cachen (Chunk-ID → Embedding)
-  - Cache-Key: `{document_id}_{chunk_id}_{model_name}_{model_version}`
-  - Cache-Hit/Miss-Handling
-  - Cache-Invalidation bei Dokument-Update
-- [ ] Tests ausführen und bestehen
+- [x] Tests für Embedding-Cache schreiben (`tests/unit/embedding_cache_test.rs`)
+- [x] `EmbeddingCache` implementieren (TDD) – `src/cache/embedding_cache.rs`
+  - In-Memory-Cache + Trait `EmbeddingCache`; Cache-Key: `{document_id}_{chunk_id}_{model_name}`
+  - Cache-Hit/Miss-Handling; `EmbeddingCacheHelper::get_or_compute_embeddings`
+  - Cache-Invalidation bei Dokument (`invalidate_document`), `clear`
+- [ ] Tests im Container ausführen (Container-Build wurde behoben: Logging + gRPC Send)
 
 #### 10.1.2 Query-Result-Cache
 - [ ] Tests für Query-Result-Cache schreiben
@@ -729,9 +728,9 @@ Dieser Plan beschreibt die kleinstmöglichen Schritte zur Implementierung von Fr
 - [ ] Rustdoc generieren (`cargo doc`) – kann lokal ausgeführt werden
 
 #### 18.2.2 Architecture Documentation
-- [ ] Architecture-Diagramm erstellen
-- [ ] Indexing-Flow-Diagramm erstellen
-- [ ] Retrieval-Flow-Diagramm erstellen
+- [x] Architecture-Diagramm erstellen (`docs/ARCHITECTURE.md`: Gesamtarchitektur mit Komponenten und Beziehungen)
+- [x] Indexing-Flow-Diagramm erstellen (`docs/ARCHITECTURE.md`: Indexing-Sequence-Diagramm, Batch-Indexing, Incremental-Update, Full-Re-Indexing)
+- [x] Retrieval-Flow-Diagramm erstellen (`docs/ARCHITECTURE.md`: Retrieval-Sequence-Diagramm, Watch-Folder & Auto-Indexing)
 
 ### 18.3 User Documentation
 
@@ -791,6 +790,16 @@ Dieser Plan beschreibt die kleinstmöglichen Schritte zur Implementierung von Fr
   - Data-Export: ExportRecord-Felder, format_json (Data Portability)
   - Data-Minimization / Access-Control: RequestValidator lehnt leere document_id und ungültiges limit ab, akzeptiert gültige Grenzwerte
 - [x] GDPR-Compliance-Tests ausführen und bestehen
+
+---
+
+## Verbleibende optionale Punkte (Übersicht)
+
+- [ ] **Phase 4.2** Sentence-Transformers FFI (komplex, optional)
+- [ ] **Phase 10–12** Caching, Hybrid-Search, Re-Ranking (optional)
+- [ ] **Phase 16.2–16.3** Document-Encryption, Access-Control (optional)
+
+*(Kern-RAG und Produktion: PRODUKTIONSBEREIT mit Embedding-Stubs.)*
 
 ---
 

@@ -1,0 +1,12 @@
+{
+  "grpc_port": 50054,
+  "default_local_llm": "llama3-8b",
+  "vision_model": "gpt-4v",
+  "local_provider": {
+    "provider_type": "auto",
+    "llamacpp_models_dir": "./models/llamacpp",
+    "bitnet_models_dir": "./models/bitnet",
+    "auto_select": true,
+    "llamacpp_min_memory_mb": 8000
+  }
+}

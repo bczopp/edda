@@ -8,6 +8,12 @@ Loki ist ein unabhängiger Service für Script-Execution, der user-generierte Sc
 
 **Tests ausführen:** Von `loki/`: `docker compose -f docker-compose.test.yml run --rm loki-test` oder `./scripts/run-tests.sh` / `.\scripts\run-tests.ps1`. Von Repo-Root: `loki/scripts/run-tests.sh` bzw. `.\loki\scripts\run-tests.ps1`. **CI:** Bei Push/PR auf `loki/**` läuft die Pipeline [.github/workflows/loki.yml](../.github/workflows/loki.yml) (Test im Container, Lint).
 
+**Status: ~78% COMPLETE** – Phase 1–14 ✅ (Projekt-Setup, Tool-Config, gRPC, Script-Engine, Resource-Management, Fenrir, Jörmungandr, Hel, Service-Coordination, Error/Resilience, Script-Cache, Performance-Monitor, Docs, E2E-, Performance-, Security-Tests). Remaining: optional Benchmarks, weitere Docs.
+
+- **Script-API (Lua)**: Fenrir (GPIO, Sensor, Actuator), Jörmungandr (HTTP, WebSocket, MQTT), Hel (FS, Storage, Cache) – siehe [docs/SCRIPT_API.md](docs/SCRIPT_API.md).
+- **Tool-Config**: TOML-Format (`ToolConfig`, `ToolDefinition`, `ScriptSource` inline/path) – siehe [docs/TOOL_CONFIG.md](docs/TOOL_CONFIG.md).
+- **Example-Scripts**: [examples/](examples/) – Fenrir (LED, Sensor), Jörmungandr (HTTP, MQTT), Hel (File, Cache).
+
 ## Verantwortlichkeiten
 
 ### 1. Script-Execution
@@ -132,9 +138,8 @@ service LokiService {
 **WICHTIG**: Loki lädt eine Konfigurationsdatei mit den vom User zur Verfügung gestellten Tools. Es gibt kein Protocol für Tool-Discovery.
 
 ### Konfigurationsdatei
-- **Format**: 
-  - **Konfigurationsdatei-Format**: JSON oder YAML (konfigurierbar)
-  - **Tool-Definitionen**: Tools werden in der Konfigurationsdatei definiert (Name, Beschreibung, Parameter, Return-Type, etc.)
+- **Format**: **TOML** (siehe [docs/TOOL_CONFIG.md](docs/TOOL_CONFIG.md))
+  - **Tool-Definitionen**: `[[tools]]` mit name, description, parameters, return_type, script (inline oder path)
 - **Speicherort**: 
   - **User-bereitgestellt**: Konfigurationsdatei wird vom User bereitgestellt
   - **Standard-Pfad**: Standard-Pfad für Konfigurationsdatei (z.B. `~/.loki/tools.json`)

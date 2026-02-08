@@ -34,7 +34,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.75
+          toolchain: stable
           components: rustfmt, clippy
 
       - name: Cache cargo
@@ -52,3 +52,39 @@ jobs:
 
       - name: cargo clippy
         run: cargo clippy --manifest-path ragnarok/Cargo.toml -- -D warnings
+
+  coverage:
+    name: Code coverage (tarpaulin)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ragnarok/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ragnarok-${{ runner.os }}-cargo-${{ hashFiles('ragnarok/Cargo.toml') }}
+          restore-keys: ragnarok-${{ runner.os }}-cargo-
+
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Run cargo tarpaulin
+        run: |
+          cd ragnarok
+          cargo tarpaulin --out Lcov --output-dir coverage --manifest-path Cargo.toml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ragnarok-coverage
+          path: ragnarok/coverage

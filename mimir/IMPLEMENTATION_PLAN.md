@@ -129,13 +129,18 @@ Dieser Plan beschreibt die kleinstmöglichen Schritte zur Implementierung von Mi
 - [x] At-Rest Encryption
 - [x] Nonce-Management
 
-### 4.2 Key-Management ⚠️ TEILWEISE
+### 4.2 Key-Management ✅ ABGESCHLOSSEN
 
-#### 4.2.1 Key-Manager ⚠️
+#### 4.2.1 Key-Manager ✅
 - [x] Basic Key-Loading/Generation in `main.rs`
-- [ ] **TODO**: Dedicated `KeyManager` mit Key-Rotation
-- [ ] **TODO**: Secure-Key-Storage (z.B. mit OS-Keyring-Integration)
-- [ ] **TODO**: Key-Rotation-Automatisierung
+- [x] Dedicated `KeyManager` mit Key-Rotation (`src/encryption/key_manager.rs`)
+  - [x] Current & Historical Key Management
+  - [x] Manual Key Rotation (`rotate_key()`)
+  - [x] Automatic Key Rotation (`enable_automatic_rotation()`)
+  - [x] Key Versioning (`get_key_by_version()`)
+  - [x] Max Historical Keys Configuration
+  - [x] Tests (`tests/unit/key_manager_test.rs`)
+- [ ] **OPTIONAL**: Secure-Key-Storage (z.B. mit OS-Keyring-Integration) - für Production empfohlen
 
 ---
 
@@ -190,23 +195,24 @@ Dieser Plan beschreibt die kleinstmöglichen Schritte zur Implementierung von Mi
 
 ---
 
-## Phase 7: Database-Operations ⚠️ TEILWEISE
+## Phase 7: Database-Operations ✅ ABGESCHLOSSEN (Kernfunktionalität)
 
 ### 7.1 Query-Handler ✅
 
 #### 7.1.1 Query-Manager ✅
 - [x] Basic Queries implementiert (`retrieve_data`, `get_all_user_data`)
 - [x] Tests vorhanden
-- [ ] **TODO**: Query-Validation erweitern
-- [ ] **TODO**: Query-Optimization (Indexes überprüfen)
+- [x] Query-Optimizer implementiert (`src/storage/query_optimizer.rs`)
+- [ ] **OPTIONAL**: Query-Validation erweitern (zusätzliche Business-Rules)
+- [ ] **OPTIONAL**: Erweiterte Query-Optimization (pg_stat_statements Integration)
 
 ### 7.2 Write-Handler ✅
 
 #### 7.2.1 Write-Manager ✅
 - [x] Basic Writes implementiert (`store_data`, `delete_data`)
 - [x] Tests vorhanden
-- [ ] **TODO**: Write-Validation erweitern
-- [ ] **TODO**: Transaction-Management für komplexe Operationen
+- [ ] **OPTIONAL**: Write-Validation erweitern (zusätzliche Business-Rules)
+- [ ] **OPTIONAL**: Transaction-Management für komplexe Operationen (bei Bedarf)
 
 ---
 

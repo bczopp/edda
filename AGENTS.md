@@ -75,7 +75,82 @@ Services communicate via:
 - **Connection pooling**: Reuse connections efficiently
 - **Load testing**: Test under realistic load conditions
 
-### 4. DRY (Don't Repeat Yourself)
+### 4. Concurrency & Parallelism for LLM Projects
+
+**Critical for LLM Systems**: Concurrency and parallelism MUST be first-class design considerations in every project that works with LLMs.
+
+**Why this matters:**
+- **LLM calls are slow** (100ms–10s+): Sequential processing wastes capacity and hurts UX
+- **Workflows are parallelizable**: Sub-tasks, model selection, RAG+LLM, plugin execution can run concurrently
+- **Resource limits**: Explicit concurrency control prevents overload (device, LLM backend, API rate limits)
+
+**Required for all LLM-related projects** (Geri, Odin, Skuld, Freki, Valkyries, Frigg, platforms calling LLMs):
+
+- **Concurrent request handling**: Support multiple LLM requests in flight (async, tokio, request queuing)
+- **Explicit limits**: Configure `max_concurrent_requests`, queue depth, or worker pool size
+- **Parallel sub-tasks**: When a workflow has independent steps (e.g., Valkyries sub-agents, Skuld model evaluation), execute them in parallel (tokio::spawn, join_all, FuturesUnordered)
+- **Load balancing**: Distribute load across multiple models/providers/instances
+- **Backpressure**: Handle overload gracefully (queue, reject, fallback)
+- **Concurrency testing**: Load tests with concurrent requests, race-condition tests, throughput benchmarks
+
+**Examples in Edda:**
+- **Geri**: `max_concurrent_requests`, `RequestQueueManager`, `LoadBalancer`, parallel-friendly architecture
+- **Odin**: `process_parallel()`, request queue, async non-blocking delegation
+- **Skuld**: Parallel model evaluation (tokio::spawn per candidate model)
+- **Freki**: Parallel indexing, concurrent-query load tests
+- **Valkyries**: `parallel_agents` config (must be implemented: multiple agent instances or concurrent task dispatch)
+
+### 5. Structured Intent & Execution Protocol
+
+Edda uses a dual-layered XML protocol to separate high-level planning (intents) from low-level execution (actions). This ensures that orchestrators can communicate goals without needing to know implementation details of specific tools.
+
+#### 1. High-Level Intent (<task>)
+
+Orchestrators (Odin, Valkyries) send high-level intents wrapped in `<task>` tags. These define "what" needs to be achieved.
+
+**Standard Intent Tags:**
+- `<collection type="...">`: Requests a collection of information (e.g., `file`, `process`, `network`).
+- `<instruction>`: A declarative command to perform a complex logical operation.
+- `<analysis type="...">`: Requests a deep-dive analysis of a specific domain.
+
+**Example Task (Odin → Thor):**
+```xml
+<task>
+   <collection type="file" location="c:/projects/edda">
+      <filter>*.proto</filter>
+   </collection>
+</task>
+```
+
+#### 2. Atomic Execution (<call>)
+
+Executors (Thor) or internal sub-agents translate `<task>` intents into atomic `<call>` actions. These define "how" the work is performed.
+
+- `<call type="TOOL_NAME">`: Executes an atomic action with specific arguments defined by `<arg name="N">V</arg>`.
+- `<thinking>`: Internal reasoning used by the executor to decide which `<call>` to generate for a given `<task>`.
+
+**Example Internal Execution (Thor Logic):**
+```xml
+<thinking>To collect .proto files in edda, I will use a recursive directory listing.</thinking>
+<call type="SYSTEM_COMMAND">
+  <arg name="command">ls</arg>
+  <arg name="args">["-la", "*.proto"]</arg>
+</call>
+```
+
+#### 3. Response Protocol
+
+All XML communications must be acknowledged with a `<response>` tag:
+- `<response status="success|error">`: Status indicator.
+- `<payload>`: The result data (raw text, JSON, or further XML).
+
+#### 4. Implementation Responsibilities
+
+- **Odin**: Translates user requests into high-level `<task>` blobs.
+- **Thor**: Analyzes `<task>` blobs and maps them to its internal action executors. **All external tool calls and system commands must be executed within a sandboxed container environment by default.**
+- **Geri**: Must be prompted to understand the difference between proposing a `task` (general goal) and a `call` (specific tool syntax).
+
+### 6. DRY (Don't Repeat Yourself)
 
 **Reuse Before Creating**: Always check for existing functionality before implementing new code.
 
@@ -85,7 +160,7 @@ Services communicate via:
 - **Shared components**: Wenn gemeinsame Komponenten (DTOs, Protocols, Utils) benötigt werden, sollten separate Projekte erstellt werden
 - **Service discovery**: Know what other services provide and use them
 
-### 5. KISS (Keep It Simple, Stupid)
+### 6. KISS (Keep It Simple, Stupid)
 
 **Simplicity Over Complexity**: Prefer simple, clear solutions over complex ones.
 
@@ -97,7 +172,7 @@ Services communicate via:
 - **Code brevity**: Code should be as short as possible while maintaining readability
 - **Minimal design**: Beautiful but simple to minimalist design - avoid unnecessary complexity
 
-### 6. CQRS (Command Query Responsibility Segregation)
+### 7. CQRS (Command Query Responsibility Segregation)
 
 **Software-Level Separation**: Separate read and write operations at the software level, not just the database.
 
@@ -107,7 +182,7 @@ Services communicate via:
 - **Optimization**: Optimize reads and writes independently
 - **Clear boundaries**: Clear separation between command and query paths
 
-### 7. Single Responsibility Principle
+### 8. Single Responsibility Principle
 
 **One Responsibility Per Component**: Each class, function, or module should have a single, well-defined responsibility.
 
@@ -117,7 +192,7 @@ Services communicate via:
 - **Maintainability**: Easier to understand, test, and maintain
 - **Refactoring**: Easier to refactor when responsibilities are clear
 
-### 8. Dependency Injection
+### 9. Dependency Injection
 
 **Inject, Don't Create**: Dependencies should be injected, not created within the component.
 

@@ -21,6 +21,8 @@ config = "0.14"
 notify = "6.1"
 clap = { version = "4.4", features = ["derive"] }
 ratatui = "0.25"
+crossterm = "0.27"
+gladsheim = { path = "../gladsheim" }
 
 [dev-dependencies]
 tokio-test = "0.4"

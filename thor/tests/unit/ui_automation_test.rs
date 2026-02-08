@@ -40,12 +40,51 @@ mod tests {
             action_id: "test-action".to_string(),
         };
         
-        // Note: Actual execution may fail if no UI is available in test environment
-        // This is expected - the test verifies the handler can parse and attempt execution
         let result = handler.execute(&context, &serde_json::to_vec(&action_data).unwrap()).await;
-        // Result may be Ok or Err depending on operating system and test environment
-        // We just verify the handler processes the request
-        assert!(result.is_ok() || result.is_err()); // Either is acceptable in test environment
+        // Click-Actions ohne explizite User-Confirmation dürfen nicht ausgeführt werden.
+        let err = result.expect_err("click without confirmation should fail");
+        let msg = err.to_string().to_lowercase();
+        assert!(
+            msg.contains("confirmation"),
+            "expected confirmation-related error, got: {}",
+            msg
+        );
+    }
+
+    #[tokio::test]
+    async fn test_ui_automation_click_action_with_confirmation() {
+        let handler = UIAutomationHandler::new();
+
+        let action_data = serde_json::json!({
+            "action": "click",
+            "confirmed": true,
+            "element": {
+                "type": "by_name",
+                "value": "test_button"
+            }
+        });
+
+        let context = ActionContext {
+            device_id: "test-device".to_string(),
+            user_id: "test-user".to_string(),
+            action_id: "test-action".to_string(),
+        };
+
+        let result = handler
+            .execute(&context, &serde_json::to_vec(&action_data).unwrap())
+            .await;
+
+        // Auf unterschiedlichen Plattformen kann die eigentliche UI-Automation
+        // noch fehlschlagen (z.B. fehlender AT-SPI-Bus). Wichtig ist hier nur,
+        // dass der Fehler *nicht* durch fehlende Bestätigung ausgelöst wird.
+        if let Err(e) = result {
+            let msg = e.to_string().to_lowercase();
+            assert!(
+                !msg.contains("confirmation"),
+                "unexpected confirmation error: {}",
+                msg
+            );
+        }
     }
 
     #[tokio::test]
@@ -69,8 +108,44 @@ mod tests {
         };
         
         let result = handler.execute(&context, &serde_json::to_vec(&action_data).unwrap()).await;
-        // In test environment, this may fail (no UI), which is acceptable
-        assert!(result.is_ok() || result.is_err());
+        // On Linux/macOS: stub returns "not yet fully implemented"; on Windows may Ok in headless
+        if let Err(e) = &result {
+            let msg = e.to_string();
+            assert!(
+                msg.contains("not yet fully implemented") || msg.contains("failed"),
+                "unexpected error: {}",
+                msg
+            );
+        }
+    }
+
+    /// On Linux, UI automation currently returns an error (stub/partial AT-SPI support).
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn test_ui_automation_linux_returns_not_implemented() {
+        let handler = UIAutomationHandler::new();
+        let action_data = serde_json::json!({
+            "action": "click",
+            "element": { "type": "by_position", "x": 0, "y": 0 }
+        });
+        let context = ActionContext {
+            device_id: "test-device".to_string(),
+            user_id: "test-user".to_string(),
+            action_id: "test-action".to_string(),
+        };
+        let result = handler
+            .execute(&context, &serde_json::to_vec(&action_data).unwrap())
+            .await;
+        let err = result.expect_err("Linux UI automation should currently return Err");
+        let msg = err.to_string();
+        // Accept both legacy stub messages and newer AT-SPI based messages
+        assert!(
+            msg.contains("not yet fully implemented")
+                || msg.contains("Linux UI Automation")
+                || msg.contains("AT-SPI"),
+            "{}",
+            msg
+        );
     }
 
     #[tokio::test]

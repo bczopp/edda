@@ -281,10 +281,11 @@ alfheim/
 - Mobile Platform SDKs (iOS/Android)
 - Audio Libraries (Mobile)
 - UI Framework (React Native, Flutter, Native)
-- **TypeScript/Frontend-Tooling**: `bun` wird als Package-Manager und Runtime verwendet (statt npm oder pnpm)
-  - Integration erfolgt über `bun install` für Dependencies und `bun run` für Scripts
-  - `bun`-spezifische Konfigurationen können in `package.json` oder `bunfig.toml` definiert werden
-  - Dependencies werden über `bun` verwaltet (schneller als npm/pnpm)
+- **TypeScript/Frontend-Tooling**: `bun` wird als Package-Manager und Runtime verwendet (npm wird nicht verwendet)
+  - Container: offizielles `oven/bun`-Image (kein Node/npm)
+  - Integration: `bun install` für Dependencies, `bun run` / `bun test` für Scripts
+  - Konfiguration: `package.json` oder `bunfig.toml`
+  - Dependencies ausschließlich über `bun` (schneller als npm/pnpm)
 
 ## Integration
 

@@ -14,6 +14,34 @@ pub enum SettingsError {
     EmptyDefaultLocalLlm,
     #[error("vision_model must be non-empty")]
     EmptyVisionModel,
+    #[error("Invalid local provider type: {0}")]
+    InvalidLocalProviderType(String),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalProviderConfig {
+    /// Provider type: "llamacpp", "bitnet", or "auto"
+    pub provider_type: String,
+    /// Path to llama.cpp models directory
+    pub llamacpp_models_dir: String,
+    /// Path to BitNet models directory
+    pub bitnet_models_dir: String,
+    /// Enable automatic provider selection based on hardware
+    pub auto_select: bool,
+    /// Minimum memory (MB) to use llama.cpp (otherwise use BitNet)
+    pub llamacpp_min_memory_mb: u32,
+}
+
+impl Default for LocalProviderConfig {
+    fn default() -> Self {
+        Self {
+            provider_type: "auto".to_string(),
+            llamacpp_models_dir: "./models/llamacpp".to_string(),
+            bitnet_models_dir: "./models/bitnet".to_string(),
+            auto_select: true,
+            llamacpp_min_memory_mb: 8000, // 8GB minimum for llama.cpp
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -21,6 +49,8 @@ pub struct GeriSettings {
     pub grpc_port: u16,
     pub default_local_llm: String,
     pub vision_model: String,
+    #[serde(default)]
+    pub local_provider: LocalProviderConfig,
 }
 
 impl GeriSettings {
@@ -34,6 +64,15 @@ impl GeriSettings {
         if self.vision_model.trim().is_empty() {
             return Err(SettingsError::EmptyVisionModel);
         }
+        
+        // Validate local provider type
+        let valid_types = ["llamacpp", "bitnet", "auto"];
+        if !valid_types.contains(&self.local_provider.provider_type.as_str()) {
+            return Err(SettingsError::InvalidLocalProviderType(
+                self.local_provider.provider_type.clone()
+            ));
+        }
+        
         Ok(())
     }
 }
@@ -44,9 +83,11 @@ impl Default for GeriSettings {
             grpc_port: 50054,
             default_local_llm: "llama3-8b".to_string(),
             vision_model: "gpt-4v".to_string(),
+            local_provider: LocalProviderConfig::default(),
         }
     }
 }
+
 
 pub struct SettingsManager {
     config_path: PathBuf,

@@ -27,9 +27,36 @@ Ragnarok wird über Subcommands gesteuert. Odin muss unter der in der Konfigurat
   "odin": {
     "address": "127.0.0.1",
     "port": 50051
+  },
+  "thor": {
+    "address": "127.0.0.1",
+    "port": 50052
+  },
+  "geri": {
+    "address": "127.0.0.1",
+    "port": 50053
+  },
+  "freki": {
+    "address": "127.0.0.1",
+    "port": 50054
+  },
+  "huginn": {
+    "address": "127.0.0.1",
+    "port": 50055
+  },
+  "muninn": {
+    "address": "127.0.0.1",
+    "port": 50056
   }
 }
 ```
+
+- `odin` ist erforderlich (Chat geht über Odin).
+- `thor` ist optional: Wenn gesetzt, wird `ragnarok action <...>` über den Thor-Service ausgeführt.
+- `geri` ist optional: Wenn gesetzt, stehen `prompt` (direkter LLM-Aufruf) und `models` (Modellliste) zur Verfügung.
+- `freki` ist optional: Wenn gesetzt, steht `retrieve` (RAG-Kontext abrufen) zur Verfügung. Hinweis: Die Freki-API nutzt Embeddings; ohne Embedding-Service liefert `retrieve` ggf. keine Treffer.
+- `huginn` ist optional: Wenn gesetzt, steht `transcribe <datei>` (STT: Audio transkribieren) zur Verfügung.
+- `muninn` ist optional: Wenn gesetzt, steht `speak "<text>"` (TTS: Text in Sprache umwandeln) zur Verfügung.
 
 **Beispiele:**
 
@@ -37,13 +64,28 @@ Ragnarok wird über Subcommands gesteuert. Odin muss unter der in der Konfigurat
 # Chat-Nachricht an Odin senden
 cargo run -- chat "Hallo, was ist die Hauptstadt von Frankreich?"
 
-# Action ausführen (Placeholder)
+# Action ausführen (über Thor, wenn konfiguriert)
 cargo run -- action "run_script"
+
+# Direkt an Geri prompten (wenn geri konfiguriert)
+cargo run -- prompt "Kurz: Was ist 2+2?"
+
+# Modellliste von Geri anzeigen (wenn geri konfiguriert)
+cargo run -- models
+
+# RAG-Kontext von Freki abrufen (wenn freki konfiguriert)
+cargo run -- retrieve "suchbegriff"
+
+# Audio transkribieren (wenn huginn konfiguriert)
+cargo run -- transcribe audio.wav
+
+# Text vorlesen (wenn muninn konfiguriert)
+cargo run -- speak "Hallo Welt"
 
 # Status anzeigen
 cargo run -- status
 
-# Einstellungen anzeigen (Config-Pfad, Odin-Adresse)
+# Einstellungen anzeigen (Config-Pfad, Odin/Thor/Geri/Freki/Huginn/Muninn)
 cargo run -- settings
 ```
 
@@ -61,10 +103,15 @@ ragnarok/
 │   ├── lib.rs
 │   ├── cli/             # CLI (clap)
 │   │   ├── mod.rs
-│   │   └── parser.rs    # Cli, Commands (Chat, Action, Status, Settings)
+│   │   └── parser.rs    # Cli, Commands (Chat, Action, Prompt, Models, Retrieve, Transcribe, Speak, Status, Settings, Tui)
 │   ├── grpc_client/     # gRPC-Clients
 │   │   ├── mod.rs
-│   │   └── odin_client.rs
+│   │   ├── odin_client.rs
+│   │   ├── thor_client.rs
+│   │   ├── geri_client.rs
+│   │   ├── freki_client.rs
+│   │   ├── huginn_client.rs   # optional (STT)
+│   │   └── muninn_client.rs  # optional (TTS)
 │   ├── services/        # Service-Integration
 │   │   ├── mod.rs
 │   │   └── odin_integration.rs  # OdinServiceIntegration (send_chat)

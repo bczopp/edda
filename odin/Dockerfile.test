@@ -1,7 +1,7 @@
 # Ein Container pro Projekt: Odin-Tests + alle Mocks (TCP + gRPC-Geri) in einem Image.
 # Keine separaten mock-* Container – Mocks laufen als Hintergrundprozesse im Test-Container.
 
-FROM rust:1.83-slim
+FROM rust:latest
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \

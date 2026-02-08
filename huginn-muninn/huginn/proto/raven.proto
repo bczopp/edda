@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package raven;
+
+// RavenMessage - Message protocol for Huginn/Muninn communication
+message RavenMessage {
+  string message_id = 1;
+  MessageDirection direction = 2;
+  string content = 3;
+  MessageMetadata metadata = 4;
+  int64 timestamp = 5;
+}
+
+// MessageDirection - Direction of the message
+enum MessageDirection {
+  INCOMING = 0;  // From user to Odin (via Huginn)
+  OUTGOING = 1;  // From Odin to user (via Muninn)
+}
+
+// MessageMetadata - Additional metadata for the message
+message MessageMetadata {
+  string user_id = 1;
+  string device_id = 2;
+  string language = 3;
+  float confidence = 4;  // STT confidence score (0.0 - 1.0)
+  int32 duration_ms = 5; // Audio duration in milliseconds
+  map<string, string> custom = 6;
+}

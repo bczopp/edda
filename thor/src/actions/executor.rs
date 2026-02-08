@@ -25,6 +25,11 @@ pub enum ActionError {
 pub trait ActionExecutor: Send + Sync {
     fn action_type(&self) -> &str;
 
+    /// Returns true if this executor runs in a sandboxed environment
+    fn is_sandboxed(&self) -> bool {
+        false
+    }
+
     async fn execute(
         &self,
         context: &ActionContext,

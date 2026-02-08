@@ -1,4 +1,9 @@
 pub mod script;
 pub mod coordination;
+pub mod error_handler;
 pub mod grpc;
+pub mod resilience;
 pub mod utils;
+pub mod tools;
+pub mod script_registry;
+pub mod resources;

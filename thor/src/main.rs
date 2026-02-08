@@ -47,17 +47,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         registry.register(Arc::new(thor::jotunheim::JotunheimActionHandler::new(jotunheim_url.clone()))).await;
     }
 
+    // Register sandbox handler
+    registry.register(Arc::new(thor::sandbox::SandboxActionExecutor)).await;
+
     // Initialize action dispatcher (with optional audit logging)
     let dispatcher = if settings.enable_audit_logging {
         Arc::new(thor::actions::ActionDispatcher::new_with_audit(
             registry.clone(),
             permission_checker.clone(),
             thor::audit::TracingAuditLogger::new(),
+            settings.enable_sandboxing,
         ))
     } else {
         Arc::new(thor::actions::ActionDispatcher::new(
             registry.clone(),
             permission_checker.clone(),
+            settings.enable_sandboxing,
         ))
     };
 

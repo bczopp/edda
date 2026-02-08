@@ -5,6 +5,6 @@ use ragnarok::services::OdinServiceIntegration;
 
 #[tokio::test]
 async fn test_odin_integration_new_unreachable_returns_err() {
-    let result = OdinServiceIntegration::new("127.0.0.1", 38475).await;
+    let result = OdinServiceIntegration::new(38475).await;
     assert!(result.is_err(), "OdinServiceIntegration::new with unreachable host must fail");
 }

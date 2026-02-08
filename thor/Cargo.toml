@@ -46,8 +46,23 @@ portable-pty = "0.5"
 # HTTP client for network operations
 reqwest = { version = "0.11", features = ["json"] }
 
+# XML parsing for structured protocol
+quick-xml = "0.31"
+
 # Cron expression parsing (Phase 13 Scheduler)
 cron-parser = "0.11"
+
+# Windows UI Automation (Phase 12.2) - mouse/keyboard input
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.52", features = [
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_UI_WindowsAndMessaging",
+  "Win32_Foundation",
+] }
+
+# Linux UI Automation (Phase 12.4) - AT-SPI integration
+[target.'cfg(target_os = "linux")'.dependencies]
+atspi = { version = "0.29", default-features = false, features = ["tokio", "connection", "proxies"] }
 
 [dev-dependencies]
 # Testing

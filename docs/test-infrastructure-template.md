@@ -18,8 +18,10 @@ Proto-Dateien und build.rs richten sich nach [docs/proto-and-build-conventions.m
 
 ## Dockerfile.test Template
 
+**Sprachversionen:** Es werden die aktuellsten stabilen Versionen verwendet (Rust: `rust:latest`, in CI `toolchain: stable`; Elixir: `elixir:latest`). **JavaScript/TypeScript:** Es wird **bun** verwendet (Docker: `oven/bun:latest`), nicht Node/npm – siehe [TECHNOLOGY_DECISIONS.md](TECHNOLOGY_DECISIONS.md).
+
 ```dockerfile
-FROM rust:1.75-slim
+FROM rust:latest
 
 WORKDIR /app
 
@@ -155,10 +157,10 @@ Ausführung von `bifrost/`: `docker compose -f docker-compose.test.yml run --rm 
 Services mit GitHub Actions CI (Test im Container, Lint; bei Push/PR auf den jeweiligen Pfad):
 
 - **Bifrost**: [.github/workflows/bifrost.yml](../.github/workflows/bifrost.yml) – `bifrost/**` (Test, Lint, Coverage, Rustdoc, cargo-audit; Test-Job-Timeout 15 min)
-- **Heimdall**: [.github/workflows/heimdall.yml](../.github/workflows/heimdall.yml) – `heimdall/**` (Test, Lint; Test-Job-Timeout 15 min)
-- **Thor**: [.github/workflows/thor.yml](../.github/workflows/thor.yml) – `thor/**` (Test, Lint; Test-Job-Timeout 15 min)
-- **Odin**: [.github/workflows/odin.yml](../.github/workflows/odin.yml) – `odin/**` (Test, Lint; Test-Job-Timeout 15 min)
-- **Loki**: [.github/workflows/loki.yml](../.github/workflows/loki.yml) – `loki/**` (Test, Lint; Test-Job-Timeout 15 min)
+- **Heimdall**: [.github/workflows/heimdall.yml](../.github/workflows/heimdall.yml) – `heimdall/**` (Test, Lint, Coverage; Test-Job-Timeout 15 min)
+- **Thor**: [.github/workflows/thor.yml](../.github/workflows/thor.yml) – `thor/**` (Test, Lint, Coverage; Test-Job-Timeout 15 min)
+- **Odin**: [.github/workflows/odin.yml](../.github/workflows/odin.yml) – `odin/**` (Test, Lint, Coverage; Test-Job-Timeout 15 min)
+- **Loki**: [.github/workflows/loki.yml](../.github/workflows/loki.yml) – `loki/**` (Test, Lint, Coverage; Test-Job-Timeout 15 min)
 - **Freki**: [.github/workflows/freki.yml](../.github/workflows/freki.yml) – `freki/**` (Test, Lint; Test-Job-Timeout 15 min)
 - **Geri**: [.github/workflows/geri.yml](../.github/workflows/geri.yml) – `geri/**` (Test, Lint; Test-Job-Timeout 15 min)
 - **Skuld**: [.github/workflows/skuld.yml](../.github/workflows/skuld.yml) – `skuld/**` (Test, Lint; Test-Job-Timeout 15 min)
@@ -169,13 +171,13 @@ Services mit GitHub Actions CI (Test im Container, Lint; bei Push/PR auf den jew
 - **Valkyries**: [.github/workflows/valkyries.yml](../.github/workflows/valkyries.yml) – `valkyries/**` (Test, Lint; Test-Job-Timeout 15 min)
 - **Nidhöggr**: [.github/workflows/nidhoggr.yml](../.github/workflows/nidhoggr.yml) – `nidhoggr/**` (Test, Lint; Build-Kontext Repo-Root; Test-Job-Timeout 15 min)
 - **Frigg**: [.github/workflows/frigg.yml](../.github/workflows/frigg.yml) – `frigg/**` (Test, Lint; Test-Job-Timeout 15 min)
-- **Ragnarok**: [.github/workflows/ragnarok.yml](../.github/workflows/ragnarok.yml) – `ragnarok/**` (Test, Lint; Test-Job-Timeout 15 min)
+- **Ragnarok**: [.github/workflows/ragnarok.yml](../.github/workflows/ragnarok.yml) – `ragnarok/**` (Test, Lint, Coverage; Test-Job-Timeout 15 min)
 - **Njörðr**: [.github/workflows/njordr.yml](../.github/workflows/njordr.yml) – `njordr/**` (Test, Lint; Test-Job-Timeout 15 min)
 - **Heidrun**: [.github/workflows/heidrun.yml](../.github/workflows/heidrun.yml) – `heidrun/**` (Test, Lint; Test-Job-Timeout 15 min)
 - **Ratatoskr**: [.github/workflows/ratatoskr.yml](../.github/workflows/ratatoskr.yml) – `ratatoskr/**` (Test, Lint; Test-Job-Timeout 15 min)
 - **Eikthyrnir**: [.github/workflows/eikthyrnir.yml](../.github/workflows/eikthyrnir.yml) – `eikthyrnir/**` (Test, Lint; Test-Job-Timeout 15 min)
 - **Læraðr**: [.github/workflows/laeradr.yml](../.github/workflows/laeradr.yml) – `laeradr/**` (Test, Lint; Test-Job-Timeout 15 min)
-- **Jotunheim**: [.github/workflows/jotunheim.yml](../.github/workflows/jotunheim.yml) – `jotunheim/**` (Test, Lint; Test-Job-Timeout 15 min)
+- **Jotunheim**: [.github/workflows/jotunheim.yml](../.github/workflows/jotunheim.yml) – `jotunheim/**` (Test, Lint, Coverage; Test-Job-Timeout 15 min)
 - **Asgard**: [.github/workflows/asgard.yml](../.github/workflows/asgard.yml) – `asgard/**` (Test, Lint; Test-Job-Timeout 15 min)
 - **Forseti**: [.github/workflows/forseti.yml](../.github/workflows/forseti.yml) – `forseti/**` (Test, Lint; Test-Job-Timeout 15 min)
 - **Midgard**: [.github/workflows/midgard.yml](../.github/workflows/midgard.yml) – `midgard/**` (Test, Lint; Test-Job-Timeout 15 min)

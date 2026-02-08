@@ -82,8 +82,50 @@ Odin ist der Main Orchestrator - er koordiniert alle Services (Thor, Freki, Geri
 
 ---
 
+## Phase 11: Device-Scheduler & Device-Loop (Asgard/Midgard/Devices)
+
+**Ziel:** Odin erhält einen vom User explizit aktivierbaren Hintergrund-Scheduler/Loop, der – abhängig von Settings – regelmäßig den Status und die Fähigkeiten der angebundenen Services/Devices aktualisiert und damit die Grundlage für Haus-/Fahrzeug-/Roboter-Steuerung über Asgard/Midgard legt.
+
+- [x] **Device-Scheduler-Design (High-Level)**
+  - Definition der Rolle des Schedulers im Kontext von Odin (nur Orchestrierung, keine direkte Hardware-Ansteuerung)
+  - Klärung der Schnittstellen Asgard/Midgard ↔ Odin ↔ Thor/Bifrost/Jotunheim
+  - Dokumentation im README (`Device Scheduler & Device-Loop`-Abschnitt)
+- [x] **Scheduler-Modulstruktur**
+  - Neues Modul `src/scheduler/` mit `DeviceScheduler` als zentraler Einstieg
+  - Klare Abgrenzung zu `services::*` (Service-Lifecycle) und `protocols::*` (Einherjar/Responsibility)
+  - Trait-basierte Abstraktion (`CapabilityDiscoverer`) für Capability-Refresh, um Tests zu erleichtern
+- [x] **Konfigurierbares Polling / Intervall**
+  - Nutzung von `state_sync.sync_interval_ms` aus `OdinSettings` als zentrales Intervall
+  - Fallback auf sinnvollen Default (z.B. 1000ms) bei fehlender Konfiguration
+  - Validierung im Settings-System (kein `0`, sinnvolle Grenzen)
+- [x] **Explizite Aktivierung durch User**
+  - Neues Settings-Objekt `scheduler` mit mindestens `enabled` und `capability_refresh_enabled`
+  - Default: `scheduler.enabled = false` (kein Hintergrund-Loop aktiv ohne User-Opt-in)
+  - README-Abschnitt beschreibt, wie der User den Scheduler aktiviert und welche Teilfunktionen (z.B. Capability-Refresh) er ein-/ausschalten kann
+- [x] **Capability-Refresh-Loop**
+  - Hintergrund-Task, der periodisch `discover_all_capabilities()` aufruft (nur wenn `scheduler.enabled` und `scheduler.capability_refresh_enabled`)
+  - Robustes Error-Handling (Logging, kein Crash bei Netzwerkfehlern)
+  - Tests: Einzelner Poll-Durchlauf (`poll_once`) darf nie paniken, auch wenn keine Services erreichbar sind
+- [ ] **Device-Loop-Erweiterung (schrittweise)**
+  - [x] **DeviceRegistry (logische Devices)**
+    - Typen: `LogicalDevice` (id, kind: House/Vehicle/Robot, platform_id, name), `DeviceRegistry` (register, get, list)
+    - Zuordnung zu Platform (Asgard/Midgard) über `platform_id`; Odin hält nur die Registry, keine Hardware-Logik
+    - Tests: register/list/get, leere Registry (tests/scheduler/device_registry_test.rs)
+  - [ ] **Integration Scheduler ↔ DeviceRegistry (später)**
+    - Scheduler-Loop kann bei aktiviertem Device-Polling die Registry mit Status-Updates füttern (Quelle: Asgard/Midgard-API)
+    - Konfiguration: z.B. `scheduler.device_polling_enabled` (zukünftig)
+  - [ ] **Design Sensor-/Aktor-Polling**
+    - Odin orchestriert nur: Anforderung an Asgard/Midgard (gRPC/Bifrost), Ausführung in Platform/Thor/Bifrost/Jotunheim
+    - Dokumentation im README (Ablauf, Verantwortungsgrenzen)
+  - [ ] **Event-getriebene Signale (Vorbereitung)**
+    - Vorbereitung auf Bifrost-Events, StateSync, Responsibility/Einherjar für Device-Events (später)
+
+*Hinweis:* Phase 11 baut direkt auf den bestehenden Service-Discovery-/Capability-Mechanismen (Phase 3) und den State-Sync-/Network-Konzepten aus dem README auf. Die konkrete Hardware-/Haus-/Fahrzeug-Logik bleibt in den Platformen (Midgard, Asgard, Jotunheim); Odin koordiniert nur.
+
+---
+
 **Schritte gesamt**: ~110
-**Phasen**: 10
+**Phasen**: 11
 
 **Hinweise**:
 - Alle Schritte folgen TDD (Tests zuerst, dann Implementierung)

@@ -6,19 +6,88 @@ use async_trait::async_trait;
 #[cfg(target_os = "windows")]
 mod windows_impl {
     use super::*;
-    
-    pub async fn create_task(_name: &str, _schedule: &str, _command: &str) -> Result<(), ActionError> {
-        // Windows Task Scheduler implementation
-        // Would use windows-service crate for actual implementation
-        Err(ActionError::ExecutionFailed("Windows Task Scheduler not yet fully implemented".to_string()))
+    use std::process::Stdio;
+    use tokio::process::Command;
+
+    /// Parse cron "min hour * * *" to (hour, minute) for daily trigger. Default 00:00.
+    fn cron_to_daily_time(schedule: &str) -> (u8, u8) {
+        let parts: Vec<&str> = schedule.split_whitespace().collect();
+        if parts.len() >= 2 {
+            let min = parts[0].parse::<u8>().unwrap_or(0);
+            let hour = parts[1].parse::<u8>().unwrap_or(0);
+            return (hour.min(23), min.min(59));
+        }
+        (0, 0)
     }
-    
-    pub async fn delete_task(_name: &str) -> Result<(), ActionError> {
-        Err(ActionError::ExecutionFailed("Windows Task Scheduler not yet fully implemented".to_string()))
+
+    pub async fn create_task(name: &str, schedule: &str, command: &str) -> Result<(), ActionError> {
+        let (hour, min) = cron_to_daily_time(schedule);
+        let time_str = format!("{:02}:{:02}", hour, min);
+        let output = Command::new("schtasks")
+            .args([
+                "/Create",
+                "/TN", name,
+                "/TR", command,
+                "/SC", "DAILY",
+                "/ST", &time_str,
+                "/F",
+            ])
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()
+            .await
+            .map_err(|e| ActionError::ExecutionFailed(format!("schtasks spawn failed: {}", e)))?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(ActionError::ExecutionFailed(format!(
+                "schtasks /Create failed: {}",
+                stderr.trim()
+            )));
+        }
+        Ok(())
     }
-    
+
+    pub async fn delete_task(name: &str) -> Result<(), ActionError> {
+        let output = Command::new("schtasks")
+            .args(["/Delete", "/TN", name, "/F"])
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()
+            .await
+            .map_err(|e| ActionError::ExecutionFailed(format!("schtasks spawn failed: {}", e)))?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(ActionError::ExecutionFailed(format!(
+                "schtasks /Delete failed: {}",
+                stderr.trim()
+            )));
+        }
+        Ok(())
+    }
+
     pub async fn list_tasks() -> Result<Vec<String>, ActionError> {
-        Err(ActionError::ExecutionFailed("Windows Task Scheduler not yet fully implemented".to_string()))
+        let output = Command::new("schtasks")
+            .args(["/Query", "/FO", "LIST", "/V"])
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()
+            .await
+            .map_err(|e| ActionError::ExecutionFailed(format!("schtasks spawn failed: {}", e)))?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(ActionError::ExecutionFailed(format!(
+                "schtasks /Query failed: {}",
+                stderr.trim()
+            )));
+        }
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let mut names = Vec::new();
+        for line in stdout.lines() {
+            if let Some(name) = line.strip_prefix("TaskName:") {
+                names.push(name.trim().to_string());
+            }
+        }
+        Ok(names)
     }
 }
 
@@ -107,6 +176,16 @@ impl SchedulerActionHandler {
                             return Err(ActionError::ExecutionFailed("Windows Task Scheduler not available on this operating system".to_string()));
                         }
                     }
+                    "launchd" => {
+                        #[cfg(target_os = "macos")]
+                        {
+                            macos_impl::create_launchd_job(job_name, schedule, command).await?;
+                        }
+                        #[cfg(not(target_os = "macos"))]
+                        {
+                            return Err(ActionError::ExecutionFailed("launchd not available on this operating system".to_string()));
+                        }
+                    }
                     _ => {
                         return Err(ActionError::InvalidAction(format!("Unsupported operating system: {}", operating_system)));
                     }
@@ -142,6 +221,16 @@ impl SchedulerActionHandler {
                         #[cfg(not(target_os = "windows"))]
                         {
                             return Err(ActionError::ExecutionFailed("Windows Task Scheduler not available on this operating system".to_string()));
+                        }
+                    }
+                    "launchd" => {
+                        #[cfg(target_os = "macos")]
+                        {
+                            macos_impl::delete_launchd_job(job_name).await?;
+                        }
+                        #[cfg(not(target_os = "macos"))]
+                        {
+                            return Err(ActionError::ExecutionFailed("launchd not available on this operating system".to_string()));
                         }
                     }
                     _ => {
@@ -188,6 +277,19 @@ impl SchedulerActionHandler {
                             Vec::new()
                         }
                     }
+                    "launchd" => {
+                        #[cfg(target_os = "macos")]
+                        {
+                            macos_impl::list_launchd_jobs().await?
+                                .into_iter()
+                                .map(|name| serde_json::json!({"name": name}))
+                                .collect()
+                        }
+                        #[cfg(not(target_os = "macos"))]
+                        {
+                            return Err(ActionError::ExecutionFailed("launchd not available on this operating system".to_string()));
+                        }
+                    }
                     _ => {
                         return Err(ActionError::InvalidAction(format!("Unsupported operating system: {}", operating_system)));
                     }
@@ -229,6 +331,17 @@ impl SchedulerActionHandler {
                         #[cfg(not(target_os = "windows"))]
                         {
                             return Err(ActionError::ExecutionFailed("Windows Task Scheduler not available on this operating system".to_string()));
+                        }
+                    }
+                    "launchd" => {
+                        #[cfg(target_os = "macos")]
+                        {
+                            macos_impl::delete_launchd_job(job_name).await?;
+                            macos_impl::create_launchd_job(job_name, schedule, command).await?;
+                        }
+                        #[cfg(not(target_os = "macos"))]
+                        {
+                            return Err(ActionError::ExecutionFailed("launchd not available on this operating system".to_string()));
                         }
                     }
                     _ => {

@@ -46,6 +46,33 @@ fn test_parse_settings_command() {
 }
 
 #[test]
+fn test_parse_prompt_command() {
+    let cli = parse(&["prompt", "What is 2+2?"]);
+    match &cli.command {
+        Some(Commands::Prompt { prompt }) => assert_eq!(prompt, "What is 2+2?"),
+        _ => panic!("expected Prompt command"),
+    }
+}
+
+#[test]
+fn test_parse_models_command() {
+    let cli = parse(&["models"]);
+    match &cli.command {
+        Some(Commands::Models) => {}
+        _ => panic!("expected Models command"),
+    }
+}
+
+#[test]
+fn test_parse_retrieve_command() {
+    let cli = parse(&["retrieve", "search term"]);
+    match &cli.command {
+        Some(Commands::Retrieve { query }) => assert_eq!(query, "search term"),
+        _ => panic!("expected Retrieve command"),
+    }
+}
+
+#[test]
 fn test_parse_no_subcommand() {
     let cli = parse(&[]);
     assert!(cli.command.is_none());

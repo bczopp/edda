@@ -22,8 +22,9 @@ Aktuell umgesetzt (Details siehe [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md
 - **Model-Selection-Cache** (`src/selection/cache.rs`): `ModelSelectionCache` mit `select_best_model_cached(requirements)`; optional TTL, `invalidate_all()`; Key über `ModelRequirements::cache_key()`.
 - **Load-Balancing** (`src/load_balancer/`): Weighted Round-Robin für Modell-Verteilung.
 - **Eikthyrnir-Integration** (`src/eikthyrnir_client/`): gRPC-Client für Quality-Metriken (GetQualityMetrics).
+- **Geri-Integration** (`src/geri_client/`): gRPC-Client für Model-Registry (ListModels, GetModelInfo).
 
-Offen u. a.: Geri gRPC-Client (Model-Registry/Model-Info), gRPC-Server für Odin (Model-Selection-Requests), E2E- und Performance-Tests.
+✅ **Alle Phasen 1–9 komplett**. Skuld ist produktionsbereit.
 
 ## Verantwortlichkeiten
 

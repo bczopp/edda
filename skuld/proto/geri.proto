@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package geri;
+
+service GeriService {
+    rpc ProcessPrompt(ProcessPromptRequest) returns (ProcessPromptResponse);
+    rpc ProcessVision(ProcessVisionRequest) returns (ProcessVisionResponse);
+    rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
+    rpc GetModelInfo(GetModelInfoRequest) returns (GetModelInfoResponse);
+}
+
+message ProcessPromptRequest {
+    string prompt = 1;
+    string context = 2; // Optional RAG context
+    string model_name = 3; // Optional: specific model
+    uint32 max_tokens = 4;
+}
+
+message ProcessPromptResponse {
+    string text = 1;
+    uint32 tokens_used = 2;
+    string model_used = 3;
+}
+
+message ProcessVisionRequest {
+    bytes image_data = 1;
+    string prompt = 2; // Optional: specific question about image
+    string model_name = 3; // Optional: specific vision model
+}
+
+message ProcessVisionResponse {
+    string description = 1;
+    bytes analysis_data = 2; // JSON-encoded analysis
+    string model_used = 3;
+}
+
+// Model Registry Messages
+message ListModelsRequest {
+    string model_type = 1; // Optional: "llm" or "vision", empty for all
+    string provider = 2;   // Optional: filter by provider
+}
+
+message ModelInfo {
+    string id = 1;
+    string name = 2;
+    string provider = 3;
+    string model_type = 4; // "llm" or "vision"
+    uint64 parameter_count = 5;
+    string hardware_requirements = 6;
+    uint32 context_window = 7;
+}
+
+message ListModelsResponse {
+    repeated ModelInfo models = 1;
+}
+
+message GetModelInfoRequest {
+    string model_id = 1;
+}
+
+message GetModelInfoResponse {
+    ModelInfo model = 1;
+}

@@ -69,13 +69,17 @@ impl ModelEvaluator {
         }
     }
 
+    fn is_1bit_model(name: &str) -> bool {
+        name.contains("1-bit") || name.contains("1bit")
+    }
+
     fn evaluate_size(&self, model_name: &str) -> f64 {
         // Evaluate model size (smaller models score higher)
         // In real implementation, would query model registry for actual size
         match model_name {
+            name if Self::is_1bit_model(name) => 0.9, // 1-bit models are very efficient
             name if name.contains("8b") => 0.8,  // 8B models are good size
             name if name.contains("70b") => 0.3, // 70B models are large
-            name if name.contains("1-bit") => 0.9, // 1-bit models are very efficient
             _ => 0.5, // Default
         }
     }
@@ -84,7 +88,7 @@ impl ModelEvaluator {
         // Evaluate hardware compatibility
         // In real implementation, would check available hardware
         match model_name {
-            name if name.contains("1-bit") => 0.9, // 1-bit models work on more hardware
+            name if Self::is_1bit_model(name) => 0.9, // 1-bit models work on more hardware
             name if name.contains("8b") => 0.7,   // 8B models need moderate hardware
             name if name.contains("70b") => 0.3,   // 70B models need powerful hardware
             _ => 0.5,
@@ -96,7 +100,7 @@ impl ModelEvaluator {
         match model_name {
             name if name.contains("llama3") => 0.9,  // Llama 3 is very reliable
             name if name.contains("gpt-4") => 0.95, // GPT-4 is highly reliable
-            name if name.contains("1-bit") => 0.7,  // 1-bit models are newer
+            name if Self::is_1bit_model(name) => 0.7,  // 1-bit models are newer
             _ => 0.6, // Default
         }
     }
@@ -104,8 +108,8 @@ impl ModelEvaluator {
     fn evaluate_latency(&self, model_name: &str) -> f64 {
         // Evaluate latency (local models typically faster)
         match model_name {
+            name if Self::is_1bit_model(name) => 0.9, // 1-bit is very fast
             name if name.contains("local") || name.contains("llama") => 0.8, // Local is fast
-            name if name.contains("1-bit") => 0.9, // 1-bit is very fast
             name if name.contains("gpt-4") => 0.6,  // Cloud has network latency
             _ => 0.5,
         }
@@ -126,7 +130,7 @@ impl ModelEvaluator {
         // Evaluate cost (local = free, cloud = paid)
         if model_name.contains("local") || model_name.contains("llama") {
             1.0 // Free local models
-        } else if model_name.contains("1-bit") {
+        } else if Self::is_1bit_model(model_name) {
             0.95 // Very efficient, almost free
         } else if model_name.contains("gpt-4") {
             0.4 // Expensive cloud models

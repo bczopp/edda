@@ -261,13 +261,14 @@ message ResultMetadata {
 - Text-Input via UI
 - Platform-spezifisch (Windows UI Automation API, macOS Accessibility API, Linux AT-SPI)
 - Element-Recognition (Buttons, Textfields, etc.)
+- **Sicherheit:** Kritische Click-Actions erfordern explizite User-Bestätigung. Im Action-JSON muss `"confirmed": true` gesetzt werden (vom aufrufenden System/Odin nach User-Bestätigung). Ohne Bestätigung antwortet Thor mit `InvalidAction("User confirmation required for click action")`.
 
 ### SCHEDULER_OPERATION
 - Timer & Scheduled Tasks
 - Cron (Linux/macOS)
 - Task Scheduler (Windows)
 - launchd (macOS)
-- Google Calendar (optional, Cloud)
+- Kalender/Calendar: nicht in Thor (evtl. Odin, Konzept offen)
 - Create/Delete/Update/List scheduled tasks
 
 ### JOTUNHEIM_OPERATION
@@ -501,7 +502,6 @@ message ResultMetadata {
 **Scheduler-Integration**:
 - `cron_parser`: Crontab-Parsing für Linux/macOS
 - `windows-service`: Windows Task Scheduler API
-- `google-calendar3`: Google Calendar API (optional, Cloud)
 - Use Cases: Timer, scheduled tasks, reminders
 
 **Jotunheim-Integration**:

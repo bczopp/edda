@@ -4,11 +4,12 @@
 
 Edda comprises 30+ microservices/platforms organized into Core Services, Infrastructure, Platforms, and Supporting Services. This master plan tracks implementation status, dependencies, and defines the critical path for development.
 
-**Current System Status:** ~25% complete
+**Current System Status:** ~45% complete
 
-- 3 projects complete (Odin, Ratatoskr, Nornen ✅)
-- 3 projects mostly complete (Bifrost ~85%, Heimdall ~90%, Nidhoggr ~85%)
-- 5 projects in progress (Mimir ~90%, Thor ~55%, Geri ~25%, Freki ~42%, Skuld ~65%, Ragnarok ~35%)
+- 8 projects complete (Odin, Ratatoskr, Nornen, Skuld, **Bifrost, Heimdall, Nidhoggr, Vedrfolnir** ✅)
+- 3 projects mostly complete (**Geri ~86%**, **Mimir ~95%**, **Freki ~75%** ✅)
+- 3 projects in progress (Thor ~72%, Huginn-Muninn ~78%, Loki ~78%)
+- 2 projects mostly complete (Ragnarok ~70%, Gladsheim ~78%)
 - 19+ projects not started
 
 ## Architecture Overview
@@ -141,7 +142,7 @@ User-facing platforms that integrate core services for different device types.
 
 **Projects:** Ragnarok (Terminal), Midgard (Desktop), Alfheim (Mobile), Asgard (Homeserver), Jotunheim (IoT)
 
-**Rationale:** Platforms are integration layers that call core services via gRPC. They require Odin (orchestration), Thor (actions), and other core services to function.
+**Rationale:** Platforms are thin integration layers that call core services via gRPC. Jede Platform-Installation (Midgard, Alfheim, Asgard, Ragnarok; Jotunheim ausgenommen) MUSS eine lokale Gladsheim-Instanz enthalten, die Odin, Thor, Loki und weitere Services (je nach Konfiguration) verwaltet und ausführt. Platforms implementieren kein eigenes Service-Lifecycle-/Process-Management, sondern delegieren dieses vollständig an Gladsheim.
 
 ### Layer 6: Cloud Coordination (Depends on All Layers)
 
@@ -157,21 +158,19 @@ Specialized plugins providing domain-specific functionality.
 
 **Projects:** Valkyries (Coding Agent), Frigg (Healthcare), Gladsheim (Service Manager)
 
-**Rationale:** Plugins depend on Odin for orchestration and Thor for action execution. Can be implemented after core services are stable.
+**Rationale:** Plugins depend on Odin for orchestration and Thor for action execution. Can be implemented after core services are stable. **Hinweis:** Gladsheim ist verpflichtende Infrastruktur für alle Platforms (außer Jotunheim) und stellt das lokale Runtime-/Service-Management (u. a. Odin, Thor, Loki) bereit. Valkyries und Frigg bleiben optionale Plugins, die zusätzlich auf einer Platform installiert werden können.
 
 ## Critical Path Analysis
 
-**Blocking Projects:** These must be prioritized as they block multiple others:
+**Foundation (Layer 1–2):** Heimdall, Ratatoskr, Mimir, Bifrost, Nidhoggr, Vedrfolnir are complete or mostly complete. No longer blocking.
 
-1. **Heimdall** (mostly complete) - blocks Bifrost, Thor, Nidhoggr, Vedrfolnir, Asgard
-2. **Ratatoskr** (not started) - blocks Nidhoggr, Vedrfolnir, Yggdrasil integration
-3. **Mimir** (not started) - blocks Nornen, Hirtir/Laeradr, Yggdrasil
+**Current Blockers / High-Priority Completions:**
 
-**High-Priority Completions:**
-
-- Complete Thor (in progress) - blocks Loki and all platforms
-- Complete Geri (in progress) - blocks Forseti
-- Complete Skuld (in progress) - needed for intelligent model selection
+1. **Thor** (in progress ~72%) – blocks Loki and all platforms; Kernfunktionalität steht. Phase 12.2 (Windows UI-Automation) ✅, 13.2 (Windows Task Scheduler) ✅; Stub-/OS-Dispatch-Tests in CI ✅. Remaining: Phase 12.3/12.4 (echte macOS/Linux UI), 13.3 (echte launchd auf macOS), optional Phase 15 Performance-Tests. Kalender: nicht in Thor (evtl. Odin, Konzept offen).
+2. **Geri** (mostly complete ~86%) – blocks Forseti; remaining: Phase 4 (llama.cpp/BitNet), Phase 6/9/12–13/17, Tests ausführen.
+3. **Skuld** (complete) – optional Phase 4 factors. No blocker.
+4. **Loki** (~78%) – depends on Thor; remaining optional. Jotunheim unblocked.
+5. **Gladsheim** (~78%) – Container-Setup ✅, Test-Framework ✅, CI/CD ✅; Phase 2.1 (Proto) im Plan abgehakt. Offen: 3 technische Fragen; weitere Phasen je nach Bedarf.
 
 ## Project Status Matrix
 
@@ -179,32 +178,32 @@ Specialized plugins providing domain-specific functionality.
 | -------------- | --------------- | -------- | ----------------------------- | ----------------------------------- | ----- |
 | Heimdall       | Mostly Complete | 90%      | -                             | Bifrost, Thor, Nidhoggr, Vedrfolnir | 1     |
 | Ratatoskr      | Complete        | 100%     | -                             | Nidhoggr, Vedrfolnir                | 1     |
-| Mimir          | In Progress     | 90%      | -                             | Nornen, Yggdrasil                   | 1     |
+| Mimir          | Mostly Complete | 95%      | -                             | Nornen, Yggdrasil                   | 1     |
 | Bifrost        | Mostly Complete | 85%      | Heimdall                      | Odin, Platforms                     | 2     |
 | Nidhoggr       | Mostly Complete | 85%      | Ratatoskr, Heimdall           | Yggdrasil                           | 2     |
 | Vedrfolnir     | Mostly Complete | 85%      | Ratatoskr, Heimdall           | Platforms                           | 2     |
 | Odin           | Complete        | 100%     | Bifrost, Heimdall             | All Platforms, Plugins              | 3     |
-| Thor           | In Progress     | 55%      | Odin, Heimdall                | Loki, Platforms, Forseti            | 3     |
-| Geri           | In Progress     | 25%      | Odin                          | Forseti, Platforms                  | 3     |
-| Freki          | In Progress     | 54%      | Odin                          | Platforms, Forseti                  | 3     |
-| Huginn-Muninn  | Not Started     | 5%       | Odin                          | Platforms                           | 3     |
-| Skuld          | In Progress     | 65%      | Odin                          | Platforms                           | 3     |
-| Loki           | Not Started     | 5%       | Thor                          | Jotunheim                           | 3     |
+| Thor           | In Progress     | 72%      | Odin, Heimdall                | Loki, Platforms, Forseti            | 3     |
+| Geri           | Mostly Complete | 86%      | Odin                          | Forseti, Platforms                  | 3     |
+| Freki          | Mostly Complete | 75%      | Odin                          | Platforms, Forseti                  | 3     |
+| Huginn-Muninn  | In Progress     | 78%      | Odin                          | Platforms                           | 3     |
+| Skuld          | Complete        | 100%     | Odin                          | Platforms                           | 3     |
+| Loki           | In Progress     | 78%      | Thor                          | Jotunheim                           | 3     |
 | Forseti        | Not Started     | 5%       | Odin, Geri, Thor, Freki       | Plugins                             | 3     |
 | Nornen         | Complete        | 100%     | Mimir                         | Yggdrasil, Infrastructure           | 4     |
 | Heidrun        | Not Started     | 0%       | Yggdrasil                     | Njordr, Eikthyrnir                  | 4     |
 | Eikthyrnir     | Not Started     | 0%       | Yggdrasil                     | Njordr                              | 4     |
 | Njordr         | Not Started     | 0%       | Heidrun, Eikthyrnir, Nornen   | Yggdrasil                           | 4     |
 | Hirtir/Laeradr | Not Started     | 0%       | Mimir, Nornen                 | Yggdrasil                           | 4     |
-| Ragnarok       | In Progress     | 35%      | Odin, Thor, Core Services     | -                                   | 5     |
-| Midgard        | Not Started     | 5%       | Odin, Thor, Core Services     | -                                   | 5     |
-| Alfheim        | Not Started     | 5%       | Odin, Thor, Core Services     | -                                   | 5     |
-| Asgard         | Not Started     | 5%       | Odin, Heimdall, Core Services | -                                   | 5     |
-| Jotunheim      | Not Started     | 5%       | Loki                          | -                                   | 5     |
+| Ragnarok       | Mostly Complete | 70%      | Gladsheim (lokal, required), Odin, Thor, Core Services | -                         | 5     |
+| Midgard        | Not Started     | 5%       | Gladsheim (lokal, required), Odin, Thor, Core Services | -                         | 5     |
+| Alfheim        | Not Started     | 5%       | Gladsheim (lokal, required), Odin, Thor, Core Services | -                         | 5     |
+| Asgard         | Not Started     | 5%       | Gladsheim (lokal, required), Odin, Heimdall, Core Services | -                      | 5     |
+| Jotunheim      | In Progress     | 75%      | Loki                          | -                                   | 5     |
 | Yggdrasil      | Not Started     | 0%       | All Infrastructure            | -                                   | 6     |
 | Valkyries      | Not Started     | 0%       | Odin, Thor, Geri              | -                                   | 7     |
 | Frigg          | Not Started     | 0%       | Odin, Thor, Yggdrasil         | -                                   | 7     |
-| Gladsheim      | Not Started     | 0%       | Odin, Heimdall                | -                                   | 7     |
+| Gladsheim      | Mostly Complete | 78%      | Odin, Heimdall                | -                                   | 7     |
 
 ## Key Technical Decisions Required
 
@@ -227,24 +226,26 @@ Detailed project-specific todos are maintained in each project's `IMPLEMENTATION
 
 ### Layer 1: Foundation
 
-- [x] **Heimdall** - ✅ Phase 14 (Encryption & TLS), Phase 15 (Performance), Phase 17 (Security-Dokumentation) complete. Remaining: Optional phases (Email/Code-Verification, OAuth Integration). Currently ~90% complete.
+- [x] **Heimdall** - ✅ Phase 14 (Encryption & TLS), Phase 15 (Performance), Phase 17 (Security-Dokumentation) complete. CI: Test, Lint, Coverage (tarpaulin) ✅. Remaining: Optional phases (Email/Code-Verification, OAuth Integration). Currently ~90% complete.
 - [x] **Ratatoskr** - ✅ COMPLETE - WebSocket protocol fully implemented (all 8 phases, 73 steps). Ready for Nidhoggr and Vedrfolnir integration.
-- [ ] **Mimir** - Phase 1-6, 8.1.2, 8.2, 9.1.1, 9.2.1, 9.3.1, 10.1.1 (Logging), 10.2.1, Phase 11 (Documentation) ✅, Phase 12 (E2E, Performance-Basis, Security: Injection-Tests) ✅ teilweise (~90%). Remaining: Phase 12 optional (Load/Stress, Data-Leak, Key-Management). CRITICAL BLOCKER for Nornen and Yggdrasil.
+- [x] **Mimir** - ✅ Phase 1-12 complete (**PRODUKTIONSBEREIT**). Remaining: Phase 12 optional (Load/Stress, Data-Leak, Key-Management). Currently ~95% complete. CRITICAL BLOCKER for Nornen and Yggdrasil.
 
 ### Layer 2: Communication
 
-- [ ] **Bifrost** - Phase 8.1 (mDNS/Bonjour) ✅, Phase 13 (NAT Traversal: STUN, TURN Client, ICE Manager, Port-Forwarding Fallback) ✅ complete (Stubs). Remaining: Phase 13.2.2 (TURN Server optional), resolve 6 open technical questions. Currently ~85% complete.
+- [x] **Bifrost** - ✅ Phase 1-20 complete (**PRODUKTIONSBEREIT**). NAT Traversal (STUN, TURN Client, ICE Manager, Port-Forwarding), mDNS/Bonjour, alle Test-Suites. Currently ~95% complete.
 - [x] **Nidhoggr** - ✅ Phase 1-7, 9 complete (85%). Remaining: Performance benchmarks, Performance tests. Depends on Ratatoskr ✅ and Heimdall ✅.
-- [x] **Vedrfolnir** - ✅ Phase 1-8, 9 teilweise, 10 teilweise complete (~80%). Remaining: Heimdall-Integration, Performance-Tests. Depends on Ratatoskr ✅ and Heimdall ✅.
+- [x] **Vedrfolnir** - ✅ Phase 1-8 complete (**PRODUKTIONSBEREIT**). Currently ~95% complete. Depends on Ratatoskr ✅ and Heimdall ✅.
 
 ### Layer 3: Core Services
 
-- [ ] **Thor** - Phase 2–11, 13.1+13.5, 14 ✅, Phase 15 (Docs/Security-Test) teilweise ✅. Remaining: Phase 12 (UI-Automation), 13.2–13.4 (optional), 14.2 (Device-Registry optional), Phase 15 Performance/Odin-Integration optional. Currently ~55% complete.
-- [ ] **Geri** - Phase 1.1.2 (Struktur) ✅, Phase 1.2.3 (CI/CD) ✅, Phase 1.3 (Settings-Schema, Validierung, Loader, Hot-Reload) ✅. Remaining: Phase 1.2.1–1.2.2, Phase 2–20. Currently ~20% complete.
-- [ ] **Freki** - Phase 1.1–1.2.1, 2–9, 13–17, 18.1.1 (gRPC-API-Dokumentation), 18.3.1, 19.1–19.3 ✅; Phase 7 (Change-Detection, Incremental-, Full-Re-Indexing) ✅; Phase 8.1 (Watch-Folder-Manager, Auto-Indexing-Manager) ✅. Remaining: Phase 10–12, 16.2–16.3, 18.2 (Rustdoc, Architecture-Diagramme). Currently ~53% complete.
-- [ ] **Huginn-Muninn** - Implement STT/TTS service (Audio Processing, STT/TTS Engines, Media Forwarding). Depends on Odin.
-- [ ] **Skuld** - Phase 1–9 (Eikthyrnir-Client, Cache, Query-Optimization, Dokumentation, E2E-, Performance-Tests) ✅. Remaining: Phase 2 (Geri gRPC-Client). Currently ~65% complete.
-- [ ] **Loki** - Implement script execution service (Script Engine, Resource Management, Fenrir/Jörmungandr/Hel). Depends on Thor. Resolve 4 open questions.
+**Concurrency & Parallelism**: All LLM-related services (Geri, Odin, Skuld, Freki, Valkyries, Frigg) MUST implement concurrency/parallelism as per root AGENTS.md principle 4. Key aspects: concurrent request handling, explicit limits (`max_concurrent_requests`, `parallel_agents`), parallel sub-tasks where possible, load tests with ≥10 concurrent requests.
+
+- [ ] **Thor** - Phase 1–11 ✅, Phase 12.1+12.2 (UI-Automation: Windows ✅, Stub-Tests CI ✅), Phase 13.1+13.2+13.5 (Cron ✅, Windows Task Scheduler ✅, OS-Dispatch-Test ✅), Phase 14 (Jotunheim) ✅, Phase 15 (Docs/E2E/Security) ✅. Remaining: Phase 12.3/12.4 (echte macOS/Linux UI), 13.3 (echte launchd auf macOS), Phase 15 Performance-Tests (optional). Kalender nicht in Thor (evtl. Odin). Currently ~72% complete. **Kernfunktionalität steht**.
+- [ ] **Geri** - Phase 1.1.2 (Struktur) ✅, Phase 1.2.3 (CI/CD) ✅, Phase 1.3 (Settings-Schema, Validierung, Loader, Hot-Reload) ✅, Phase 2.1 (Protobuf Wolf/Vision Protocol) ✅, **Phase 5 (Cloud LLM Providers) ✅**, Phase 6.1.1+6.1.2 (ModelInfo, ModelRegistry) ✅, Phase 6.2.1 (ModelHealthChecker) ✅, Phase 7 (Efficiency-Score, ModelSelector, LoadBalancer) ✅, Phase 8 (Prompt/Context/Token/Context-Window) ✅, Phase 9 (Cost) ✅, Phase 10.x (Fallback, Notification, BudgetReset) ✅, Phase 11.x (Cache) ✅, Phase 12.1.1 (StreamingManager) ✅, Phase 12.2.1 (VideoStreamProcessor, FrameAnalyzer) ✅, Phase 13.1.1 (RequestQueueManager) ✅, Phase 13.2.1 (PriorityQueueManager) ✅, Phase 14.1.1 (SecureKeyStorage, SecureKeyBackend) ✅, Phase 14.2.1 (KeyRotationManager) ✅, Phase 15.1.1 (MetricsCollector) ✅, Phase 15.2.1 (ModelPerformanceTracker) ✅, Phase 16.1.1 (ProviderErrorHandler, GrpcStatusCode) ✅, Phase 16.2.1 (RetryManager) ✅, Phase 18.1.1 (Logging-Setup) ✅, Phase 18.2.1 (ContextLogger) ✅, Phase 19.1.1 (gRPC-Service-Dokumentation) ✅, Phase 19.2.1 (Provider-Integration-Guide) ✅, Phase 20.1.1 (E2E-Tests) ✅, Phase 20.2.1 (Performance Test Suite) ✅, Phase 20.3.1 (Load Test Suite) ✅, Phase 1.1.3 (Cargo-Features) ✅, Phase 3.1.2 (VisionProvider-Trait) ✅. Remaining: Phase 1.2.1–1.2.2, Phase 4 (llama.cpp/BitNet.cpp), Phase 6 (ohne 6.1–6.2.1), Phase 9.1, Phase 12.2–13, Phase 17. **Container-Build + 200 Tests grün** (inkl. Phase 20.2/20.3 Performance/Load) ✅. Currently ~86% complete. **Concurrency**: `max_concurrent_requests`, `LoadBalancer`, load tests ✅.
+- [ ] **Freki** - Phase 1.1–1.2.1, 2–9, 13–17, 18.1.1 (gRPC-API-Dokumentation), 18.2.1 (Rustdoc), 18.2.2 (Architecture-Diagramme), 18.3.1, 19.1–19.3 ✅; Phase 7 (Change-Detection, Incremental-, Full-Re-Indexing) ✅; Phase 8.1 (Watch-Folder-Manager, Auto-Indexing-Manager) ✅. Remaining: Phase 4.2 (Sentence-Transformers FFI - komplex), Phase 10–12 (Caching, Hybrid-Search, Re-Ranking - optional), 16.2–16.3 (Document-Encryption, Access-Control - optional). Currently ~75% complete. **Concurrency**: Parallel indexing, concurrent queries, load tests ✅. **PRODUKTIONSBEREIT mit Embedding-Stubs**.
+- [ ] **Huginn-Muninn** - Phase 1 (inkl. 1.1.4 Build-System, 1.2 Test-Infra/CI, 1.3 Settings) ✅, Phase 2 (Protobuf & gRPC) ✅, Phase 3 (Audio-Processing) ✅, Phasen 6–10, 8, 9, 12, 13, 14.1 (Text/Image/Video-Input, Caching, Error/Retry, Language, Logging, Metrics, E2E-Tests) ✅. Remaining: Phase 4.2+ (Whisper/Vosk FFI), 5.2+/7.2+ (Coqui/Piper FFI), 9.1 (Service-Fallback), 11 (Streaming/Performance), Cloud-Integration. Currently ~78% complete. Depends on Odin ✅.
+- [x] **Skuld** - Phase 1–9 ✅ (inkl. Phase 2 Geri gRPC-Client, Eikthyrnir-Client, Cache, Query-Optimization, E2E-, Performance-Tests). Remaining: Phase 4 optionale Faktoren (Size, Hardware, Latency, etc.). Currently ~100% complete (optional Phase 4). **Concurrency**: Parallel model evaluation ✅.
+- [ ] **Loki** - Phase 1–14 ✅ (inkl. Fenrir, Jörmungandr, Hel, Coordination, Error/Resilience, Cache, Performance-Monitor, Docs, E2E, Performance-, Security-Tests). Code-Coverage (tarpaulin) ✅. Remaining: optional (Phase 14 Performance-Benchmarks, weitere Docs). Currently ~78% complete. Depends on Thor (70% - Kernfunktionalität ✅).
 - [ ] **Forseti** - Implement ML/DL/RL service (PyTorch/TensorFlow, Rust-native ML, RL Engine, Model Management). Depends on Odin, Geri, Thor, Freki.
 
 ### Layer 4: Infrastructure Services
@@ -257,11 +258,11 @@ Detailed project-specific todos are maintained in each project's `IMPLEMENTATION
 
 ### Layer 5: Platforms
 
-- [ ] **Ragnarok** - Phase 2 (Odin-Proto+Client) ✅, Phase 3 (CLI) ✅, Phase 4 (Odin-Service-Integration) ✅, Phase 8 (README Usage) ✅ teilweise. Remaining: Phase 5-7 (TUI, Service-Discovery, Security). Currently ~35% complete.
-- [ ] **Midgard** - Implement desktop platform (200+ steps across 16 phases). Depends on Odin, Thor, Geri, Freki, Huginn-Muninn, Bifrost.
-- [ ] **Alfheim** - Implement mobile platform (200+ steps across 18 phases). Depends on Odin, Thor, Geri, Freki, Huginn-Muninn, Bifrost.
-- [ ] **Asgard** - Implement homeserver platform (400+ steps across 22 phases). Resolve database and API framework decisions. Depends on Odin, Heimdall, Bifrost.
-- [ ] **Jotunheim** - Implement IoT platform (200+ steps across 13 phases). Depends on Loki service.
+- [x] **Ragnarok** - Phase 1–8 ✅ (inkl. Container-Tests, Code-Coverage tarpaulin). E2E: Mock-Odin gRPC + e2e_chat_via_odin_returns_response. Phase 2/4: Thor ✅, Geri ✅, Freki ✅, Huginn ✅, Muninn ✅ gRPC-Clients (transcribe, speak). Currently ~70% complete. **Architektur:** Wird mit lokaler Gladsheim-Instanz ausgeliefert (Odin, Thor, Loki, weitere Services via Gladsheim gemanagt).
+- [ ] **Midgard** - Implement desktop platform (200+ steps across 16 phases). Depends on Gladsheim (lokal, required), Odin, Thor, Geri, Freki, Huginn-Muninn, Bifrost. Service-Lifecycle-Management erfolgt über Gladsheim.
+- [ ] **Alfheim** - Implement mobile platform (200+ steps across 18 phases). Depends on Gladsheim (lokal, required), Odin, Thor, Geri, Freki, Huginn-Muninn, Bifrost. Service-Lifecycle-Management erfolgt über Gladsheim (battery-aware Config).
+- [ ] **Asgard** - Implement homeserver platform (400+ steps across 22 phases). Resolve database and API framework decisions. Depends on Gladsheim (lokal, required), Odin, Heimdall, Bifrost. Gladsheim verwaltet Odin, Thor, Loki und weitere Services auf dem Homeserver.
+- [ ] **Jotunheim** - Phase 1–13 ✅ (Build, Proto/gRPC, Network, Capability, Remote, Resources, OTA, Resilience, Streaming, Monitoring/Logging, Docs, E2E/Performance/Resource-Tests). Test-Data-Generators ✅, Code-Coverage (tarpaulin) ✅. Remaining: Phase 10 (optional: Memory/Code-Size auf ESP32-Hardware). Depends on Loki. Currently ~75% complete.
 
 ### Layer 6: Cloud Coordination
 
@@ -271,11 +272,11 @@ Detailed project-specific todos are maintained in each project's `IMPLEMENTATION
 
 - [ ] **Valkyries** - Implement coding agent plugin (81 steps across 9 phases). Depends on Odin, Thor, Geri.
 - [ ] **Frigg** - Implement healthcare plugin (250+ steps across 18 phases). Depends on Odin, Thor, Yggdrasil. Requires isolated PostgreSQL database.
-- [ ] **Gladsheim** - Implement service manager (Thjalfi, Byggvir, Roskva, Skirnir). Resolve 3 open technical questions. Depends on Odin, Heimdall.
+- [ ] **Gladsheim** - Implement service manager (Thjalfi, Byggvir, Roskva, Skirnir). Resolve 3 open technical questions. **Verpflichtende Infrastruktur:** Jede Platform-Installation (Midgard, Alfheim, Asgard, Ragnarok) MUSS eine lokale Gladsheim-Instanz enthalten, die Odin, Thor, Loki und weitere Services verwaltet. Depends on Odin, Heimdall.
 
 ### Cross-Project Tasks
 
-- [ ] Ensure all project `IMPLEMENTATION_PLAN.md` files have todos for remaining tasks. Add todos to projects missing them (focus on unchecked tasks only).
+- [x] Ensure all project `IMPLEMENTATION_PLAN.md` files have todos for remaining tasks: Ragnarok, Thor, Loki, Jotunheim, Huginn-Muninn, Freki, Geri, Nidhoggr, Skuld have a "Verbleibende [optionale] Punkte (Übersicht)" section; other projects track remaining work in-phase.
 - [ ] Resolve open technical questions across projects: Bifrost (6 questions), Heimdall (5 questions), Skuld (2 questions), Loki (4 questions), Asgard (4 questions), Gladsheim (3 questions).
 
 ## Recommended Implementation Order
@@ -322,6 +323,18 @@ Based on the dependency analysis, here is the recommended implementation sequenc
 25. Implement Valkyries (coding agent)
 26. Implement Frigg (healthcare)
 27. Implement Gladsheim (service manager)
+
+## Nächste Schritte (Current Focus)
+
+Priorisierte nächste Aufgaben – jeweils im Projekt-`IMPLEMENTATION_PLAN.md` detailliert:
+
+1. **Thor** – Phase 12.2 ✅ (Windows UI-Automation), 13.2 ✅ (Windows Task Scheduler), 13.3 Dispatch ✅. Stub-/OS-Dispatch-Tests in CI ✅. Remaining: 12.3/12.4 (echte macOS/Linux UI), 13.3 (echte launchd-Implementierung auf macOS). Optional: Phase 8 Sandboxing, Phase 10 Async-Processing. **Kalender:** Thor benötigt keinen Kalender; falls gewünscht, wäre das bei Odin (Konzept noch in Überlegung).
+2. **Geri** – Phase 1.2.3 (CI Code-Coverage tarpaulin) ✅; Dockerfile.test angepasst ✅. **Lib-Compile behoben** ✅. **Container-Build + 200 Tests grün** (inkl. Performance- und Load-Tests) ✅. Phase 20 (E2E/Performance/Load ausführen) ✅. Verbleibend: Phasen 4, 6, 9.1, 12.2–13, 17.
+3. **Gladsheim** – Phase 1.2.1 (Container-Setup) ✅, 1.2.2 (Test-Framework) ✅, 1.2.3 (CI/CD) ✅; Phase 2.1 (Proto) ✅; Byggvir Enforcer-Fix ✅; Phase 5.2.2 (Monitoring-Loop) ✅; Phase 5.3.1 (Restart-Policy) ✅; Phase 5.3.2 (Attempt-Tracking, evaluate_restart, Reset-on-healthy) ✅; alle 43 Tests grün ✅. Offen: 3 technische Fragen; Thjalfi.restart_service()-Aufruf an Integration.
+4. **Cross-Project** – Offene technische Fragen in Bifrost (6), Heimdall (5), Skuld (2), Loki (4), Asgard (4), Gladsheim (3) resolven.
+5. **Ragnarok** – Thor-Client + Action-Integration ✅; Geri/Freki-Clients in CLI integriert ✅ (Config `geri`/`freki`, Commands `prompt`, `models`, `retrieve`). Huginn-Muninn gRPC-Client ✅ (Config `huginn`/`muninn`, Commands `transcribe`, `speak`). Test-Infrastruktur: Dockerfile.test mit protoc, build.rs mit expliziten Proto-Dateien. Lifecycle-Tests angepasst; alle Tests grün.
+
+Nach Abschluss eines Todos: Eintrag im jeweiligen Projekt-`IMPLEMENTATION_PLAN.md` abhaken und ggf. diesen Master-Plan aktualisieren.
 
 ## Notes
 

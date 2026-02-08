@@ -25,8 +25,6 @@ services:
       SERVICE_NAME: odin
       SERVICE_PORT: 50050
       RUST_LOG: debug
-    ports:
-      - "50050:50050"
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 50050 || exit 1"]
       interval: 5s

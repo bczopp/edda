@@ -1,22 +1,18 @@
 [workspace]
-members = ["huginn", "muninn", "shared"]
-
-[workspace.dependencies]
-tonic-build = "0.11"
+members = [
+    "huginn",
+    "muninn",
+    "shared",
+]
+resolver = "2"
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 authors = ["Edda Team"]
+license = "MIT OR Apache-2.0"
 
-[package]
-name = "huginn"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-description = "STT + Data Forwarding Service for Edda"
-
-[dependencies]
+[workspace.dependencies]
 tokio = { version = "1.35", features = ["full"] }
 tonic = "0.11"
 prost = "0.12"
@@ -30,12 +26,16 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.6", features = ["v4", "serde"] }
 config = "0.14"
 notify = "6.1"
+
+# Audio processing
 cpal = "0.15"
+rodio = "0.17"
+hound = "3.5"
 
-[dev-dependencies]
-tokio-test = "0.4"
-mockall = "0.12"
-tempfile = "3.8"
+# Video processing
+ffmpeg-next = "6.1"
 
-[build-dependencies]
-tonic-build = "0.11"
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

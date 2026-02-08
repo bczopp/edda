@@ -1,12 +1,12 @@
+use loki::utils::logging;
 use tracing::info;
 use std::path::PathBuf;
 use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .init();
+    // Initialize minimal logging (ERROR, WARN only for IoT devices)
+    logging::init_minimal_logging();
 
     info!("Loki Script Execution Service starting...");
 

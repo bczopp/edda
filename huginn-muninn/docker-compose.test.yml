@@ -33,4 +33,5 @@ services:
       - ./tests:/app/tests
       - ./huginn:/app/huginn
       - ./muninn:/app/muninn
+      - ./shared:/app/shared
     command: cargo test --release

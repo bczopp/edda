@@ -36,7 +36,16 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 - **Parallel analysis**: Parallel analysis of multiple options
 - **Caching**: Cache network plan analyses
 
-### 4. DRY (Don't Repeat Yourself)
+### 4. Concurrency & Parallelism
+
+**Critical for Model Selection**: Skuld implements concurrency/parallelism as required by root AGENTS.md principle 4.
+
+- **Parallel model evaluation**: `ModelSelector` evaluates multiple model candidates in parallel (tokio::spawn per model, then join)
+- **Concurrent selection requests**: Async tokio runtime handles multiple selection requests concurrently
+- **Fast scoring**: Parallel scoring reduces latency when many models are available
+- **Testing**: Performance tests verify parallel evaluation is faster than sequential
+
+### 5. DRY (Don't Repeat Yourself)
 
 **Reuse Before Creating**: Always check for existing functionality.
 
@@ -45,7 +54,7 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 - **Shared utilities**: Wenn gemeinsame Utils benötigt werden, sollte ein separates Projekt erstellt werden
 - **Avoid duplication**: Don't duplicate scoring logic
 
-### 5. KISS (Keep It Simple, Stupid)
+### 6. KISS (Keep It Simple, Stupid)
 
 **Simplicity Over Complexity**: Prefer simple scoring and selection logic.
 
@@ -54,7 +63,7 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 - **Readable code**: Code should be self-documenting
 - **Avoid over-engineering**: Don't add unnecessary complexity
 
-### 6. CQRS (Command Query Responsibility Segregation)
+### 7. CQRS (Command Query Responsibility Segregation)
 
 **Software-Level Separation**: Separate read and write operations.
 
@@ -63,7 +72,7 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 - **Status queries**: Separate handlers for selection status queries
 - **Optimization**: Optimize selection and queries independently
 
-### 7. Single Responsibility Principle
+### 8. Single Responsibility Principle
 
 **One Responsibility Per Component**: Each component should have a single responsibility.
 
@@ -72,7 +81,7 @@ Diese Datei enthält ausschließlich Richtlinien für das Verhalten des Agents b
 - **Selection**: Selection decision only
 - **Cache management**: Cache management only
 
-### 8. Dependency Injection
+### 9. Dependency Injection
 
 **Inject, Don't Create**: Dependencies should be injected.
 

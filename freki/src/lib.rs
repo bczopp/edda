@@ -43,3 +43,4 @@ pub mod embedding;
 pub mod chunking;
 pub mod grpc;
 pub mod utils;
+pub mod cache;

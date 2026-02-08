@@ -5,8 +5,32 @@ edition.workspace = true
 authors.workspace = true
 description = "ESP32 implementation for Jotunheim IoT Platform"
 
+[features]
+default = ["esp32"]
+esp32 = []
+esp8266 = []
+pico = []
+
 [dependencies]
 shared = { path = "../shared" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+tonic = "0.11"
+prost = "0.12"
+tokio = { version = "1", features = ["net", "rt", "sync", "time", "macros"] }
+async-trait = "0.1"
+sha2 = "0.10"
+hex = "0.4"
+log = "0.4"
+
+[build-dependencies]
+tonic-build = "0.11"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
 
 [dev-dependencies]
 tokio-test = "0.4"

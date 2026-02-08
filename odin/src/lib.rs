@@ -3,6 +3,7 @@ pub mod clients;
 pub mod orchestration;
 pub mod protocols;
 pub mod services;
+pub mod scheduler;
 pub mod plugins;
 pub mod grpc;
 pub mod utils;

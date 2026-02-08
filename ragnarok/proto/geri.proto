@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package geri;
+
+// Geri LLM Service (Ragnarok uses this for optional direct prompt/model queries)
+service GeriService {
+    rpc ProcessPrompt(ProcessPromptRequest) returns (ProcessPromptResponse);
+    rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
+}
+
+message ProcessPromptRequest {
+    string prompt = 1;
+    string context = 2;
+    string model_name = 3;
+    uint32 max_tokens = 4;
+    string system_prompt = 5;
+}
+
+message ProcessPromptResponse {
+    string text = 1;
+    uint32 tokens_used = 2;
+    string model_used = 3;
+}
+
+message ListModelsRequest {
+    string model_type = 1;
+    string provider = 2;
+}
+
+message ModelInfo {
+    string id = 1;
+    string name = 2;
+    string provider = 3;
+    string model_type = 4;
+    uint64 parameter_count = 5;
+    string hardware_requirements = 6;
+    uint32 context_window = 7;
+}
+
+message ListModelsResponse {
+    repeated ModelInfo models = 1;
+}

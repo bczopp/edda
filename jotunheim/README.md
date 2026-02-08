@@ -8,6 +8,8 @@ Jotunheim ist eine **Platform** für IoT-Devices (inkl. ESP32/Microcontroller), 
 
 **Tests ausführen:** Von `jotunheim/`: `docker compose -f docker-compose.test.yml run --rm jotunheim-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `jotunheim/**` läuft die Pipeline [.github/workflows/jotunheim.yml](../.github/workflows/jotunheim.yml) (Test im Container, Lint).
 
+**Dokumentation:** [docs/PLATFORM_GUIDE.md](docs/PLATFORM_GUIDE.md) (ESP32-Setup, Flash, Capability-Konfiguration). **Beispiele:** [esp32/examples/README.md](esp32/examples/README.md) (LED-Control, Sensor-Reading, Remote-Control).
+
 ## Zielplattformen
 
 - ESP32 (esp-rs, Rust)
@@ -177,6 +179,8 @@ ESP32-Devices sind sehr variabel einsetzbar und können unterschiedlich konfigur
 - **Verschiedene Funktionen**: Jedes Device kann andere Tools/Funktionen anbieten
 
 **Das verbundene Device (Controller, z.B. Midgard/Asgard) muss wissen, was das Jotunheim-Device kann, um es steuern zu können.**
+
+**Automatische Tool-Generierung:** Aus den gemeldeten Sensoren und Aktoren (und optional GPIO) werden Tool-Calling-Definitionen automatisch erzeugt – der User muss sie nicht manuell anlegen. Siehe [docs/DEVICE_TOOL_AUTO_DISCOVERY.md](../docs/DEVICE_TOOL_AUTO_DISCOVERY.md) und Jotunheim-API `generate_tools_from_capabilities()`. Kryptische Geräte-IDs können über Odin/die verbundene Platform aufgelöst werden (Device-Resolver).
 
 ### Capability Structure
 

@@ -26,10 +26,10 @@ Skuld ist der LLM Selection Service - er entscheidet basierend auf Multi-Factor-
 ## Phase 2: Protobuf & gRPC (10 Schritte)
 - [x] Protobuf-Definitions (`skuld.proto`)
 - [x] gRPC-Server (Skuld)
-- [ ] gRPC-Clients:
-  - Eikthyrnir (Quality-Daten)
-  - Geri (Model-Registry, Model-Info)
-- [ ] gRPC-Server für Odin (Model-Selection-Requests)
+- [x] gRPC-Clients:
+  - Eikthyrnir (Quality-Daten) ✅
+  - Geri (Model-Registry, Model-Info) ✅ (`src/geri_client/client.rs`, Tests: `tests/geri_client_test.rs`)
+- [x] gRPC-Server für Odin (Model-Selection-Requests) ✅
 
 ## Phase 3: Model-Registry (10 Schritte)
 - [x] Tests für Model-Registry schreiben (`tests/model_registry_test.rs`: register/list, idempotent, get_model_info)
@@ -63,6 +63,13 @@ Skuld ist der LLM Selection Service - er entscheidet basierend auf Multi-Factor-
 - [x] Dokumentation – README „Implementierungsstand (Für Entwickler)“: Registry, Evaluator, Selector, Cache, Load-Balancer, Eikthyrnir; Verweis auf IMPLEMENTATION_PLAN
 - [x] E2E-Tests (Request → Evaluation → Selection → Response) – `tests/e2e_selection_test.rs`: e2e_request_evaluation_selection_response, e2e_cached_selection_same_response
 - [x] Performance-Tests – `tests/performance_selection_test.rs`: selection_latency_under_threshold (≤2s), cached_selection_faster_than_uncached
+
+---
+
+## Verbleibende optionale Punkte (Übersicht)
+
+- [ ] **Phase 4** Weitere Faktoren (Size, Hardware, Latency, Distance, Cost) – optional
+- [ ] **Phase 4** Evaluator pro Faktor (SizeEvaluator, etc.) – optional
 
 ---
 

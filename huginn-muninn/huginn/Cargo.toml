@@ -1,0 +1,45 @@
+[package]
+name = "huginn"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "STT + Data Forwarding Service for Edda"
+
+[build]
+build = "build.rs"
+
+[features]
+default = []
+# Optional STT backends (FFI, not yet implemented)
+whisper = []
+vosk = []
+
+[dependencies]
+tokio.workspace = true
+tonic.workspace = true
+prost.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+config.workspace = true
+notify.workspace = true
+cpal.workspace = true
+rodio.workspace = true
+hound.workspace = true
+ffmpeg-next.workspace = true
+
+# Shared audio utilities
+shared = { path = "../shared" }
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockall = "0.12"
+tempfile = "3.8"
+
+[build-dependencies]
+tonic-build = "0.11"

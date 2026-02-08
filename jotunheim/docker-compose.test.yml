@@ -31,7 +31,6 @@ services:
     volumes:
       - ./target:/app/target
       - ./tests:/app/tests
-      - ./jotunheim:/app/jotunheim
       - ./esp32:/app/esp32
       - ./generic:/app/generic
       - ./shared:/app/shared

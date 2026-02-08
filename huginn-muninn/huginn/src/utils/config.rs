@@ -1,15 +1,3 @@
-use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+//! Re-export Huginn settings from shared (full schema, validation, loader, hot-reload).
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HuginnSettings {
-    pub grpc_port: u16,
-}
-
-impl Default for HuginnSettings {
-    fn default() -> Self {
-        Self {
-            grpc_port: 50057,
-        }
-    }
-}
+pub use shared::HuginnSettings;

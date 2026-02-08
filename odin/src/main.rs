@@ -55,6 +55,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Discover capabilities from all services and enabled plugins (Frigg, Valkyries)
     protocol_manager.discover_all_capabilities().await?;
 
+    // Start background device scheduler / capability refresh loop.
+    // This keeps the Einherjar/Capability-Ansicht aller verbundenen Services
+    // aktuell und bildet die Basis für einen später erweiterten Device-Loop
+    // (Asgard/Midgard/Haus/Fahrzeug/Roboter).
+    let device_scheduler = Arc::new(odin::scheduler::DeviceScheduler::new(
+        settings_arc.clone(),
+        protocol_manager.clone(),
+    ));
+    device_scheduler.start();
+
     // Bootstrap Frigg/Valkyries as remote plugins when enabled and URL set
     let plugin_manager = Arc::new(odin::plugins::PluginManager::new());
     odin::bootstrap::bootstrap_frigg_valkyries_plugins(plugin_manager.as_ref(), protocol_manager.as_ref(), &settings_arc).await?;

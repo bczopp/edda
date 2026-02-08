@@ -1,0 +1,9 @@
+[package]
+name = "jotunheim-generic"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Generic (non-ESP32) implementation for Jotunheim IoT Platform"
+
+[dependencies]
+shared = { path = "../shared" }

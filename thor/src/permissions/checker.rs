@@ -67,7 +67,7 @@ impl PermissionChecker {
                     .map_err(|e| PermissionError::ConnectionError(format!("Connection failed: {}", e)))
             })
             .await
-            .clone()
+            .map(|c| c.clone())
     }
 
     pub async fn check_permission(

@@ -21,9 +21,12 @@ Aktuell umgesetzt (Details siehe [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md
 - **Watch-Folder** (Phase 8.1): WatchFolderManager (notify), WatchEvent (Created/Modified/Removed), Event-Kanal; AutoIndexingManager (8.1.2) verbindet Watch-Events mit Indexing (Created → index, Modified → reindex, Removed → delete).
 - **Tests**: Container-Setup (Dockerfile.test, docker-compose.test.yml), E2E RAG, Load-Tests (Concurrent-Queries, Batch-Indexing), Search-Performance, Security/GDPR-Test-Suites, Performance-Benchmarks (README), Watch-Folder-Tests, Auto-Indexing-Tests.
 
-Offen u. a.: Phase 10–12 (Caching, Hybrid-Search, Re-Ranking optional), Phase 16.2–16.3 (Document-Encryption, Access-Control optional), Phase 18.2.2 (Architecture-Diagramme).
+**~75% COMPLETE** (**PRODUKTIONSBEREIT** mit Embedding-Stubs). Remaining: Phase 4.2 (Sentence-Transformers FFI - komplex), Phase 10–12 (Caching, Hybrid-Search, Re-Ranking - optional), Phase 16.2–16.3 (Document-Encryption, Access-Control - optional).
 
-**Rustdoc:** Wichtige Public-APIs sind mit Rustdoc-Kommentaren und Code-Beispielen dokumentiert. Generiere Dokumentation mit `cargo doc --open`.
+**Dokumentation:**
+- **API-Dokumentation**: Siehe [docs/API.md](docs/API.md) für gRPC-Service-Dokumentation, Request/Response-Schemas, Error-Codes und Code-Beispiele.
+- **Architektur-Dokumentation**: Siehe [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) für Gesamtarchitektur, Indexing- und Retrieval-Flow-Diagramme, Komponenten-Übersicht und Performance-Überlegungen.
+- **Rustdoc**: Wichtige Public-APIs sind mit Rustdoc-Kommentaren und Code-Beispielen dokumentiert. Generiere Dokumentation mit `cargo doc --open`.
 
 ## Verantwortlichkeiten
 

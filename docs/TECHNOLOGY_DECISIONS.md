@@ -29,7 +29,8 @@
 **Begründung**: Beste tokio-Integration, async-native, robuste Performance, production-ready
 
 ### Frontend
-- **Package Manager**: `bun` (NICHT npm/yarn/pnpm!)
+- **Package Manager & Runtime**: `bun` (NICHT npm/yarn/pnpm!)
+- **Regel**: Wo immer npm verwendet werden könnte, wird stattdessen **bun** genutzt (z. B. `bun install`, `bun run`, Docker: `oven/bun`-Image statt Node + npm).
 - **Frontend-Framework**: React (alle Platforms)
 - **Build-Tool**: Vite (mit bun)
 

@@ -2,14 +2,121 @@ syntax = "proto3";
 
 package loki;
 
+// Main Loki Service - Script Execution Service
 service LokiService {
+    // Get capabilities of Loki and its children
+    rpc GetCapabilities(GetCapabilitiesRequest) returns (GetCapabilitiesResponse);
+    
+    // Get status of child services (Fenrir, Jörmungandr, Hel)
+    rpc GetChildrenStatus(GetChildrenStatusRequest) returns (GetChildrenStatusResponse);
+    
+    // List all available scripts
+    rpc ListScripts(ListScriptsRequest) returns (ListScriptsResponse);
+    
+    // Register a new script dynamically
+    rpc RegisterScript(RegisterScriptRequest) returns (RegisterScriptResponse);
+    
+    // Execute a script (legacy, for backward compatibility)
     rpc ExecuteScript(ExecuteScriptRequest) returns (ExecuteScriptResponse);
+    
+    // Stream script execution (for long-running scripts)
+    rpc StreamScriptExecution(StreamScriptExecutionRequest) returns (stream ScriptChunk);
 }
 
+// Capability-related messages
+message GetCapabilitiesRequest {
+    // Empty - returns all capabilities
+}
+
+message GetCapabilitiesResponse {
+    string service_name = 1;  // "Loki"
+    string purpose = 2;        // "Script Execution Service"
+    repeated ScriptCapability capabilities = 3;
+    repeated ChildServiceInfo children = 4;
+}
+
+message ScriptCapability {
+    string script_name = 1;
+    string description = 2;
+    repeated ParameterDefinition parameters = 3;
+    string return_type = 4;
+    bool supports_streaming = 5;
+}
+
+message ParameterDefinition {
+    string name = 1;
+    string type = 2;  // "String", "Number", "Boolean", "Object", "Array"
+    bool required = 3;
+    string description = 4;
+}
+
+message ChildServiceInfo {
+    string name = 1;  // "Fenrir", "Jörmungandr", "Hel"
+    string purpose = 2;
+    bool enabled = 3;
+    string address = 4;
+}
+
+// Children status messages
+message GetChildrenStatusRequest {
+    // Empty - returns status of all children
+}
+
+message GetChildrenStatusResponse {
+    repeated ChildStatus children = 1;
+}
+
+message ChildStatus {
+    string name = 1;
+    bool available = 2;
+    string status_message = 3;
+    int64 last_check_timestamp = 4;
+}
+
+// Script listing messages
+message ListScriptsRequest {
+    // Optional filter by script name pattern
+    string name_pattern = 1;
+}
+
+message ListScriptsResponse {
+    repeated ScriptInfo scripts = 1;
+}
+
+message ScriptInfo {
+    string name = 1;
+    string description = 2;
+    string language = 3;  // "lua", etc.
+    repeated ParameterDefinition parameters = 4;
+    string return_type = 5;
+    bool has_inline_script = 6;
+    string script_path = 7;  // Empty if inline
+}
+
+// Script registration messages
+message RegisterScriptRequest {
+    string name = 1;
+    string description = 2;
+    string language = 3;  // "lua", etc.
+    repeated ParameterDefinition parameters = 4;
+    string return_type = 5;
+    oneof script_source {
+        string inline_script = 6;
+        string script_path = 7;
+    }
+}
+
+message RegisterScriptResponse {
+    bool success = 1;
+    string script_name = 2;
+    string error_message = 3;
+}
+
+// Legacy script execution messages
 message ExecuteScriptRequest {
     string script_id = 1;
     string script_content = 2;
-    string script_type = 3; // "lua", "python", etc.
+    string script_type = 3;  // "lua", "python", etc.
     map<string, string> parameters = 4;
 }
 
@@ -17,4 +124,39 @@ message ExecuteScriptResponse {
     bool success = 1;
     string output = 2;
     string error = 3;
+}
+
+// Streaming script execution messages
+message StreamScriptExecutionRequest {
+    string script_name = 1;
+    ScriptInput input = 2;
+}
+
+message ScriptInput {
+    map<string, string> parameters = 1;
+}
+
+message ScriptChunk {
+    oneof chunk_type {
+        ScriptResult result = 1;
+        ScriptOutput output = 2;
+        ScriptError error = 3;
+    }
+    int64 timestamp = 4;
+}
+
+message ScriptResult {
+    bool success = 1;
+    string output = 2;
+    map<string, string> metadata = 3;
+}
+
+message ScriptOutput {
+    string data = 1;
+    bool is_final = 2;
+}
+
+message ScriptError {
+    string error_message = 1;
+    string error_type = 2;  // "execution", "timeout", "resource_limit", etc.
 }

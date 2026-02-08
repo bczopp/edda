@@ -22,39 +22,57 @@ pub fn init_logging() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let json = std::env::var("FREKI_LOG_JSON").map(|v| v == "1" || v.eq_ignore_ascii_case("true")).unwrap_or(false);
     let log_file = std::env::var("FREKI_LOG_FILE").ok();
 
-    let fmt_layer = fmt::layer()
-        .with_target(true)
-        .with_thread_ids(false)
-        .with_file(false)
-        .with_line_number(false);
-
-    let fmt_layer = if json {
-        fmt_layer.json().with_writer(std::io::stdout)
-    } else {
-        fmt_layer.with_writer(std::io::stdout)
-    };
-
-    let registry = tracing_subscriber::registry()
-        .with(env_filter)
-        .with(fmt_layer);
+    let base = tracing_subscriber::registry().with(env_filter);
 
     if let Some(ref path) = log_file {
         let directory = Path::new(path).parent().unwrap_or(Path::new("."));
         let file_name = Path::new(path).file_name().and_then(|p| p.to_str()).unwrap_or("freki.log");
         let file_appender = tracing_appender::rolling::Builder::new()
             .rotation(tracing_appender::rolling::Rotation::DAILY)
-            .build(directory, file_name)
+            .filename_prefix(file_name)
+            .build(directory)
             .map_err(|e| format!("Failed to create log file appender: {}", e))?;
-        let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
-        std::mem::forget(guard); // Keep guard alive for program lifetime (file writer)
+        let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+        std::mem::forget(_guard);
         let file_layer = fmt::layer()
             .with_target(true)
             .with_ansi(false)
             .with_writer(non_blocking);
-        let registry = registry.with(file_layer);
-        registry.init();
+        if json {
+            let stdout_layer = fmt::layer()
+                .with_target(true)
+                .with_thread_ids(false)
+                .with_file(false)
+                .with_line_number(false)
+                .json()
+                .with_writer(std::io::stdout);
+            base.with(stdout_layer).with(file_layer).init();
+        } else {
+            let stdout_layer = fmt::layer()
+                .with_target(true)
+                .with_thread_ids(false)
+                .with_file(false)
+                .with_line_number(false)
+                .with_writer(std::io::stdout);
+            base.with(stdout_layer).with(file_layer).init();
+        }
+    } else if json {
+        let layer = fmt::layer()
+            .with_target(true)
+            .with_thread_ids(false)
+            .with_file(false)
+            .with_line_number(false)
+            .json()
+            .with_writer(std::io::stdout);
+        base.with(layer).init();
     } else {
-        registry.init();
+        let layer = fmt::layer()
+            .with_target(true)
+            .with_thread_ids(false)
+            .with_file(false)
+            .with_line_number(false)
+            .with_writer(std::io::stdout);
+        base.with(layer).init();
     }
 
     Ok(())

@@ -1,9 +1,11 @@
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PromptRequest {
     pub prompt: String,
+    pub system_prompt: Option<String>,
     pub context: Option<String>,
     pub max_tokens: Option<u32>,
 }
@@ -22,9 +24,10 @@ pub enum LLMError {
     ModelNotAvailable(String),
 }
 
+#[async_trait]
 pub trait LLMProvider: Send + Sync {
     fn model_name(&self) -> &str;
-    
+
     async fn process_prompt(&self, request: PromptRequest) -> Result<PromptResponse, LLMError>;
 }
 
@@ -38,6 +41,7 @@ impl LocalLLMProvider {
     }
 }
 
+#[async_trait]
 impl LLMProvider for LocalLLMProvider {
     fn model_name(&self) -> &str {
         &self.model_name
@@ -51,12 +55,13 @@ impl LLMProvider for LocalLLMProvider {
         // 3. Run inference through llama.cpp/BitNet.cpp
         // 4. Return generated text
         
-        // For now, provide a structured response that can be extended
-        let full_prompt = if let Some(context) = &request.context {
-            format!("Context: {}\n\nPrompt: {}", context, request.prompt)
-        } else {
-            request.prompt.clone()
-        };
+        // Use PromptFormatter for consistent prompting
+        let formatter = crate::prompt::PromptFormatter::default();
+        let full_prompt = formatter.format(
+            request.system_prompt.as_deref().unwrap_or(""),
+            &request.prompt,
+            request.context.as_deref(),
+        );
         
         // Estimate token count (simplified - would use actual tokenizer)
         let estimated_tokens = full_prompt.split_whitespace().count() as u32;

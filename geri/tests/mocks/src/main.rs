@@ -15,7 +15,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Starting mock service {} on port {}", service_name, port);
 
-    let addr = format!("0.0.0.0:{}", port).parse()?;
+    // Explizit als SocketAddr parsen, um Typ-Inferenz-Probleme zu vermeiden.
+    let addr: std::net::SocketAddr = format!("0.0.0.0:{}", port).parse()?;
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     info!("Mock service {} listening on {}", service_name, addr);
 

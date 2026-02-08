@@ -38,64 +38,127 @@ impl ActionOrchestrator {
         }
     }
 
-    /// Generate action plan from request text (keyword-based: file, terminal, app, fallback).
+    /// Generate action plan from request text (XML Task-based).
     pub async fn plan_actions(&self, request: &str) -> Result<ActionPlan, Box<dyn std::error::Error + Send + Sync>> {
         let request_lower = request.to_lowercase();
         let mut actions = Vec::new();
 
-        // Detect file operations
-        if request_lower.contains("open") && request_lower.contains("file") {
+        // High-level intent: File Collection
+        if (request_lower.contains("list") || request_lower.contains("show") || request_lower.contains("open")) && request_lower.contains("file") {
             let file_name = self.extract_file_name(request);
+            let location = if file_name == "unknown.txt" { "." } else { &file_name };
+            
+            let xml_task = format!(
+                "<task><collection type=\"file\" location=\"{}\"></collection></task>",
+                location
+            );
+
             actions.push(Action {
                 action_id: Uuid::new_v4().to_string(),
-                action_type: "FILE_OPERATION".to_string(),
+                action_type: "XML_TASK".to_string(),
                 service: "thor".to_string(),
                 parameters: serde_json::json!({
-                    "operation": "open",
-                    "file": file_name
+                    "xml": xml_task
                 }),
             });
         }
 
-        // Detect terminal/command operations
-        if request_lower.contains("run") && request_lower.contains("command") 
-            || request_lower.contains("execute") 
-            || request_lower.starts_with("ls") 
-            || request_lower.starts_with("cd") 
-            || request_lower.starts_with("mkdir") {
+        // High-level intent: Process Collection
+        if request_lower.contains("list") && (request_lower.contains("process") || request_lower.contains("tasks")) {
+            let xml_task = "<task><collection type=\"process\"></collection></task>".to_string();
+            actions.push(Action {
+                action_id: Uuid::new_v4().to_string(),
+                action_type: "XML_TASK".to_string(),
+                service: "thor".to_string(),
+                parameters: serde_json::json!({ "xml": xml_task }),
+            });
+        }
+
+        // High-level intent: Network Collection
+        if request_lower.contains("network") || request_lower.contains("ip") || request_lower.contains("connection") {
+            let xml_task = "<task><collection type=\"network\"></collection></task>".to_string();
+            actions.push(Action {
+                action_id: Uuid::new_v4().to_string(),
+                action_type: "XML_TASK".to_string(),
+                service: "thor".to_string(),
+                parameters: serde_json::json!({ "xml": xml_task }),
+            });
+        }
+
+        // High-level intent: Analysis Collection (Resource/Performance)
+        if request_lower.contains("analyze") || request_lower.contains("status") || request_lower.contains("performance") || request_lower.contains("usage") {
+            let xml_task = "<task><analysis type=\"resource\"></analysis></task>".to_string();
+            actions.push(Action {
+                action_id: Uuid::new_v4().to_string(),
+                action_type: "XML_TASK".to_string(),
+                service: "thor".to_string(),
+                parameters: serde_json::json!({ "xml": xml_task }),
+            });
+        }
+
+        // High-level intent: Instruction/Command
+        if request_lower.contains("run") || request_lower.contains("execute") {
             let command = self.extract_command(request);
+            let xml_task = format!(
+                "<task><instruction>Execute the following command: {}</instruction></task>",
+                command
+            );
+
             actions.push(Action {
                 action_id: Uuid::new_v4().to_string(),
-                action_type: "TERMINAL_OPERATION".to_string(),
+                action_type: "XML_TASK".to_string(),
                 service: "thor".to_string(),
                 parameters: serde_json::json!({
-                    "command": command
+                    "xml": xml_task
                 }),
             });
         }
 
-        // Detect app control operations
-        if request_lower.contains("launch") || request_lower.contains("start") || request_lower.contains("open app") {
-            let app_name = self.extract_app_name(request);
+        // High-level intent: Log Collection
+        if request_lower.contains("log") || request_lower.contains("journal") {
+            let xml_task = "<task><collection type=\"logs\"></collection></task>".to_string();
             actions.push(Action {
                 action_id: Uuid::new_v4().to_string(),
-                action_type: "APP_CONTROL".to_string(),
+                action_type: "XML_TASK".to_string(),
                 service: "thor".to_string(),
-                parameters: serde_json::json!({
-                    "operation": "launch",
-                    "app": app_name
-                }),
+                parameters: serde_json::json!({ "xml": xml_task }),
             });
         }
 
-        // If no specific actions detected, create a generic action
+        // High-level intent: Security Analysis
+        if request_lower.contains("security") || request_lower.contains("port") || request_lower.contains("firewall") {
+            let xml_task = "<task><analysis type=\"security\"></analysis></task>".to_string();
+            actions.push(Action {
+                action_id: Uuid::new_v4().to_string(),
+                action_type: "XML_TASK".to_string(),
+                service: "thor".to_string(),
+                parameters: serde_json::json!({ "xml": xml_task }),
+            });
+        }
+
+        // High-level intent: Hardware Analysis
+        if request_lower.contains("hardware") || request_lower.contains("cpu") || request_lower.contains("memory") || request_lower.contains("specs") {
+            let xml_task = "<task><analysis type=\"hardware\"></analysis></task>".to_string();
+            actions.push(Action {
+                action_id: Uuid::new_v4().to_string(),
+                action_type: "XML_TASK".to_string(),
+                service: "thor".to_string(),
+                parameters: serde_json::json!({ "xml": xml_task }),
+            });
+        }
+
+        // Fallback for unspecified intents
         if actions.is_empty() {
+            let xml_task = format!(
+                "<task><instruction>Determine how to handle: {}</instruction></task>",
+                request
+            );
             actions.push(Action {
                 action_id: Uuid::new_v4().to_string(),
-                action_type: "SYSTEM_COMMAND".to_string(),
+                action_type: "XML_TASK".to_string(),
                 service: "thor".to_string(),
                 parameters: serde_json::json!({
-                    "request": request
+                    "xml": xml_task
                 }),
             });
         }
@@ -189,7 +252,13 @@ impl ActionOrchestrator {
                         } else {
                             "Action completed successfully".to_string()
                         };
-                        results.push(result_data);
+
+                        // Post-process XML response if present
+                        if result_data.starts_with("<response") {
+                            results.push(self.parse_xml_response(&result_data));
+                        } else {
+                            results.push(result_data);
+                        }
                     } else {
                         results.push(format!("Action failed: {}", thor_result.error_message));
                     }
@@ -203,11 +272,32 @@ impl ActionOrchestrator {
         Ok(results)
     }
 
+    /// Parses a standard XML response and returns the payload or error.
+    fn parse_xml_response(&self, xml: &str) -> String {
+        // Simple extraction logic for demonstration
+        if let Some(payload_start) = xml.find("<payload>") {
+            if let Some(payload_end) = xml.find("</payload>") {
+                return xml[payload_start + 9..payload_end].to_string();
+            }
+        }
+        
+        if xml.contains("status=\"error\"") {
+             return format!("Error in XML response: {}", xml);
+        }
+
+        xml.to_string()
+    }
+
     /// Convert internal Action to ThorAction proto
     fn convert_to_thor_action(&self, action: Action) -> Result<crate::clients::thor::thor::ThorAction, Box<dyn std::error::Error + Send + Sync>> {
-        // Serialize parameters to JSON bytes
-        let action_data = serde_json::to_vec(&action.parameters)
-            .map_err(|e| format!("Failed to serialize action parameters: {}", e))?;
+        // For XML types, we want the raw XML string as action_data
+        let action_data = if action.action_type == "XML_TASK" || action.action_type == "XML_CALL" {
+            action.parameters["xml"].as_str().unwrap_or_default().as_bytes().to_vec()
+        } else {
+            // Serialize parameters to JSON bytes for standard actions
+            serde_json::to_vec(&action.parameters)
+                .map_err(|e| format!("Failed to serialize action parameters: {}", e))?
+        };
 
         Ok(crate::clients::thor::thor::ThorAction {
             action_id: action.action_id,

@@ -11,6 +11,8 @@ Gladsheim ist der **Service-Manager und Runtime-Manager** auf allen Plattformen 
 
 **Tests ausführen:** Von `gladsheim/`: `docker compose -f docker-compose.test.yml run --rm gladsheim-test` oder `./scripts/run-tests.sh` (bzw. `.\scripts\run-tests.ps1` unter Windows). **CI:** Bei Push/PR auf `gladsheim/**` läuft [.github/workflows/gladsheim.yml](../.github/workflows/gladsheim.yml) (Test im Container, Lint).
 
+**Status: ~77% COMPLETE** - Phase 1.1 (Projekt-Setup & Grundstruktur) ✅, Phase 1.3 (Settings-System) ✅, Phase 2 (Protobuf & gRPC Setup) ✅, Phase 3.1 (Thjalfi Service Loader) ✅, Phase 4.1–4.2 (Byggvir Resource Manager) ✅, Phase 5.1–5.3.1 (Roskva Health Monitor) ✅. Alle 4 Sub-Komponenten vollständig implementiert: Thjalfi (ServiceProcess, Service Loader), Byggvir (System-Monitoring mit sysinfo, ServiceResourceTracker, ResourceLimitChecker, ResourceEnforcer mit Warning/Critical Actions), Roskva (HealthMonitor HTTP/gRPC/Process, ServiceHealthTracker mit Auto-Restart-Logic), Skirnir (Service Registry). Process Management, Resource Monitoring, Health Monitoring, Service Registry implementiert. Settings-System mit Platform-spezifischen Defaults, Validierung, JSON-Loading und Hot-Reload implementiert. **Phase 1.1.3 Build-System ✅**: `build.rs` mit tonic-build, Cargo-Features (`http-health`, `grpc-health`). gRPC Service implementiert: **Alle 10 RPCs vollständig** (GetServiceStatus, ListServices, GetResourceUsage, StartService, StopService, RestartService, GetServiceHealth, **SubscribeServiceHealth** (Server-Side-Streaming), SetResourceLimits, GetResourceLimits). Remaining: Phase 1.2 (Test-Infrastruktur), Phase 3.2–10 (Service-Path-Resolution, Monitoring-Loop, Crash-Detection, etc.).
+
 ## Architektur
 
 ### Gladsheim als Plattform-Komponente

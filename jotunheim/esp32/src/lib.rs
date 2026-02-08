@@ -1,3 +1,10 @@
-pub mod network;
+pub mod capability;
 pub mod grpc;
+pub mod network;
+pub mod ota;
+pub mod remote;
+pub mod resilience;
+pub mod resources;
+pub mod settings;
+pub mod streaming;
 pub mod utils;

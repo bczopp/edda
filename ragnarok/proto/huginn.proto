@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package huginn;
+
+import "raven.proto";
+
+// HuginnMediaService - Service for forwarding all types of media to Odin
+service HuginnMediaService {
+  // Forward text input to Odin
+  rpc ForwardText(ForwardTextRequest) returns (MediaForwardResponse);
+  
+  // Forward image to Odin
+  rpc ForwardImage(ForwardImageRequest) returns (MediaForwardResponse);
+  
+  // Forward video to Odin
+  rpc ForwardVideo(ForwardVideoRequest) returns (MediaForwardResponse);
+  
+  // Forward video stream to Odin (streaming)
+  rpc ForwardVideoStream(stream ForwardVideoStreamChunk) returns (MediaForwardResponse);
+  
+  // Transcribe audio to text (STT)
+  rpc TranscribeAudio(TranscribeAudioRequest) returns (TranscribeAudioResponse);
+}
+
+// ForwardTextRequest - Request to forward text
+message ForwardTextRequest {
+  string text = 1;
+  string user_id = 2;
+  string device_id = 3;
+  map<string, string> metadata = 4;
+}
+
+// ForwardImageRequest - Request to forward image
+message ForwardImageRequest {
+  bytes image_data = 1;
+  string image_format = 2;  // "jpg", "png", "webp", etc.
+  int32 width = 3;
+  int32 height = 4;
+  string user_id = 5;
+  string device_id = 6;
+  map<string, string> metadata = 7;
+}
+
+// ForwardVideoRequest - Request to forward video
+message ForwardVideoRequest {
+  bytes video_data = 1;
+  string video_format = 2;  // "mp4", "webm", etc.
+  int32 duration_ms = 3;
+  string user_id = 4;
+  string device_id = 5;
+  map<string, string> metadata = 6;
+}
+
+// ForwardVideoStreamChunk - Streaming video chunk
+message ForwardVideoStreamChunk {
+  bytes chunk_data = 1;
+  int32 chunk_index = 2;
+  bool is_last = 3;
+  string video_format = 4;
+  string user_id = 5;
+  string device_id = 6;
+}
+
+// MediaForwardResponse - Response for media forwarding
+message MediaForwardResponse {
+  bool success = 1;
+  string message_id = 2;
+  string error_message = 3;
+}
+
+// TranscribeAudioRequest - Request to transcribe audio
+message TranscribeAudioRequest {
+  bytes audio_data = 1;
+  string audio_format = 2;  // "wav", "mp3", "opus", etc.
+  int32 sample_rate = 3;
+  int32 channels = 4;
+  string language = 5;
+  string user_id = 6;
+  string device_id = 7;
+}
+
+// TranscribeAudioResponse - Response with transcribed text
+message TranscribeAudioResponse {
+  raven.RavenMessage message = 1;
+  bool success = 2;
+  string error_message = 3;
+}

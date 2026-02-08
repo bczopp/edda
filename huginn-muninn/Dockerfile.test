@@ -1,4 +1,4 @@
-FROM rust:1.75-slim
+FROM rust:latest
 
 WORKDIR /app
 
@@ -11,9 +11,10 @@ RUN apt-get update && apt-get install -y \
 # Copy workspace Cargo files
 COPY Cargo.toml Cargo.lock ./
 
-# Copy workspace members
+# Copy workspace members (including shared - path dependency)
 COPY huginn ./huginn
 COPY muninn ./muninn
+COPY shared ./shared
 COPY tests ./tests
 
 # Build the project

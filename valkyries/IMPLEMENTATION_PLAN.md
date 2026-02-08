@@ -53,19 +53,29 @@ Valkyries ist das Coding Agent Plugin - es unterstützt bei Code-Aufgaben via Od
 - [ ] Chat-Routing zu Valkyries (TDD)
 - [ ] Thor-Integration für File-Operations (TDD)
 
-## Phase 8: Performance & Security (6 Schritte)
+## Phase 8: Concurrency & Parallelism (6 Schritte)
+- [x] **Odin parallel_agents Unterstützung**: `PluginManager::process_request_parallel()` für N parallele Plugin-Aufrufe (bereits implementiert)
+- [ ] Tests für parallele Valkyries-Instanzen schreiben (N concurrent tasks, task decomposition)
+- [ ] Brünnhilde: Task-Decomposition für parallele Sub-Agents implementieren
+- [ ] Parallel Sub-Agent Execution: tokio::spawn für unabhängige Sub-Tasks
+- [ ] Concurrency-Limits: `max_concurrent_agents` in Settings (default = `parallel_agents`)
+- [ ] Load-Tests: N parallele Valkyries-Requests, Throughput messen
+
+**Hinweis**: `parallel_agents` (Odin-Config) steuert, wie viele Valkyries-Instanzen parallel aufgerufen werden. Valkyries selbst muss Tasks in parallele Sub-Tasks zerlegen (Brünnhilde), wenn möglich.
+
+## Phase 9: Performance & Security (6 Schritte)
 - [ ] Async-Processing
 - [ ] Heimdall-Integration (Auth)
 - [ ] Audit-Logging
 
-## Phase 9: Documentation & Testing (6 Schritte)
+## Phase 10: Documentation & Testing (6 Schritte)
 - [ ] Dokumentation
 - [ ] E2E-Tests (User-Request → Valkyries → Code-Analysis → Response)
 
 ---
 
-**Schritte gesamt**: ~81
-**Phasen**: 9
+**Schritte gesamt**: ~87
+**Phasen**: 10
 
 **Hinweise**:
 - Alle Schritte folgen TDD (Tests zuerst, dann Implementierung)

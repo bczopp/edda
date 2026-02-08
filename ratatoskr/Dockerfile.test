@@ -1,5 +1,5 @@
 # Rust 1.85+ required for deps using edition2024 (e.g. base64ct)
-FROM rust:1.85-slim
+FROM rust:latest
 
 WORKDIR /app
 

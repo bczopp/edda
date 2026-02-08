@@ -48,6 +48,40 @@ impl PluginManager {
         let plugins = self.plugins.read().await;
         plugins.keys().cloned().collect()
     }
+
+    /// Process request in parallel: spawn `parallel_count` concurrent calls to the same plugin.
+    /// Returns all results (or errors). Useful for Valkyries parallel_agents.
+    pub async fn process_request_parallel(
+        &self,
+        plugin_name: &str,
+        request: &str,
+        parallel_count: usize,
+    ) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
+        if parallel_count == 0 {
+            return Err("parallel_count must be > 0".into());
+        }
+
+        let plugin = self.get(plugin_name).await.ok_or_else(|| {
+            format!("Plugin '{}' not found", plugin_name)
+        })?;
+
+        let mut handles = vec![];
+        for _ in 0..parallel_count {
+            let p = Arc::clone(&plugin);
+            let req = request.to_string();
+            handles.push(tokio::spawn(async move {
+                p.process_request(&req).await
+            }));
+        }
+
+        let mut results = vec![];
+        for handle in handles {
+            let res = handle.await??;
+            results.push(res);
+        }
+
+        Ok(results)
+    }
 }
 
 impl Default for PluginManager {

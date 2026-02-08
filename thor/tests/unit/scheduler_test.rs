@@ -14,7 +14,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_scheduler_create_job() {
+    async fn test_scheduler_create_job_linux() {
         let handler = SchedulerActionHandler::new();
         let action_data = serde_json::json!({
             "operation": "create",
@@ -29,7 +29,54 @@ mod tests {
             action_id: "test-action".to_string(),
         };
         let result = handler.execute(&context, &serde_json::to_vec(&action_data).unwrap()).await;
+        // On Linux/macOS: cron with no persistent store succeeds (no-op); on Windows we use schtasks
         assert!(result.is_ok() || result.is_err());
+    }
+
+    /// On non-Windows, requesting Windows scheduler returns "not available on this operating system".
+    #[cfg(not(target_os = "windows"))]
+    #[tokio::test]
+    async fn test_scheduler_windows_unavailable_on_unix() {
+        let handler = SchedulerActionHandler::new();
+        let action_data = serde_json::json!({
+            "operation": "create",
+            "job_name": "test_job",
+            "schedule": "0 0 * * *",
+            "command": "echo test",
+            "operating_system": "windows"
+        });
+        let context = ActionContext {
+            device_id: "test-device".to_string(),
+            user_id: "test-user".to_string(),
+            action_id: "test-action".to_string(),
+        };
+        let result = handler.execute(&context, &serde_json::to_vec(&action_data).unwrap()).await;
+        let err = result.expect_err("Windows scheduler should be unavailable on Unix");
+        let msg = err.to_string();
+        assert!(msg.contains("not available on this operating system"), "{}", msg);
+    }
+
+    /// On non-macOS, requesting launchd scheduler returns "not available on this operating system".
+    #[cfg(not(target_os = "macos"))]
+    #[tokio::test]
+    async fn test_scheduler_launchd_unavailable_on_non_macos() {
+        let handler = SchedulerActionHandler::new();
+        let action_data = serde_json::json!({
+            "operation": "create",
+            "job_name": "test_job",
+            "schedule": "0 0 * * *",
+            "command": "echo test",
+            "operating_system": "launchd"
+        });
+        let context = ActionContext {
+            device_id: "test-device".to_string(),
+            user_id: "test-user".to_string(),
+            action_id: "test-action".to_string(),
+        };
+        let result = handler.execute(&context, &serde_json::to_vec(&action_data).unwrap()).await;
+        let err = result.expect_err("launchd should be unavailable on non-macOS");
+        let msg = err.to_string();
+        assert!(msg.contains("launchd not available on this operating system"), "{}", msg);
     }
 
     #[tokio::test]
@@ -164,5 +211,46 @@ mod tests {
         let scheduler = CronScheduler::new_with_store(store);
         let r = scheduler.delete_job("nonexistent").await;
         assert!(r.is_err());
+    }
+
+    #[cfg(target_os = "windows")]
+    #[tokio::test]
+    async fn test_scheduler_windows_create_list_delete() {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let handler = SchedulerActionHandler::new();
+        let name = format!(
+            "ThorTest_{}",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()
+        );
+        let context = ActionContext {
+            device_id: "test-device".to_string(),
+            user_id: "test-user".to_string(),
+            action_id: "test-action".to_string(),
+        };
+        let create_data = serde_json::json!({
+            "operation": "create",
+            "job_name": name,
+            "schedule": "0 9 * * *",
+            "command": "cmd /c echo hello",
+            "operating_system": "windows"
+        });
+        let create_result = handler
+            .execute(&context, &serde_json::to_vec(&create_data).unwrap())
+            .await;
+        assert!(create_result.is_ok(), "create should succeed: {:?}", create_result);
+        let list_data = serde_json::json!({ "operation": "list", "operating_system": "windows" });
+        let list_result = handler
+            .execute(&context, &serde_json::to_vec(&list_data).unwrap())
+            .await;
+        assert!(list_result.is_ok(), "list should succeed: {:?}", list_result);
+        let delete_data = serde_json::json!({
+            "operation": "delete",
+            "job_name": name,
+            "operating_system": "windows"
+        });
+        let delete_result = handler
+            .execute(&context, &serde_json::to_vec(&delete_data).unwrap())
+            .await;
+        assert!(delete_result.is_ok(), "delete should succeed: {:?}", delete_result);
     }
 }

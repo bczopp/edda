@@ -405,7 +405,14 @@ service LokiService {
 
 **Projekt-Status** liegt in den jeweiligen Projekten: Jedes Projekt hat einen `IMPLEMENTATION_PLAN` (bzw. `IMPLEMENTATION_STATUS`) und ein `README` mit aktueller Funktionalität und Tests.
 
-**Aktueller Gesamtfortschritt und kritischer Pfad:** [IMPLEMENTATION_PLAN.md](../IMPLEMENTATION_PLAN.md) (Master-Plan im Repo-Root). Stand: Odin, Ratatoskr, Nornen ✅; Bifrost ~85%, Heimdall ~90%, Nidhoggr ~85%; Mimir ~90%; Thor ~55%; Ragnarok ~35%; Geri ~20%; Skuld ~18%; Freki ~8% (Phase 1.1 Struktur ✅); in Arbeit.
+**Aktueller Gesamtfortschritt und kritischer Pfad:** [IMPLEMENTATION_PLAN.md](../IMPLEMENTATION_PLAN.md) (Master-Plan im Repo-Root).
+
+**Stand (aktuell):**
+- **Abgeschlossen (8):** Odin, Ratatoskr, Nornen, Skuld, Bifrost, Heimdall, Nidhoggr, Vedrfolnir.
+- **Weit fortgeschritten:** Geri ~86% (Phase 1.2.3 CI/Coverage ✅), Mimir ~95%, Freki ~75%, Nidhoggr/Bifrost/Vedrfolnir ~85–95%.
+- **In Arbeit:** Thor ~72% (Phase 12.2 Windows UI-Automation ✅, 13.2 Windows Task Scheduler ✅), Huginn-Muninn ~78%, Loki ~78%.
+- **Platformen:** Ragnarok ~67% (Phase 2–8 ✅, E2E Mock-Odin; Thor/Geri/Freki gRPC-Clients ✅, Action nutzt Thor), Jotunheim ~75% (Phase 1–13 ✅; optional: Phase 10), Gladsheim ~78% (Phase 1.2.1–1.2.3, 2.1 ✅).
+- **Offen/gering:** Midgard, Alfheim, Asgard, Yggdrasil, Valkyries, Frigg, Forseti, Heidrun, Eikthyrnir, Njordr, Hirtir/Laeradr.
 
 ## Implementierungs-Notizen
 

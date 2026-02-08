@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package odin;
+
+// Odin orchestrator service (mock for E2E tests)
+message ProcessRequest {
+    string request_id = 1;
+    string user_id = 2;
+    string device_id = 3;
+    string input = 4;
+    string input_type = 5;
+}
+
+message ProcessResponse {
+    string response = 1;
+    repeated string actions_taken = 2;
+}
+
+service OdinService {
+    rpc Process(ProcessRequest) returns (ProcessResponse);
+}

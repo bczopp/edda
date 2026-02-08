@@ -7,17 +7,20 @@ pub struct ActionDispatcher {
     registry: Arc<ActionRegistry>,
     permission_checker: Arc<PermissionChecker>,
     audit_logger: Option<Arc<dyn AuditLogger>>,
+    strict_sandboxing: bool,
 }
 
 impl ActionDispatcher {
     pub fn new(
         registry: Arc<ActionRegistry>,
         permission_checker: Arc<PermissionChecker>,
+        strict_sandboxing: bool,
     ) -> Self {
         Self {
             registry,
             permission_checker,
             audit_logger: None,
+            strict_sandboxing,
         }
     }
 
@@ -25,11 +28,13 @@ impl ActionDispatcher {
         registry: Arc<ActionRegistry>,
         permission_checker: Arc<PermissionChecker>,
         audit_logger: Arc<dyn AuditLogger>,
+        strict_sandboxing: bool,
     ) -> Self {
         Self {
             registry,
             permission_checker,
             audit_logger: Some(audit_logger),
+            strict_sandboxing,
         }
     }
 
@@ -67,13 +72,23 @@ impl ActionDispatcher {
             )));
         }
 
+        // Enforcement: If strict_sandboxing is enabled, only allow sandboxed executors
+        if self.strict_sandboxing && !executor.is_sandboxed() {
+            let err_msg = format!("Action {} is blocked: strict sandboxing is enabled and this executor is not sandboxed", action_type);
+            if let Some(logger) = &self.audit_logger {
+                logger.log_result(context, action_type, false, Some(&err_msg)).await;
+            }
+            return Err(ActionError::PermissionDenied(err_msg));
+        }
+
         let result = executor.execute(context, action_data).await;
         if let Some(logger) = &self.audit_logger {
-            let (success, err_msg) = match &result {
+            let err_msg = result.as_ref().err().map(|e| e.to_string());
+            let (success, err_msg_ref) = match &result {
                 Ok(_) => (true, None),
-                Err(e) => (false, Some(e.to_string().as_str())),
+                Err(_) => (false, err_msg.as_deref()),
             };
-            logger.log_result(context, action_type, success, err_msg).await;
+            logger.log_result(context, action_type, success, err_msg_ref).await;
         }
         result
     }

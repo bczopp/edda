@@ -6,19 +6,124 @@ use async_trait::async_trait;
 #[cfg(target_os = "windows")]
 mod windows_impl {
     use super::*;
-    
-    pub async fn click_element(_element: &Element) -> Result<(), ActionError> {
-        // Windows UI Automation implementation
-        // Would use windows-rs crate for actual implementation
-        Err(ActionError::ExecutionFailed("Windows UI Automation not yet fully implemented".to_string()))
+    use windows::Win32::UI::Input::KeyboardAndMouse::*;
+    use windows::Win32::UI::WindowsAndMessaging::SetCursorPos;
+    use std::mem::size_of;
+
+    fn position_from_element(element: &Element) -> Result<(i32, i32), ActionError> {
+        let x = element.value.get("x").and_then(Value::as_i64).ok_or_else(|| {
+            ActionError::InvalidAction("Element by_position missing 'x'".to_string())
+        })? as i32;
+        let y = element.value.get("y").and_then(Value::as_i64).ok_or_else(|| {
+            ActionError::InvalidAction("Element by_position missing 'y'".to_string())
+        })? as i32;
+        Ok((x, y))
     }
-    
-    pub async fn type_text(_element: &Element, _text: &str) -> Result<(), ActionError> {
-        Err(ActionError::ExecutionFailed("Windows UI Automation not yet fully implemented".to_string()))
+
+    pub async fn click_element(element: &Element) -> Result<(), ActionError> {
+        let (x, y) = match element.element_type.as_str() {
+            "by_position" => position_from_element(element)?,
+            _ => {
+                return Err(ActionError::ExecutionFailed(
+                    "Windows UI Automation: by_name/by_id not yet implemented, use by_position".to_string(),
+                ));
+            }
+        };
+        unsafe {
+            SetCursorPos(x, y).map_err(|e| {
+                ActionError::ExecutionFailed(format!("SetCursorPos failed: {}", e))
+            })?;
+            // Send left button down then up at current (x,y)
+            let down = INPUT {
+                r#type: INPUT_TYPE::INPUT_MOUSE,
+                Anonymous: windows::Win32::UI::Input::KeyboardAndMouse::INPUT_0 {
+                    mi: MOUSEINPUT {
+                        dx: 0,
+                        dy: 0,
+                        mouseData: 0,
+                        dwFlags: MOUSE_EVENT_FLAGS::MOUSEEVENTF_LEFTDOWN,
+                        dwExtraInfo: 0,
+                        time: 0,
+                    },
+                },
+            };
+            let up = INPUT {
+                r#type: INPUT_TYPE::INPUT_MOUSE,
+                Anonymous: windows::Win32::UI::Input::KeyboardAndMouse::INPUT_0 {
+                    mi: MOUSEINPUT {
+                        dx: 0,
+                        dy: 0,
+                        mouseData: 0,
+                        dwFlags: MOUSE_EVENT_FLAGS::MOUSEEVENTF_LEFTUP,
+                        dwExtraInfo: 0,
+                        time: 0,
+                    },
+                },
+            };
+            let inputs = [down, up];
+            let n = SendInput(&inputs, size_of::<INPUT>() as i32);
+            if n != 2 {
+                return Err(ActionError::ExecutionFailed(
+                    "SendInput (mouse click) failed".to_string(),
+                ));
+            }
+        }
+        Ok(())
     }
-    
-    pub async fn move_cursor(_x: i32, _y: i32) -> Result<(), ActionError> {
-        Err(ActionError::ExecutionFailed("Windows UI Automation not yet fully implemented".to_string()))
+
+    pub async fn type_text(_element: &Element, text: &str) -> Result<(), ActionError> {
+        unsafe {
+            for ch in text.chars() {
+                // BMP only; surrogates (char > U+FFFF) would need encode_utf16
+                let scan = match ch as u32 {
+                    n if n <= 0xFFFF => n as u16,
+                    _ => continue,
+                };
+                let inputs = [
+                    INPUT {
+                        r#type: INPUT_TYPE::INPUT_KEYBOARD,
+                        Anonymous: windows::Win32::UI::Input::KeyboardAndMouse::INPUT_0 {
+                            ki: KEYBDINPUT {
+                                wVk: 0,
+                                wScan: scan,
+                                dwFlags: KEYBD_EVENT_FLAGS::KEYEVENTF_UNICODE,
+                                time: 0,
+                                dwExtraInfo: 0,
+                            },
+                        },
+                    },
+                    INPUT {
+                        r#type: INPUT_TYPE::INPUT_KEYBOARD,
+                        Anonymous: windows::Win32::UI::Input::KeyboardAndMouse::INPUT_0 {
+                            ki: KEYBDINPUT {
+                                wVk: 0,
+                                wScan: scan,
+                                dwFlags: KEYBD_EVENT_FLAGS::KEYEVENTF_UNICODE
+                                    | KEYBD_EVENT_FLAGS::KEYEVENTF_KEYUP,
+                                time: 0,
+                                dwExtraInfo: 0,
+                            },
+                        },
+                    },
+                ];
+                let n = SendInput(&inputs, size_of::<INPUT>() as i32);
+                if n != 2 {
+                    return Err(ActionError::ExecutionFailed(
+                        "SendInput (keyboard) failed".to_string(),
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub async fn move_cursor(x: i32, y: i32) -> Result<(), ActionError> {
+        unsafe {
+            SetCursorPos(x, y).map_err(|e| {
+                ActionError::ExecutionFailed(format!("SetCursorPos failed: {}", e))
+            })?;
+        }
+        Ok(())
     }
 }
 
@@ -44,19 +149,123 @@ mod macos_impl {
 #[cfg(target_os = "linux")]
 mod linux_impl {
     use super::*;
-    
-    pub async fn click_element(_element: &Element) -> Result<(), ActionError> {
-        // Linux AT-SPI implementation
-        // Would use atspi crate for actual implementation
-        Err(ActionError::ExecutionFailed("Linux UI Automation not yet fully implemented".to_string()))
+    use atspi::AccessibilityConnection;
+    use atspi::proxy::action::ActionProxy;
+    use atspi::proxy::component::ComponentProxy;
+    use atspi::CoordType;
+    use atspi::ObjectRef;
+    use std::sync::Arc;
+    use tokio::sync::OnceCell;
+    use zbus::Proxy;
+
+    static ATSPI_CONNECTION: OnceCell<Result<Arc<AccessibilityConnection>, String>> = OnceCell::const_new();
+
+    async fn get_connection() -> Result<Arc<AccessibilityConnection>, ActionError> {
+        ATSPI_CONNECTION
+            .get_or_init(|| async {
+                match AccessibilityConnection::new().await {
+                    Ok(conn) => Ok(Arc::new(conn)),
+                    Err(e) => Err(format!("Linux UI Automation AT-SPI connection failed: {e}")),
+                }
+            })
+            .await
+            .clone()
+            .map_err(ActionError::ExecutionFailed)
+    }
+
+    fn position_from_element(element: &Element) -> Result<(i32, i32), ActionError> {
+        let x = element.value.get("x").and_then(Value::as_i64).ok_or_else(|| {
+            ActionError::InvalidAction("Element by_position missing 'x'".to_string())
+        })? as i32;
+        let y = element.value.get("y").and_then(Value::as_i64).ok_or_else(|| {
+            ActionError::InvalidAction("Element by_position missing 'y'".to_string())
+        })? as i32;
+        Ok((x, y))
+    }
+
+    pub async fn click_element(element: &Element) -> Result<(), ActionError> {
+        let (x, y) = match element.element_type.as_str() {
+            "by_position" => position_from_element(element)?,
+            _ => {
+                return Err(ActionError::ExecutionFailed(
+                    "Linux UI Automation: by_name/by_id not yet implemented, use by_position".to_string(),
+                ));
+            }
+        };
+        let conn = get_connection().await?;
+        let root = conn
+            .root_accessible_on_registry()
+            .await
+            .map_err(|e| ActionError::ExecutionFailed(format!("AT-SPI root: {e}")))?;
+        let path = root.inner().path().clone();
+        let destination = root
+            .inner()
+            .destination()
+            .cloned()
+            .ok_or_else(|| ActionError::ExecutionFailed("AT-SPI root has no destination".to_string()))?;
+        let component = ComponentProxy::builder(conn.connection())
+            .path(path)
+            .destination(destination)
+            .build()
+            .await
+            .map_err(|e| ActionError::ExecutionFailed(format!("AT-SPI Component proxy: {e}")))?;
+        let obj_ref = component
+            .get_accessible_at_point(x, y, CoordType::Screen)
+            .await
+            .map_err(|e| ActionError::ExecutionFailed(format!("AT-SPI get_accessible_at_point: {e}")))?;
+        if matches!(obj_ref.as_ref(), ObjectRef::Null) {
+            return Err(ActionError::ExecutionFailed(format!(
+                "No accessible element at position ({}, {})",
+                x, y
+            )));
+        }
+        let accessible = conn
+            .object_as_accessible(&obj_ref)
+            .await
+            .map_err(|e| ActionError::ExecutionFailed(format!("AT-SPI object_as_accessible: {e}")))?;
+        let path = accessible.inner().path().clone();
+        let destination = accessible
+            .inner()
+            .destination()
+            .cloned()
+            .ok_or_else(|| ActionError::ExecutionFailed("AT-SPI accessible has no destination".to_string()))?;
+        let action_proxy = ActionProxy::builder(conn.connection())
+            .path(path)
+            .destination(destination)
+            .build()
+            .await
+            .map_err(|e| ActionError::ExecutionFailed(format!("AT-SPI Action proxy: {e}")))?;
+        let n = action_proxy
+            .nactions()
+            .await
+            .map_err(|e| ActionError::ExecutionFailed(format!("AT-SPI nactions: {e}")))?;
+        if n <= 0 {
+            return Err(ActionError::ExecutionFailed(
+                "Element at position does not support actions".to_string(),
+            ));
+        }
+        let ok = action_proxy
+            .do_action(0)
+            .await
+            .map_err(|e| ActionError::ExecutionFailed(format!("AT-SPI do_action: {e}")))?;
+        if !ok {
+            return Err(ActionError::ExecutionFailed("AT-SPI do_action returned false".to_string()));
+        }
+        Ok(())
     }
     
     pub async fn type_text(_element: &Element, _text: &str) -> Result<(), ActionError> {
-        Err(ActionError::ExecutionFailed("Linux UI Automation not yet fully implemented".to_string()))
+        let _conn = get_connection().await?;
+        Err(ActionError::ExecutionFailed(
+            "Linux UI Automation (AT-SPI type) not yet fully implemented".to_string(),
+        ))
     }
     
     pub async fn move_cursor(_x: i32, _y: i32) -> Result<(), ActionError> {
-        Err(ActionError::ExecutionFailed("Linux UI Automation not yet fully implemented".to_string()))
+        let _conn = get_connection().await?;
+        Err(ActionError::ExecutionFailed(
+            "Linux UI Automation (AT-SPI move) not yet fully implemented".to_string(),
+        ))
     }
 }
 
@@ -122,12 +331,22 @@ impl UIAutomationHandler {
             text: value["text"].as_str().map(|s| s.to_string()),
             x: value["x"].as_i64().map(|v| v as i32),
             y: value["y"].as_i64().map(|v| v as i32),
+            confirmed: value["confirmed"].as_bool().unwrap_or(false),
         })
     }
 
     async fn execute_os_action(&self, params: &UIActionParams) -> Result<(), ActionError> {
         let os = self.os_detector.detect();
-        
+
+        // Kritische UI-Aktionen wie "click" dürfen nur mit expliziter
+        // User-Bestätigung ausgeführt werden. Die Bestätigung muss vom
+        // aufrufenden System (z. B. Odin/Plattform) gesetzt werden.
+        if params.action == "click" && !params.confirmed {
+            return Err(ActionError::InvalidAction(
+                "User confirmation required for click action".to_string(),
+            ));
+        }
+
         match os {
             #[cfg(target_os = "windows")]
             OperatingSystem::Windows => {
@@ -270,6 +489,7 @@ struct UIActionParams {
     text: Option<String>,
     x: Option<i32>,
     y: Option<i32>,
+    confirmed: bool,
 }
 
 #[async_trait]

@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package jotunheim.capability;
+
+// Platform Capability Protocol (Jotunheim IoT devices).
+// Aligned with README JotunheimCapabilities interface.
+
+message JotunheimCapabilities {
+  string device_id = 1;
+  string device_name = 2;
+  string device_type = 3;       // e.g. "ESP32", "ESP8266", "Raspberry Pi Pico"
+  string firmware_version = 4;
+  string protocol_version = 5;
+
+  repeated Tool tools = 6;
+  HardwareCapabilities hardware = 7;
+  ResourceLimits resources = 8;
+  ProtocolFeatures features = 9;
+}
+
+message Tool {
+  string name = 1;
+  string description = 2;
+  repeated ParameterDefinition parameters = 3;
+  string return_type = 4;
+}
+
+message ParameterDefinition {
+  string name = 1;
+  string type = 2;   // "String", "Number", "Boolean", "Object", "Array"
+  bool required = 3;
+  string description = 4;
+}
+
+message HardwareCapabilities {
+  GpioInfo gpio = 1;
+  repeated string interfaces = 2;   // e.g. "I2C", "SPI", "UART", "ADC", "PWM"
+  repeated string sensors = 3;      // e.g. "DHT22", "DS18B20", "BMP280"
+  repeated string actuators = 4;    // e.g. "LED", "Motor", "Relay", "Display"
+}
+
+message GpioInfo {
+  repeated int32 available_pins = 1;
+  bool digital = 2;
+  bool analog = 3;
+  bool pwm = 4;
+}
+
+message ResourceLimits {
+  uint32 max_memory_kb = 1;
+  uint32 max_cpu_percent = 2;       // optional, 0 = unset
+  uint32 max_concurrent_tools = 3;
+}
+
+message ProtocolFeatures {
+  bool streaming = 1;
+  bool compression = 2;
+  bool encryption = 3;
+}
+
+message CapabilityRequest {
+  // Empty – request device capabilities
+}
+
+message CapabilityResponse {
+  JotunheimCapabilities capabilities = 1;
+}
+
+message CapabilityUpdateEvent {
+  string event_type = 1;   // e.g. "connected", "updated", "disconnected"
+  JotunheimCapabilities capabilities = 2;
+}

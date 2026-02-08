@@ -34,6 +34,17 @@ Odin ist der zentrale Orchestrator auf Midgard (Desktop), Alfheim (Mobile), Asga
 - Trackt laufende Actions und Tasks
 - Verwaltet Device-Konfiguration
 
+### 3a. Device Scheduler & Device-Loop
+- **Opt-in-Hintergrund-Scheduler**: Odin kann einen asynchronen Scheduler betreiben, der **nur dann aktiv ist, wenn der User ihn explizit in den Settings einschaltet** (`scheduler.enabled = true`).
+- **Capability-Refresh (konfigurierbar)**: Wenn `scheduler.capability_refresh_enabled = true`, ruft der Scheduler periodisch das Einherjar-Protocol auf (`discover_all_capabilities`), um die Fähigkeiten aller angebundenen Services/Devices aktuell zu halten. Wird dieses Flag deaktiviert, läuft der Scheduler zwar, führt aber keine Capability-Refreshs aus.
+- **Konfigurierbares Intervall**: Das Polling-Intervall wird über `state_sync.sync_interval_ms` in den Settings konfiguriert (Hot-Reload-fähig); bei fehlender Angabe wird ein sicherer Default verwendet. Mit `scheduler.enabled = false` werden keinerlei Hintergrund-Polls ausgeführt.
+- **Basis für Haus/Fahrzeug/Roboter-Steuerung**: Diese (vom User aktivierte) regelmäßige Aktualisierung bildet die Grundlage dafür, dass Asgard/Midgard ganze Häuser, Fahrzeuge oder Roboter steuern können – Odin kennt jederzeit die verfügbaren Funktionen und Zuständigkeiten, führt aber selbst keine Hardware-Operationen aus (das bleibt bei Thor/Bifrost/Jotunheim).
+
+### 3b. DeviceRegistry & Sensor-/Aktor-Polling (Erweiterung)
+- **DeviceRegistry**: Odin hält eine Registry logischer Devices (`LogicalDevice`: Haus, Fahrzeug, Roboter) mit Zuordnung zu einer Platform (`platform_id`: Asgard/Midgard). Keine Hardware-Logik in Odin – nur die Liste und Metadaten.
+- **Sensor-/Aktor-Polling (Design)**: Odin orchestriert nur: Anforderungen (z.B. Status abfragen, Aktion ausführen) gehen an die zuständige Platform (Asgard/Midgard) per gRPC/Bifrost; die Platform bzw. Thor/Bifrost/Jotunheim führen Polling und Steuerung in der physischen Welt aus.
+- **Event-getriebene Signale**: Geplant ist die Anbindung von Bifrost-Events, StateSync und Responsibility/Einherjar, damit Device-Ereignisse (z.B. Sensor-Schwellwert) in den Loop einfließen können.
+
 ### 4. Inter-Device Communication Coordination
 - Koordiniert Kommunikation mit anderen Devices über Bifrost
 - Verwaltet Device-Verbindungen
@@ -586,6 +597,10 @@ Plugins können über den Marketplace veröffentlicht und verkauft werden. Der M
     "enabled": true,            // State-Synchronisation aktiviert
     "sync_interval_ms": 1000,   // Sync-Intervall (optional)
     "selective_propagation": true // Selective Propagation aktiviert
+  },
+  "scheduler": {
+    "enabled": false,                  // Device-Scheduler/Loop ist standardmäßig AUS (Opt-in)
+    "capability_refresh_enabled": true // Steuert, ob Capabilities per Einherjar gepollt werden
   },
   "chat_flags": {
     "frigg_direct": false,      // Direkte Chat-Leitung an Frigg

@@ -1,0 +1,19 @@
+[package]
+name = "fenrir"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Loki sub-service: Hardware-Control (GPIO, Sensors, Actuators)"
+
+[dependencies]
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+mlua.workspace = true
+shared = { path = "../shared" }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.8"
