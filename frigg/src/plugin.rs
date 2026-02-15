@@ -1,7 +1,5 @@
 use async_trait::async_trait;
-
-pub mod plugin;
-pub use plugin::OdinPlugin;
+use crate::plugin::OdinPlugin;
 
 /// Frigg Plugin - Implements OdinPlugin trait for healthcare tasks
 pub struct FriggPlugin {

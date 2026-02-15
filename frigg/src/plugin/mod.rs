@@ -1,4 +1,3 @@
-// Re-export OdinPlugin trait for use in this crate
 use async_trait::async_trait;
 
 #[async_trait]
